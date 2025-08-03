@@ -3,6 +3,8 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
   CalendarDays, 
   Target, 
@@ -11,10 +13,21 @@ import {
   Apple,
   Timer,
   Award,
-  Plus
+  Plus,
+  Play,
+  Calendar,
+  BarChart3,
+  CheckCircle2,
+  Clock,
+  Flame,
+  Activity,
+  Utensils,
+  Eye,
+  ArrowRight
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import Link from "next/link";
 
 interface ClientDashboardProps {
   user: any;
@@ -27,6 +40,10 @@ interface DashboardData {
   latestMeasurements: any | null;
   weeklyProgress: any | null;
   upcomingWorkouts: any[];
+  activePrograms: any[];
+  todayNutrition: any | null;
+  workoutStreak: number;
+  totalWorkoutsCompleted: number;
 }
 
 export default function ClientDashboard({ user, profile }: ClientDashboardProps) {
@@ -42,22 +59,28 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
     const supabase = createSupabaseClient();
     
     try {
+      const today = new Date().toISOString().split('T')[0];
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
       // Parallel queries for dashboard data
       const [
         { data: todayWorkouts },
         { data: activeGoals },
         { data: latestMeasurements },
-        { data: upcomingWorkouts }
+        { data: upcomingWorkouts },
+        { data: activePrograms },
+        { data: workoutLogs },
+        { data: nutritionLogs }
       ] = await Promise.all([
-        // Today's workout sessions
+        // Today's scheduled workouts
         supabase
-          .from("workout_sessions")
+          .from("workouts")
           .select(`
             *,
-            workout_programs(name, description)
+            workout_programs(name, description, trainer_id, profiles!workout_programs_trainer_id_fkey(full_name))
           `)
           .eq("client_id", user.id)
-          .eq("scheduled_date", new Date().toISOString().split('T')[0])
+          .eq("scheduled_date", today)
           .order("created_at", { ascending: false }),
 
         // Active goals
@@ -67,11 +90,11 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           .eq("client_id", user.id)
           .eq("is_achieved", false)
           .order("priority", { ascending: false })
-          .limit(5),
+          .limit(4),
 
         // Latest measurements
         supabase
-          .from("body_measurements")
+          .from("client_progress")
           .select("*")
           .eq("client_id", user.id)
           .order("date", { ascending: false })
@@ -79,24 +102,74 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
 
         // Upcoming workouts (next 7 days)
         supabase
-          .from("workout_sessions")
+          .from("workouts")
           .select(`
             *,
             workout_programs(name, description)
           `)
           .eq("client_id", user.id)
-          .gte("scheduled_date", new Date().toISOString().split('T')[0])
+          .gte("scheduled_date", today)
           .lte("scheduled_date", new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
           .order("scheduled_date", { ascending: true })
-          .limit(5)
+          .limit(5),
+
+        // Active programs
+        supabase
+          .from("workout_programs")
+          .select(`
+            *,
+            profiles!workout_programs_trainer_id_fkey(full_name, email)
+          `)
+          .eq("client_id", user.id)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false }),
+
+        // Recent workout logs for streak calculation
+        supabase
+          .from("workout_logs")
+          .select("date, completed")
+          .eq("client_id", user.id)
+          .gte("date", sevenDaysAgo)
+          .order("date", { ascending: false }),
+
+        // Today's nutrition logs
+        supabase
+          .from("nutrition_logs")
+          .select("*")
+          .eq("client_id", user.id)
+          .eq("date", today)
       ]);
+
+      // Calculate workout streak
+      let streak = 0;
+      if (workoutLogs && workoutLogs.length > 0) {
+        const sortedLogs = workoutLogs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        for (const log of sortedLogs) {
+          if (log.completed) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+      }
+
+      // Calculate total completed workouts
+      const { count: totalCompleted } = await supabase
+        .from("workout_logs")
+        .select("*", { count: 'exact', head: true })
+        .eq("client_id", user.id)
+        .eq("completed", true);
 
       setData({
         todayWorkouts: todayWorkouts || [],
         activeGoals: activeGoals || [],
         latestMeasurements: latestMeasurements?.[0] || null,
         weeklyProgress: null, // TODO: Calculate from recent data
-        upcomingWorkouts: upcomingWorkouts || []
+        upcomingWorkouts: upcomingWorkouts || [],
+        activePrograms: activePrograms || [],
+        todayNutrition: nutritionLogs?.[0] || null,
+        workoutStreak: streak,
+        totalWorkoutsCompleted: totalCompleted || 0
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -131,16 +204,20 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
     );
   }
 
+  const currentDate = new Date();
+  const greeting = currentDate.getHours() < 12 ? "Good morning" : 
+                  currentDate.getHours() < 18 ? "Good afternoon" : "Good evening";
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">
-            Welcome back, {profile.full_name}! 💪
+            {greeting}, {profile.full_name}! 💪
           </h1>
           <p className="text-muted-foreground">
-            {new Date().toLocaleDateString('en-US', { 
+            {currentDate.toLocaleDateString('bg-BG', { 
               weekday: 'long', 
               year: 'numeric', 
               month: 'long', 
@@ -148,240 +225,399 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
             })}
           </p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Quick Log
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/protected/progress">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Progress
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/protected/workouts/log">
+              <Plus className="h-4 w-4 mr-2" />
+              Quick Log
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {/* Quick Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Today's Workouts"
           value={data?.todayWorkouts?.length || 0}
           subtitle="scheduled"
           icon={<Dumbbell className="h-4 w-4" />}
-          trend="+2 from yesterday"
+          color="blue"
+          actionText={data?.todayWorkouts?.length ? "Start workout" : "View programs"}
+          actionHref={data?.todayWorkouts?.length ? `/protected/workouts/${data.todayWorkouts[0].id}` : "/protected/programs"}
         />
+        
         <StatsCard
-          title="Active Goals"
-          value={data?.activeGoals?.length || 0}
-          subtitle="in progress"
-          icon={<Target className="h-4 w-4" />}
-          trend="3 near completion"
+          title="Workout Streak"
+          value={data?.workoutStreak || 0}
+          subtitle="days"
+          icon={<Flame className="h-4 w-4" />}
+          color="orange"
+          trend={(data?.workoutStreak || 0) >= 7 ? "🔥 On fire!" : "Keep going!"}
         />
+        
         <StatsCard
           title="Current Weight"
-          value={data?.latestMeasurements?.weight_kg || "—"}
+          value={data?.latestMeasurements?.weight || "—"}
           subtitle="kg"
           icon={<TrendingUp className="h-4 w-4" />}
-          trend="-2.3kg this month"
+          color="green"
+          trend={data?.latestMeasurements ? `Updated ${new Date(data.latestMeasurements.date).toLocaleDateString()}` : "No data"}
+          actionText="Update"
+          actionHref="/protected/progress"
         />
+        
         <StatsCard
-          title="Streak"
-          value="7"
-          subtitle="days"
+          title="Total Workouts"
+          value={data?.totalWorkoutsCompleted || 0}
+          subtitle="completed"
           icon={<Award className="h-4 w-4" />}
-          trend="Personal best!"
+          color="purple"
+          trend="All time"
         />
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Today's Schedule */}
-        <Card className="lg:col-span-2">
-          <div className="p-6">
+        
+        {/* Left Column - Today's Activities */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          {/* Today's Workouts */}
+          <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center">
-                <CalendarDays className="h-5 w-5 mr-2" />
+                <Calendar className="h-5 w-5 mr-2" />
                 Today's Schedule
               </h3>
-              <Button variant="outline" size="sm">View All</Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/protected/calendar">
+                  View Calendar
+                </Link>
+              </Button>
             </div>
-
-            {data?.todayWorkouts?.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Dumbbell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No workouts scheduled for today</p>
-                <p className="text-sm">Take a rest day or add a quick workout!</p>
-              </div>
-            ) : (
+            
+            {data?.todayWorkouts && data.todayWorkouts.length > 0 ? (
               <div className="space-y-3">
-                {data?.todayWorkouts?.map((workout) => (
-                  <WorkoutCard key={workout.id} workout={workout} />
+                {data.todayWorkouts.map((workout) => (
+                  <TodayWorkoutCard key={workout.id} workout={workout} />
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No workouts scheduled for today</p>
+                <Button variant="outline" size="sm" className="mt-2" asChild>
+                  <Link href="/protected/programs">
+                    Browse Programs
+                  </Link>
+                </Button>
+              </div>
             )}
-          </div>
-        </Card>
+          </Card>
 
-        {/* Quick Actions & Goals */}
-        <div className="space-y-6">
           {/* Active Goals */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center">
                 <Target className="h-5 w-5 mr-2" />
                 Active Goals
               </h3>
-              
-              {data?.activeGoals?.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">
-                  <p className="text-sm">No active goals</p>
-                  <Button variant="outline" size="sm" className="mt-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/protected/goals">
+                  Manage Goals
+                </Link>
+              </Button>
+            </div>
+            
+            {data?.activeGoals && data.activeGoals.length > 0 ? (
+              <div className="space-y-4">
+                {data.activeGoals.map((goal) => (
+                  <GoalProgressCard key={goal.id} goal={goal} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Target className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No active goals</p>
+                <Button variant="outline" size="sm" className="mt-2" asChild>
+                  <Link href="/protected/goals">
                     Set Your First Goal
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {data?.activeGoals?.slice(0, 3).map((goal) => (
-                    <GoalCard key={goal.id} goal={goal} />
-                  ))}
-                  {data?.activeGoals && data.activeGoals.length > 3 && (
-                    <Button variant="ghost" size="sm" className="w-full">
-                      View All Goals ({data.activeGoals.length})
-                    </Button>
-                  )}
-                </div>
-              )}
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Right Column - Summary & Quick Actions */}
+        <div className="space-y-6">
+          
+          {/* Quick Actions */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              <Button className="w-full justify-start" asChild>
+                <Link href="/protected/workouts/log">
+                  <Play className="h-4 w-4 mr-2" />
+                  Log Workout
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/protected/nutrition/log">
+                  <Utensils className="h-4 w-4 mr-2" />
+                  Log Meal
+                </Link>
+              </Button>
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link href="/protected/progress">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Update Progress
+                </Link>
+              </Button>
             </div>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <Button variant="outline" size="sm">
-                  <Dumbbell className="h-4 w-4 mr-2" />
-                  Start Workout
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Apple className="h-4 w-4 mr-2" />
-                  Log Meal
-                </Button>
-                <Button variant="outline" size="sm">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Log Weight
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Timer className="h-4 w-4 mr-2" />
-                  Quick Timer
-                </Button>
-              </div>
+          {/* Active Programs */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">My Programs</h3>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/protected/programs">
+                  <Eye className="h-4 w-4 mr-1" />
+                  All
+                </Link>
+              </Button>
             </div>
+            
+            {data?.activePrograms && data.activePrograms.length > 0 ? (
+              <div className="space-y-3">
+                {data.activePrograms.slice(0, 2).map((program) => (
+                  <div key={program.id} className="border rounded-lg p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-sm">{program.name}</h4>
+                      <Badge variant="secondary" className="text-xs">
+                        Week {Math.ceil((Date.now() - new Date(program.start_date).getTime()) / (7 * 24 * 60 * 60 * 1000)) || 1}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Coach: {program.profiles?.full_name}
+                    </p>
+                    <Button size="sm" variant="outline" className="w-full" asChild>
+                      <Link href={`/protected/programs/${program.id}`}>
+                        View Program
+                        <ArrowRight className="h-3 w-3 ml-1" />
+                      </Link>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                <p className="text-sm">No active programs</p>
+              </div>
+            )}
+          </Card>
+
+          {/* Upcoming Workouts */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">This Week</h3>
+            
+            {data?.upcomingWorkouts && data.upcomingWorkouts.length > 0 ? (
+              <div className="space-y-2">
+                {data.upcomingWorkouts.slice(0, 4).map((workout) => (
+                  <UpcomingWorkoutCard key={workout.id} workout={workout} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                <p className="text-sm">No upcoming workouts</p>
+              </div>
+            )}
           </Card>
         </div>
       </div>
-
-      {/* Upcoming Workouts */}
-      {data?.upcomingWorkouts && data.upcomingWorkouts.length > 0 && (
-        <Card>
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">This Week's Workouts</h3>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {data.upcomingWorkouts.map((workout) => (
-                <UpcomingWorkoutCard key={workout.id} workout={workout} />
-              ))}
-            </div>
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
 
-// Helper Components
-function StatsCard({ title, value, subtitle, icon, trend }: {
+function StatsCard({ 
+  title, 
+  value, 
+  subtitle, 
+  icon, 
+  color = "blue", 
+  trend, 
+  actionText, 
+  actionHref 
+}: {
   title: string;
   value: string | number;
   subtitle: string;
   icon: React.ReactNode;
+  color?: "blue" | "green" | "orange" | "purple";
   trend?: string;
+  actionText?: string;
+  actionHref?: string;
 }) {
+  const colorClasses = {
+    blue: "text-blue-600 bg-blue-50",
+    green: "text-green-600 bg-green-50", 
+    orange: "text-orange-600 bg-orange-50",
+    purple: "text-purple-600 bg-purple-50"
+  };
+
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <div className="flex items-baseline space-x-2">
-            <p className="text-2xl font-bold">{value}</p>
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
-          </div>
-          {trend && (
-            <p className="text-xs text-green-600 mt-1">{trend}</p>
-          )}
+    <Card className="p-4">
+      <div className="flex items-center justify-between mb-2">
+        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+          {icon}
         </div>
-        <div className="text-muted-foreground">{icon}</div>
+        {actionText && actionHref && (
+          <Button size="sm" variant="ghost" asChild>
+            <Link href={actionHref} className="text-xs">
+              {actionText}
+            </Link>
+          </Button>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <div className="flex items-baseline gap-1">
+          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
+        </div>
+        {trend && (
+          <p className="text-xs text-muted-foreground mt-1">{trend}</p>
+        )}
       </div>
     </Card>
   );
 }
 
-function WorkoutCard({ workout }: { workout: any }) {
+function TodayWorkoutCard({ workout }: { workout: any }) {
+  const duration = workout.estimated_duration_minutes || 45;
+  const isCompleted = workout.status === 'completed';
+  
   return (
-    <div className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
-      <div className="flex items-center justify-between">
-        <div>
-          <h4 className="font-medium">{workout.name}</h4>
+    <div className={`border rounded-lg p-4 ${isCompleted ? 'bg-green-50 border-green-200' : ''}`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-medium">{workout.name}</h4>
+            {isCompleted && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+          </div>
           <p className="text-sm text-muted-foreground">
-            {workout.planned_duration_minutes} min • {workout.status}
+            {workout.workout_programs?.name}
           </p>
+          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {duration} min
+            </span>
+            <span className="flex items-center gap-1">
+              <Activity className="h-3 w-3" />
+              {workout.difficulty_level || 'Medium'}
+            </span>
+          </div>
         </div>
-        <Button size="sm">
-          {workout.status === 'planned' ? 'Start' : 'Continue'}
+        <Button 
+          size="sm" 
+          variant={isCompleted ? "outline" : "default"}
+          asChild
+        >
+          <Link href={`/protected/workouts/${workout.id}`}>
+            {isCompleted ? "Review" : "Start"}
+          </Link>
         </Button>
       </div>
+      
+      {workout.description && (
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {workout.description}
+        </p>
+      )}
     </div>
   );
 }
 
-function GoalCard({ goal }: { goal: any }) {
+function GoalProgressCard({ goal }: { goal: any }) {
   const progress = goal.target_value && goal.target_value > 0 
-    ? Math.min(100, (goal.current_value / goal.target_value) * 100)
+    ? Math.min(100, Math.max(0, (goal.current_value / goal.target_value) * 100))
     : 0;
 
+  const progressColor = progress >= 75 ? "bg-green-600" : 
+                       progress >= 50 ? "bg-blue-600" : 
+                       progress >= 25 ? "bg-yellow-600" : "bg-gray-400";
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium">{goal.title}</h4>
-        <span className="text-xs text-muted-foreground">
+        <h4 className="font-medium">{goal.title}</h4>
+        <span className="text-sm font-medium text-muted-foreground">
           {Math.round(progress)}%
         </span>
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-          style={{ width: `${progress}%` }}
-        ></div>
+      
+      <Progress value={progress} className="h-2" />
+      
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {goal.current_value || 0} / {goal.target_value || 0} {goal.unit || ''}
+        </span>
+        <span>
+          Target: {new Date(goal.target_date).toLocaleDateString('bg-BG')}
+        </span>
       </div>
-      <p className="text-xs text-muted-foreground">
-        {goal.current_value || 0} / {goal.target_value || 0} {goal.unit || ''}
-      </p>
+      
+      {goal.description && (
+        <p className="text-xs text-muted-foreground">{goal.description}</p>
+      )}
     </div>
   );
 }
 
 function UpcomingWorkoutCard({ workout }: { workout: any }) {
   const date = new Date(workout.scheduled_date);
-  const isToday = date.toDateString() === new Date().toDateString();
-  const isTomorrow = date.toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
   
-  let dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const isToday = date.toDateString() === today.toDateString();
+  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+  
+  let dateLabel = date.toLocaleDateString('bg-BG', { weekday: 'short', day: 'numeric' });
   if (isToday) dateLabel = 'Today';
   if (isTomorrow) dateLabel = 'Tomorrow';
 
   return (
-    <div className="border rounded-lg p-3">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-blue-600">{dateLabel}</span>
-        <span className="text-xs text-muted-foreground">
-          {workout.planned_duration_minutes}min
-        </span>
+    <div className="flex items-center justify-between p-2 rounded border">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-medium px-2 py-1 rounded ${
+            isToday ? 'bg-blue-100 text-blue-700' : 
+            isTomorrow ? 'bg-green-100 text-green-700' : 
+            'bg-gray-100 text-gray-700'
+          }`}>
+            {dateLabel}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {workout.estimated_duration_minutes || 45}min
+          </span>
+        </div>
+        <p className="text-sm font-medium truncate mt-1">{workout.name}</p>
       </div>
-      <h4 className="text-sm font-medium">{workout.name}</h4>
-      <p className="text-xs text-muted-foreground mt-1">
-        {workout.workout_programs?.name}
-      </p>
+      <Button size="sm" variant="ghost" asChild>
+        <Link href={`/protected/workouts/${workout.id}`}>
+          <Eye className="h-3 w-3" />
+        </Link>
+      </Button>
     </div>
   );
 }
@@ -392,18 +628,49 @@ function LoadingDashboard({ profile }: { profile: any }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Welcome back, {profile.full_name}!</h1>
-          <p className="text-muted-foreground">Here's your fitness overview</p>
+          <div className="h-4 bg-gray-200 rounded w-48 mt-1 animate-pulse"></div>
         </div>
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="p-6">
-            <div className="animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <Card key={i} className="p-4">
+            <div className="animate-pulse space-y-2">
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
             </div>
           </Card>
         ))}
+      </div>
+      
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          {[1, 2].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="animate-pulse space-y-4">
+                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="animate-pulse space-y-4">
+                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded"></div>
+                  <div className="h-3 bg-gray-200 rounded w-4/5"></div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
