@@ -1,5 +1,8 @@
+// app/protected/page.tsx - Заменяме съществуващата страница
 import { createSupabaseClient } from "@/utils/supabase/server";
-import AuthPageSignOutButton from "@/components/auth-sign-out-button";
+import { redirect } from "next/navigation";
+import ClientDashboard from "@/components/fitness/client-dashboard";
+import TrainerDashboard from "@/components/fitness/trainer-dashboard";
 
 export default async function ProtectedPage() {
   const client = await createSupabaseClient();
@@ -8,67 +11,34 @@ export default async function ProtectedPage() {
   } = await client.auth.getUser();
 
   if (!user) {
+    redirect("/sign-in");
+  }
+
+  // Get user profile to determine role
+  const { data: profile } = await client
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) {
     return (
-      <div>There was an error loading your account. Please try again.</div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Profile Setup Required</h2>
+          <p className="text-muted-foreground">
+            Please complete your profile setup to continue.
+          </p>
+        </div>
+      </div>
     );
   }
 
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-medium">Account</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your account settings
-          </p>
-        </div>
-        <AuthPageSignOutButton />
-      </div>
+  // Render different dashboards based on user role
+  if (profile.role === "trainer") {
+    return <TrainerDashboard user={user} profile={profile} />;
+  }
 
-      <div className="space-y-6">
-        <div className="border rounded-lg p-6 space-y-4">
-          <h2 className="font-medium">User Information</h2>
-          <div className="grid gap-2 text-sm">
-            <div className="grid grid-cols-[120px_1fr]">
-              <div className="text-muted-foreground">Email</div>
-              <div>{user?.email}</div>
-            </div>
-            <div className="grid grid-cols-[120px_1fr]">
-              <div className="text-muted-foreground">User ID</div>
-              <div className="font-mono">{user?.id}</div>
-            </div>
-            <div className="grid grid-cols-[120px_1fr]">
-              <div className="text-muted-foreground">Last Sign In</div>
-              <div>
-                {user.last_sign_in_at
-                  ? new Date(user.last_sign_in_at).toLocaleString()
-                  : "Never"}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="border rounded-lg p-6 space-y-4">
-          <h2 className="font-medium">Authentication Status</h2>
-          <div className="grid gap-2 text-sm">
-            <div className="grid grid-cols-[120px_1fr]">
-              <div className="text-muted-foreground">Status</div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                Authenticated
-              </div>
-            </div>
-            <div className="grid grid-cols-[120px_1fr]">
-              <div className="text-muted-foreground">Providers</div>
-              <div>
-                {user.identities
-                  ?.map(identity => identity.provider)
-                  .join(", ") || "Email"}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // Default to client dashboard
+  return <ClientDashboard user={user} profile={profile} />;
 }
