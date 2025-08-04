@@ -144,88 +144,55 @@ export default function InviteClientPage() {
     setSending(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Generate unique token
-      const token = generateInvitationToken();
-      
-      // Set expiration to 7 days from now
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
-
-      // Get trainer profile for email
-      const { data: trainerProfile } = await supabase
-        .from("profiles")
-        .select("full_name, email")
-        .eq("id", user.id)
-        .single();
-
-      const { data: newInvitation, error } = await supabase
-        .from("trainer_invitations")
-        .insert({
-          trainer_id: user.id,
-          email: inviteForm.email.trim(),
-          first_name: inviteForm.first_name.trim() || null,
-          personal_message: inviteForm.personal_message.trim() || null,
-          token: token,
-          expires_at: expiresAt.toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Send invitation email
-      try {
-        const response = await fetch('/api/send-invitation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            recipientEmail: inviteForm.email.trim(),
-            recipientName: inviteForm.first_name.trim() || null,
-            trainerName: trainerProfile?.full_name || 'Треньор',
-            trainerEmail: trainerProfile?.email || '',
-            personalMessage: inviteForm.personal_message.trim() || null,
-            invitationToken: token,
-            expiresAt: expiresAt.toISOString()
-          })
-        });
-
-        if (!response.ok) {
-          console.error('Failed to send email, but invitation was created');
-          alert("Поканата е създадена, но имейлът не беше изпратен. Можете да копирате линка ръчно.");
-        } else {
-          alert("Поканата е изпратена успешно!");
-        }
-      } catch (emailError) {
-        console.error('Email sending error:', emailError);
-        alert("Поканата е създадена, но имейлът не беше изпратен. Можете да копирате линка ръчно.");
+      // Get current user session token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert("Моля влезте в акаунта си отново");
+        return;
       }
 
-      // Reset form
-      setInviteForm({
-        email: '',
-        first_name: '',
-        personal_message: ''
+      // Send invitation via API
+      const response = await fetch('/api/send-invitation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          email: inviteForm.email,
+          firstName: inviteForm.first_name,
+          personalMessage: inviteForm.personal_message
+        })
       });
 
-      // Refresh invitations
-      fetchInvitations();
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        if (result.warning) {
+          alert(result.message); // Show warning about email not being sent
+        } else {
+          alert(result.message || "Поканата е изпратена успешно!");
+        }
+
+        // Reset form
+        setInviteForm({
+          email: '',
+          first_name: '',
+          personal_message: ''
+        });
+
+        // Refresh invitations
+        fetchInvitations();
+      } else {
+        alert(result.error || "Грешка при изпращане на поканата");
+      }
+
     } catch (error) {
       console.error("Error sending invitation:", error);
       alert("Грешка при изпращане на поканата");
     } finally {
       setSending(false);
     }
-  };
-
-  const generateInvitationToken = () => {
-    return Math.random().toString(36).substring(2) + 
-           Math.random().toString(36).substring(2) + 
-           Date.now().toString(36);
   };
 
   const copyInvitationLink = async (token: string) => {
@@ -282,6 +249,7 @@ export default function InviteClientPage() {
         .eq("id", invitationId);
 
       if (error) throw error;
+      
       fetchInvitations();
       alert("Поканата е изпратена отново!");
     } catch (error) {

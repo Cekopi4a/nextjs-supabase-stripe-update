@@ -1,5 +1,7 @@
 // utils/email/invitation-service.ts
+import { Resend } from 'resend';
 import { createSupabaseClient } from "@/utils/supabase/server";
+import InvitationEmail from '@/components/emails/invitation-email';
 
 export interface InvitationEmailData {
   recipientEmail: string;
@@ -12,247 +14,69 @@ export interface InvitationEmailData {
 }
 
 export class InvitationEmailService {
-  private supabase: any = null;
+  private resend: Resend;
+  private supabasePromise: ReturnType<typeof createSupabaseClient>;
 
-  private async getSupabaseClient() {
-    if (!this.supabase) {
-      this.supabase = await createSupabaseClient();
+  constructor() {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      console.warn('RESEND_API_KEY not found. Email sending will be disabled.');
+      this.resend = null as any;
+    } else {
+      this.resend = new Resend(apiKey);
     }
-    return this.supabase;
+    this.supabasePromise = createSupabaseClient();
   }
 
   /**
-   * Send invitation email (integration with email service like Resend, SendGrid, etc.)
+   * Send invitation email using Resend
    */
   async sendInvitationEmail(data: InvitationEmailData): Promise<boolean> {
     try {
-      // In a real implementation, you would integrate with:
-      // - Resend (recommended for simplicity)
-      // - SendGrid 
-      // - AWS SES
-      // - Postmark
-      // etc.
+      if (!this.resend) {
+        console.log('Email service not configured. Logging email details:');
+        this.logEmailForDevelopment(data);
+        await this.logEmailSent(data, 'dev_logged');
+        return true;
+      }
 
-      const invitationLink = `${process.env.NEXT_PUBLIC_SITE_URL}/join/${data.invitationToken}`;
-      
-      const emailHtml = this.generateInvitationEmailHTML(data, invitationLink);
-      const emailText = this.generateInvitationEmailText(data, invitationLink);
-
-      // Example with Resend (you need to install @resend/node and configure)
-      /*
-      import { Resend } from 'resend';
-      const resend = new Resend(process.env.RESEND_API_KEY);
-
-      const emailResult = await resend.emails.send({
-        from: 'noreply@yourdomain.com',
-        to: data.recipientEmail,
-        subject: `Покана за тренировки от ${data.trainerName}`,
-        html: emailHtml,
-        text: emailText,
+      const invitationLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/join/${data.invitationToken}`;
+      const expiresDate = new Date(data.expiresAt).toLocaleDateString('bg-BG', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
-      */
 
-      // For now, we'll log the email content and return true
-      // In production, replace this with actual email sending
-      console.log('=== INVITATION EMAIL ===');
-      console.log('To:', data.recipientEmail);
-      console.log('Subject:', `Покана за тренировки от ${data.trainerName}`);
-      console.log('Link:', invitationLink);
-      console.log('========================');
+      // Send email using React component
+      const emailResult = await this.resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+        to: data.recipientEmail,
+        subject: `🏋️ Покана за тренировки от ${data.trainerName}`,
+        react: InvitationEmail({
+          recipientName: data.recipientName,
+          trainerName: data.trainerName,
+          trainerEmail: data.trainerEmail,
+          personalMessage: data.personalMessage,
+          invitationLink,
+          expiresDate,
+        }),
+      });
 
-      // Log email in database
-      await this.logEmailSent(data);
+      if (emailResult.error) {
+        console.error('Resend error:', emailResult.error);
+        await this.logEmailSent(data, 'failed', emailResult.error.message);
+        return false;
+      }
 
+      console.log('Email sent successfully:', emailResult.data?.id);
+      await this.logEmailSent(data, 'sent', undefined, emailResult.data?.id);
       return true;
+
     } catch (error) {
       console.error('Error sending invitation email:', error);
+      await this.logEmailSent(data, 'failed', error instanceof Error ? error.message : 'Unknown error');
       return false;
-    }
-  }
-
-  /**
-   * Generate HTML email template
-   */
-  private generateInvitationEmailHTML(data: InvitationEmailData, invitationLink: string): string {
-    const recipientName = data.recipientName || data.recipientEmail.split('@')[0];
-    const expiresDate = new Date(data.expiresAt).toLocaleDateString('bg-BG');
-
-    return `
-    <!DOCTYPE html>
-    <html lang="bg">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Покана за тренировки</title>
-      <style>
-        body { 
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-          line-height: 1.6; 
-          color: #333; 
-          max-width: 600px; 
-          margin: 0 auto; 
-          padding: 20px; 
-        }
-        .header { 
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-          color: white; 
-          padding: 30px; 
-          text-align: center; 
-          border-radius: 10px 10px 0 0; 
-        }
-        .content { 
-          background: #f8f9fa; 
-          padding: 30px; 
-          border-radius: 0 0 10px 10px; 
-        }
-        .message-box { 
-          background: #e3f2fd; 
-          border-left: 4px solid #2196f3; 
-          padding: 15px; 
-          margin: 20px 0; 
-          border-radius: 4px; 
-        }
-        .cta-button { 
-          display: inline-block; 
-          background: #4caf50; 
-          color: white; 
-          padding: 15px 30px; 
-          text-decoration: none; 
-          border-radius: 5px; 
-          font-weight: bold; 
-          margin: 20px 0; 
-        }
-        .footer { 
-          text-align: center; 
-          color: #666; 
-          font-size: 12px; 
-          margin-top: 30px; 
-          padding-top: 20px; 
-          border-top: 1px solid #eee; 
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>🏋️ Добре дошли в екипа!</h1>
-        <p>Поканени сте да започнете фитнес пътуването си</p>
-      </div>
-      
-      <div class="content">
-        <h2>Здравейте${recipientName ? `, ${recipientName}` : ''}!</h2>
-        
-        <p><strong>${data.trainerName}</strong> ви кани да станете негов клиент и да започнете работа заедно за постигане на вашите фитнес цели.</p>
-        
-        ${data.personalMessage ? `
-        <div class="message-box">
-          <strong>Лично съобщение от ${data.trainerName}:</strong><br>
-          "${data.personalMessage}"
-        </div>
-        ` : ''}
-        
-        <h3>Какво ви очаква:</h3>
-        <ul>
-          <li>🎯 Персонализирани тренировъчни програми</li>
-          <li>📅 Календар с планирани тренировки</li>
-          <li>📊 Проследяване на прогрес и резултати</li>
-          <li>🥗 Хранителни препоръки и планове</li>
-          <li>💬 Директна връзка с вашия треньор</li>
-        </ul>
-        
-        <div style="text-align: center;">
-          <a href="${invitationLink}" class="cta-button">
-            Започнете сега
-          </a>
-        </div>
-        
-        <p><strong>Важно:</strong> Тази покана е валидна до <strong>${expiresDate}</strong>.</p>
-        
-        <p>Ако не можете да кликнете на бутона, копирайте и поставете този линк в браузъра си:</p>
-        <p style="word-break: break-all; background: #f0f0f0; padding: 10px; border-radius: 4px;">
-          ${invitationLink}
-        </p>
-        
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-        
-        <p><strong>Контакт с треньора:</strong><br>
-        ${data.trainerName}<br>
-        📧 ${data.trainerEmail}</p>
-      </div>
-      
-      <div class="footer">
-        <p>Ако не очаквахте този имейл, можете да го игнорирате.</p>
-        <p>© 2025 Fitness Platform. Всички права запазени.</p>
-      </div>
-    </body>
-    </html>
-    `;
-  }
-
-  /**
-   * Generate plain text email template
-   */
-  private generateInvitationEmailText(data: InvitationEmailData, invitationLink: string): string {
-    const recipientName = data.recipientName || data.recipientEmail.split('@')[0];
-    const expiresDate = new Date(data.expiresAt).toLocaleDateString('bg-BG');
-
-    return `
-Здравейте${recipientName ? `, ${recipientName}` : ''}!
-
-${data.trainerName} ви кани да станете негов клиент и да започнете работа заедно за постигане на вашите фитнес цели.
-
-${data.personalMessage ? `Лично съобщение от ${data.trainerName}:
-"${data.personalMessage}"
-
-` : ''}Какво ви очаква:
-• Персонализирани тренировъчни програми
-• Календар с планирани тренировки  
-• Проследяване на прогрес и резултати
-• Хранителни препоръки и планове
-• Директна връзка с вашия треньор
-
-За да започнете, кликнете на този линк:
-${invitationLink}
-
-Важно: Тази покана е валидна до ${expiresDate}.
-
-Контакт с треньора:
-${data.trainerName}
-${data.trainerEmail}
-
-Ако не очаквахте този имейл, можете да го игнорирате.
-
-© 2025 Fitness Platform
-    `.trim();
-  }
-
-  /**
-   * Log email sending in database
-   */
-  private async logEmailSent(data: InvitationEmailData): Promise<void> {
-    try {
-      const supabase = await this.getSupabaseClient();
-      
-      // Find the invitation ID based on token
-      const { data: invitation } = await supabase
-        .from("trainer_invitations")
-        .select("id")
-        .eq("token", data.invitationToken)
-        .single();
-
-      if (invitation) {
-        await supabase
-          .from("email_logs")
-          .insert({
-            invitation_id: invitation.id,
-            recipient_email: data.recipientEmail,
-            email_type: 'invitation',
-            subject: `Покана за тренировки от ${data.trainerName}`,
-            template_name: 'trainer_invitation',
-            status: 'sent'
-          });
-      }
-    } catch (error) {
-      console.error('Error logging email:', error);
     }
   }
 
@@ -261,8 +85,7 @@ ${data.trainerEmail}
    */
   async sendReminderEmail(invitationId: string): Promise<boolean> {
     try {
-      const supabase = await this.getSupabaseClient();
-      
+      const supabase = await this.supabasePromise;
       const { data: invitation } = await supabase
         .from("trainer_invitations")
         .select(`
@@ -282,7 +105,7 @@ ${data.trainerEmail}
         recipientName: invitation.first_name,
         trainerName: invitation.profiles?.full_name || 'Треньор',
         trainerEmail: invitation.profiles?.email || '',
-        personalMessage: `Това е напомняне за поканата ви. ${invitation.personal_message || ''}`.trim(),
+        personalMessage: `🔔 Напомняне: ${invitation.personal_message || 'Очакваме ви в нашия екип!'}`,
         invitationToken: invitation.token,
         expiresAt: invitation.expires_at
       };
@@ -291,6 +114,262 @@ ${data.trainerEmail}
     } catch (error) {
       console.error('Error sending reminder email:', error);
       return false;
+    }
+  }
+
+  /**
+   * Send welcome email after successful registration
+   */
+  async sendWelcomeEmail(clientData: {
+    email: string;
+    full_name: string;
+    trainerName: string;
+    trainerEmail: string;
+  }): Promise<boolean> {
+    try {
+      if (!this.resend) {
+        console.log('Welcome email would be sent to:', clientData.email);
+        return true;
+      }
+
+      const emailResult = await this.resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+        to: clientData.email,
+        subject: `🎉 Добре дошли в екипа на ${clientData.trainerName}!`,
+        html: this.generateWelcomeEmailHTML(clientData),
+      });
+
+      if (emailResult.error) {
+        console.error('Welcome email error:', emailResult.error);
+        return false;
+      }
+
+      console.log('Welcome email sent successfully:', emailResult.data?.id);
+      return true;
+
+    } catch (error) {
+      console.error('Error sending welcome email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Send notification email to trainer when client joins
+   */
+  async sendTrainerNotificationEmail(trainerData: {
+    email: string;
+    full_name: string;
+    clientName: string;
+    clientEmail: string;
+  }): Promise<boolean> {
+    try {
+      if (!this.resend) {
+        console.log('Trainer notification would be sent to:', trainerData.email);
+        return true;
+      }
+
+      const emailResult = await this.resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+        to: trainerData.email,
+        subject: `🎊 Нов клиент се присъедини към вашия екип!`,
+        html: this.generateTrainerNotificationHTML(trainerData),
+      });
+
+      if (emailResult.error) {
+        console.error('Trainer notification error:', emailResult.error);
+        return false;
+      }
+
+      console.log('Trainer notification sent successfully:', emailResult.data?.id);
+      return true;
+
+    } catch (error) {
+      console.error('Error sending trainer notification:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Log email for development when Resend is not configured
+   */
+  private logEmailForDevelopment(data: InvitationEmailData): void {
+    const invitationLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/join/${data.invitationToken}`;
+    
+    console.log('\n' + '='.repeat(60));
+    console.log('📧 INVITATION EMAIL (Development Mode)');
+    console.log('='.repeat(60));
+    console.log(`To: ${data.recipientEmail}`);
+    console.log(`From: ${data.trainerName} <${data.trainerEmail}>`);
+    console.log(`Subject: 🏋️ Покана за тренировки от ${data.trainerName}`);
+    console.log('');
+    console.log(`Здравейте${data.recipientName ? `, ${data.recipientName}` : ''}!`);
+    console.log('');
+    console.log(`${data.trainerName} ви кани да станете негов клиент.`);
+    if (data.personalMessage) {
+      console.log('');
+      console.log(`Лично съобщение: "${data.personalMessage}"`);
+    }
+    console.log('');
+    console.log(`🔗 Invitation Link: ${invitationLink}`);
+    console.log(`⏰ Expires: ${new Date(data.expiresAt).toLocaleDateString('bg-BG')}`);
+    console.log('='.repeat(60) + '\n');
+  }
+
+  /**
+   * Generate welcome email HTML
+   */
+  private generateWelcomeEmailHTML(clientData: {
+    email: string;
+    full_name: string;
+    trainerName: string;
+    trainerEmail: string;
+  }): string {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Добре дошли!</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">🎉 Добре дошли в екипа!</h1>
+        <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Вашето фитнес пътуване започва сега</p>
+      </div>
+      
+      <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #333; margin-top: 0;">Здравейте, ${clientData.full_name}!</h2>
+        
+        <p>Поздравления! Успешно се присъединихте към екипа на <strong>${clientData.trainerName}</strong>.</p>
+        
+        <div style="background: white; border-left: 4px solid #4caf50; padding: 20px; margin: 20px 0; border-radius: 4px;">
+          <h3 style="margin-top: 0; color: #4caf50;">Какво следва?</h3>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li>Влезте в акаунта си за да видите персонализираните си програми</li>
+            <li>Проверете календара си за предстоящи тренировки</li>
+            <li>Свържете се с ${clientData.trainerName} за въпроси</li>
+            <li>Започнете да проследявате прогреса си</li>
+          </ul>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/protected" style="background: #4caf50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+            Влезте в акаунта си
+          </a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+        
+        <p><strong>Контакт с треньора:</strong><br>
+        ${clientData.trainerName}<br>
+        📧 ${clientData.trainerEmail}</p>
+        
+        <p style="text-align: center; color: #666; font-size: 12px; margin-top: 30px;">
+          © 2025 Fitness Platform. Всички права запазени.
+        </p>
+      </div>
+    </body>
+    </html>
+    `;
+  }
+
+  /**
+   * Generate trainer notification email HTML
+   */
+  private generateTrainerNotificationHTML(trainerData: {
+    email: string;
+    full_name: string;
+    clientName: string;
+    clientEmail: string;
+  }): string {
+    return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Нов клиент се присъедини!</title>
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="margin: 0; font-size: 28px;">🎊 Нов клиент!</h1>
+        <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Екипът ви се разраства</p>
+      </div>
+      
+      <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #333; margin-top: 0;">Здравейте, ${trainerData.full_name}!</h2>
+        
+        <p>Имате страхотни новини! <strong>${trainerData.clientName}</strong> прие поканата ви и се присъедини към вашия екип.</p>
+        
+        <div style="background: white; border: 1px solid #e0e0e0; padding: 20px; margin: 20px 0; border-radius: 8px;">
+          <h3 style="margin-top: 0; color: #2196f3;">Детайли за клиента:</h3>
+          <p><strong>Име:</strong> ${trainerData.clientName}</p>
+          <p><strong>Имейл:</strong> ${trainerData.clientEmail}</p>
+          <p><strong>Дата на присъединяване:</strong> ${new Date().toLocaleDateString('bg-BG')}</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/protected/clients" style="background: #2196f3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+            Управлявайте клиентите си
+          </a>
+        </div>
+        
+        <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #1565c0;"><strong>Следващи стъпки:</strong></p>
+          <p style="margin: 5px 0 0; color: #1565c0;">Създайте персонализирана програма за вашия нов клиент и планирайте първата тренировка.</p>
+        </div>
+        
+        <p style="text-align: center; color: #666; font-size: 12px; margin-top: 30px;">
+          © 2025 Fitness Platform. Всички права запазени.
+        </p>
+      </div>
+    </body>
+    </html>
+    `;
+  }
+
+  /**
+   * Log email sending in database
+   */
+  private async logEmailSent(
+    data: InvitationEmailData, 
+    status: string, 
+    errorMessage?: string,
+    emailId?: string
+  ): Promise<void> {
+    try {
+      const supabase = await this.supabasePromise;
+      // Find the invitation ID based on token
+      const { data: invitation } = await supabase
+        .from("trainer_invitations")
+        .select("id")
+        .eq("token", data.invitationToken)
+        .single();
+
+      if (invitation) {
+        // Try to insert email log, but don't fail if table doesn't exist yet
+        const { error } = await supabase
+          .from("email_logs")
+          .insert({
+            invitation_id: invitation.id,
+            recipient_email: data.recipientEmail,
+            email_type: 'invitation',
+            subject: `Покана за тренировки от ${data.trainerName}`,
+            template_name: 'trainer_invitation',
+            status: status,
+            external_id: emailId,
+            error_message: errorMessage
+          });
+
+        if (error) {
+          // Log the error but don't throw - email logging is not critical
+          console.warn('Failed to log email (this is not critical):', error.message);
+        }
+      }
+    } catch (error) {
+      // Don't throw here - email logging failure shouldn't break email sending
+      console.warn('Error logging email (this is not critical):', error);
     }
   }
 }

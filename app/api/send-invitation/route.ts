@@ -49,13 +49,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json(
-        { error: 'Failed to send invitation email' },
+        { error: 'Failed to send reminder email' },
         { status: 500 }
       );
     }
-
   } catch (error) {
-    console.error('Invitation API Error:', error);
+    console.error('Reminder API Error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -113,7 +112,6 @@ export async function PUT(request: NextRequest) {
         { status: 500 }
       );
     }
-
   } catch (error) {
     console.error('Reminder API Error:', error);
     return NextResponse.json(

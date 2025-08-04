@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { 
   User,
   Mail,
@@ -21,6 +21,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import { acceptInvitationAction, validateInvitationAction } from "@/utils/actions/invitation-actions";
 import { useParams, useRouter } from "next/navigation";
 import { invitationAcceptanceHandler } from "@/utils/invitation/acceptance-handler";
 
@@ -34,6 +35,11 @@ interface InvitationData {
   trainer_email: string;
   status: string;
   expires_at: string;
+}
+
+// Type guard за резултата от validateInvitationAction
+function hasInvitation(result: any): result is { valid: true; invitation: InvitationData } {
+  return result && result.valid && "invitation" in result && !!result.invitation;
 }
 
 export default function JoinPage() {
@@ -67,34 +73,16 @@ export default function JoinPage() {
       setLoading(true);
       setError(null);
 
-      // Use the invitation handler to get invitation details
-      const invitationData = await invitationAcceptanceHandler.getInvitationByToken(token);
+      // Use server action to validate invitation
+      const result = await validateInvitationAction(token);
 
-      if (!invitationData) {
-        setError("Поканата не е намерена или е невалидна");
-        return;
-      }
-
-      if (!invitationData.is_valid) {
-        if (invitationData.is_expired) {
-          setError("Поканата е изтекла. Моля свържете се с треньора си за нова покана.");
-        } else if (invitationData.status === 'accepted') {
-          setError("Тази покана вече е използвана.");
-        } else {
-          setError("Поканата е неактивна.");
-        }
-        return;
-      }
-
-      // Check if user already exists
-      const userExists = await invitationAcceptanceHandler.checkExistingUser(invitationData.email);
-      
-      if (userExists) {
-        setError("Потребител с този имейл адрес вече съществува. Моля влезте в акаунта си.");
+      if (!hasInvitation(result)) {
+        setError(result.error || "Грешка при валидиране на поканата");
         return;
       }
 
       // Set invitation data
+      const invitationData = result.invitation;
       setInvitation({
         id: invitationData.id,
         email: invitationData.email,
@@ -162,28 +150,32 @@ export default function JoinPage() {
         throw new Error("Грешка при създаване на акаунт");
       }
 
-      // Wait a moment for the user profile to be created
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('User created successfully:', authData.user.id);
 
-      // Accept the invitation using the handler
-      const acceptResult = await invitationAcceptanceHandler.acceptInvitation({
-        invitationToken: token,
-        clientId: authData.user.id,
-        clientData: {
+      // Wait for the user profile to be created by the trigger
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Accept the invitation using server action
+      const acceptResult = await acceptInvitationAction(
+        token,
+        authData.user.id,
+        {
           full_name: formData.full_name.trim(),
           email: invitation.email,
           phone: formData.phone.trim() || undefined
         }
-      });
+      );
+
+      console.log('Accept invitation result:', acceptResult);
 
       if (!acceptResult.success) {
         console.error("Failed to accept invitation:", acceptResult.error);
-        // User is created but relationship might have failed
         setError(acceptResult.error || "Грешка при приемане на поканата");
         return;
       }
 
       // Success! Redirect to protected area
+      console.log('Registration and invitation acceptance successful');
       router.push("/protected");
 
     } catch (error: any) {

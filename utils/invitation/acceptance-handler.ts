@@ -1,5 +1,6 @@
 // utils/invitation/acceptance-handler.ts
 import { createSupabaseClient } from "@/utils/supabase/client";
+import { invitationEmailService } from "@/utils/email/invitation-service";
 
 export interface AcceptInvitationParams {
   invitationToken: string;
@@ -22,7 +23,10 @@ export class InvitationAcceptanceHandler {
       // Get invitation details
       const { data: invitation, error: inviteError } = await this.supabase
         .from("trainer_invitations")
-        .select("*")
+        .select(`
+          *,
+          profiles!trainer_invitations_trainer_id_fkey(full_name, email)
+        `)
         .eq("token", params.invitationToken)
         .eq("status", "pending")
         .single();
@@ -76,8 +80,31 @@ export class InvitationAcceptanceHandler {
         // Don't return error here as the relationship was created successfully
       }
 
-      // Send welcome notification to trainer
-      await this.notifyTrainerOfAcceptance(invitation.trainer_id, params.clientData);
+      // Send welcome email to client
+      try {
+        await invitationEmailService.sendWelcomeEmail({
+          email: params.clientData.email,
+          full_name: params.clientData.full_name,
+          trainerName: invitation.profiles?.[0]?.full_name || 'Треньор',
+          trainerEmail: invitation.profiles?.[0]?.email || ''
+        });
+      } catch (emailError) {
+        console.error("Error sending welcome email:", emailError);
+        // Don't fail the whole process if email fails
+      }
+
+      // Send notification to trainer
+      try {
+        await invitationEmailService.sendTrainerNotificationEmail({
+          email: invitation.profiles?.[0]?.email || '',
+          full_name: invitation.profiles?.[0]?.full_name || 'Треньор',
+          clientName: params.clientData.full_name,
+          clientEmail: params.clientData.email
+        });
+      } catch (emailError) {
+        console.error("Error sending trainer notification:", emailError);
+        // Don't fail the whole process if email fails
+      }
 
       return { success: true };
 
@@ -113,39 +140,6 @@ export class InvitationAcceptanceHandler {
     } catch (error) {
       console.error("Error checking client limit:", error);
       return false;
-    }
-  }
-
-  /**
-   * Notify trainer when a client accepts their invitation
-   */
-  private async notifyTrainerOfAcceptance(trainerId: string, clientData: { full_name: string; email: string }): Promise<void> {
-    try {
-      // In a real app, you would:
-      // 1. Send an email notification to the trainer
-      // 2. Create a notification record in the database
-      // 3. Send a push notification if supported
-
-      console.log(`New client accepted invitation: ${clientData.full_name} (${clientData.email}) for trainer ${trainerId}`);
-
-      // Example: Create notification record
-      /*
-      await this.supabase
-        .from("notifications")
-        .insert({
-          user_id: trainerId,
-          type: 'client_joined',
-          title: 'Нов клиент се присъедини',
-          message: `${clientData.full_name} прие поканата ви и се присъедини към екипа!`,
-          data: {
-            client_name: clientData.full_name,
-            client_email: clientData.email
-          }
-        });
-      */
-
-    } catch (error) {
-      console.error("Error notifying trainer:", error);
     }
   }
 
@@ -248,17 +242,10 @@ export class InvitationAcceptanceHandler {
         return { success: false, error: "Failed to update invitation" };
       }
 
-      // Send reminder email via API
+      // Send reminder email using the service
       try {
-        const response = await fetch('/api/send-invitation', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ invitationId })
-        });
-
-        if (!response.ok) {
+        const success = await invitationEmailService.sendReminderEmail(invitationId);
+        if (!success) {
           console.error('Failed to send reminder email');
         }
       } catch (emailError) {
