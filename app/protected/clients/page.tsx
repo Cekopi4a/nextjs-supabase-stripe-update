@@ -248,19 +248,27 @@ export default function ClientsManagementPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Управление на клиенти</h1>
-          <p className="text-muted-foreground">
-            Управлявайте програмите и прогреса на вашите клиенти
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/protected/clients/invite">
-            <Plus className="h-4 w-4 mr-2" />
-            Покани клиент
-          </Link>
-        </Button>
-      </div>
+  <div>
+    <h1 className="text-2xl font-bold">Управление на клиенти</h1>
+    <p className="text-muted-foreground">
+      Управлявайте програмите и прогреса на вашите клиенти
+    </p>
+  </div>
+  <div className="flex gap-2">
+    <Button asChild>
+      <Link href="/protected/clients/programs/create">
+        <Dumbbell className="h-4 w-4 mr-2" />
+        Нова програма
+      </Link>
+    </Button>
+    <Button variant="outline" asChild>
+      <Link href="/protected/clients/invite">
+        <Plus className="h-4 w-4 mr-2" />
+        Покани клиент
+      </Link>
+    </Button>
+  </div>
+</div>
 
       {/* Stats Cards */}
       {stats && (
