@@ -182,106 +182,66 @@ const workoutTypes = [
 
   const fetchClients = async () => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
-        console.log('No user found');
-        setClients(mockClients);
+        console.error('No user found');
         setLoading(false);
         return;
       }
-
-      console.log('Fetching clients for user:', user.id);
-
-      // Първо проверяваме дали има клиенти за този тренър
-      const { count: trainerClientsCount, error: countError } = await supabase
+  
+      console.log('Fetching clients for trainer:', user.id);
+  
+      // Проста и директна заявка
+      const { data: trainerClients, error } = await supabase
         .from("trainer_clients")
-        .select("*", { count: 'exact', head: true })
+        .select("client_id, status")
         .eq("trainer_id", user.id)
         .eq("status", "active");
-
-      console.log('Trainer clients count:', trainerClientsCount);
-
-      if (countError) {
-        console.error('Error counting trainer clients:', countError);
-        throw countError;
+  
+      if (error) {
+        console.error('Error fetching trainer clients:', error);
+        throw error;
       }
-
-      if (!trainerClientsCount || trainerClientsCount === 0) {
-        console.log('No clients found for this trainer');
+  
+      console.log('Trainer clients found:', trainerClients);
+  
+      if (!trainerClients || trainerClients.length === 0) {
+        console.log('No active clients found');
         setClients([]);
         setLoading(false);
         return;
       }
-
-      // Опитваме с проста заявка първо
-      console.log('Fetching trainer clients with simple query...');
-      const { data: simpleClients, error: simpleError } = await supabase
-        .from("trainer_clients")
-        .select("client_id")
-        .eq("trainer_id", user.id)
-        .eq("status", "active");
-
-      console.log('Simple query result:', { data: simpleClients, error: simpleError });
-
-      if (simpleError) throw simpleError;
-
-      if (!simpleClients || simpleClients.length === 0) {
-        console.log('No clients found in simple query');
-        setClients([]);
-        setLoading(false);
-        return;
-      }
-
-      // Вземаме профилите отделно
-      const clientIds = simpleClients.map(tc => tc.client_id);
-      console.log('Client IDs:', clientIds);
-
+  
+      // Извличаме профилите на клиентите
+      const clientIds = trainerClients.map(tc => tc.client_id);
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, full_name, email")
         .in("id", clientIds);
-
-      console.log('Profiles query result:', { data: profiles, error: profilesError });
-
-      if (profilesError) throw profilesError;
-
-      const trainerClients = simpleClients.map(tc => {
-        const profile = profiles?.find(p => p.id === tc.client_id);
-        return {
-          client_id: tc.client_id,
-          profiles: profile ? [profile] : []
-        };
-      });
-
-      console.log('Final trainer clients data:', trainerClients);
-
-      const clientsData = trainerClients?.map((tc: any) => {
-        // profiles може да е масив или обект, зависимо от връзката
-        const profile = Array.isArray(tc.profiles) ? tc.profiles[0] : tc.profiles;
-        
-        console.log('Processing client:', { tc, profile });
-        
-        return {
-          id: profile?.id,
-          full_name: profile?.full_name,
-          email: profile?.email,
-          goals: 'Обща физическа форма' // Може да се добави в базата данни
-        };
-      }).filter((client: any) => client.id && client.full_name) || [];
-
-      console.log('Final processed clients data:', clientsData);
-
-      if (clientsData.length === 0) {
-        console.log('No valid clients found');
-        setClients([]);
-      } else {
-        setClients(clientsData as Client[]);
+  
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
       }
+  
+      console.log('Client profiles found:', profiles);
+  
+      // Форматираме данните
+      const clientsData = profiles?.map(profile => ({
+        id: profile.id,
+        full_name: profile.full_name || 'Без име',
+        email: profile.email,
+        goals: 'Обща физическа форма' // Default стойност
+      })) || [];
+  
+      console.log('Final clients data:', clientsData);
+      setClients(clientsData as Client[]);
+  
     } catch (error) {
-      console.error('Error fetching clients:', error);
-      alert('Грешка при зареждане на клиентите. Използват се тестови данни.');
-      // Fallback to mock data
-      setClients(mockClients);
+      console.error('Error in fetchClients:', error);
+      // Можете да покажете съобщение за грешка на потребителя
     } finally {
       setLoading(false);
     }
