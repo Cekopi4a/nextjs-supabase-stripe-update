@@ -1,35 +1,49 @@
+// app/protected/clients/programs/create/page.tsx - Поправена версия
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { 
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Plus,
+  Calendar,
+  Target,
+  Save,
+  Clock,
+  Dumbbell
+} from 'lucide-react';
+import Link from 'next/link';
+import { createSupabaseClient } from '@/utils/supabase/client';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Plus, User, Dumbbell, Clock, Target, ChevronLeft, ChevronRight, Save, Edit, Trash2 } from 'lucide-react';
-import Link from 'next/link';
-import { createSupabaseClient } from '@/utils/supabase/client';
-
-// Mock data - replace with actual Supabase data
-
-const mockExercises = [
-  { id: '1', name: 'Клек', muscle_groups: ['legs', 'glutes'], equipment: ['barbell'] },
-  { id: '2', name: 'Bench Press', muscle_groups: ['chest', 'triceps'], equipment: ['barbell'] },
-  { id: '3', name: 'Deadlift', muscle_groups: ['back', 'legs'], equipment: ['barbell'] },
-  { id: '4', name: 'Pull-ups', muscle_groups: ['back', 'biceps'], equipment: ['pull-up bar'] },
-  { id: '5', name: 'Push-ups', muscle_groups: ['chest', 'triceps'], equipment: [] },
-  { id: '6', name: 'Planks', muscle_groups: ['core'], equipment: [] }
-];
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const workoutTypes = [
-  { value: 'strength', label: 'Силова', color: 'bg-blue-500' },
+  { value: 'strength', label: 'Силова тренировка', color: 'bg-blue-500' },
   { value: 'cardio', label: 'Кардио', color: 'bg-red-500' },
+  { value: 'hiit', label: 'HIIT', color: 'bg-orange-500' },
   { value: 'flexibility', label: 'Гъвкавост', color: 'bg-green-500' },
-  { value: 'rest', label: 'Почивка', color: 'bg-gray-500' },
-  { value: 'active_recovery', label: 'Активно възстановяване', color: 'bg-yellow-500' }
+  { value: 'sport', label: 'Спорт', color: 'bg-purple-500' },
+  { value: 'recovery', label: 'Възстановяване', color: 'bg-gray-500' }
 ];
 
 const daysOfWeek = ['Нед', 'Пон', 'Вто', 'Сря', 'Чет', 'Пет', 'Съб'];
@@ -43,49 +57,94 @@ export default function CreateProgramsPage() {
   const [showWorkoutDialog, setShowWorkoutDialog] = useState<boolean>(false);
   const [editingWorkout, setEditingWorkout] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
-    const fetchClients = async () => {
-      setLoading(true);
-      const supabase = createSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setClients([]);
-        setLoading(false);
-        return;
-      }
-      // Вземи всички клиенти, асоциирани с треньора
-      const { data: trainerClients, error: trainerClientsError } = await supabase
-        .from('trainer_clients')
-        .select('client_id')
-        .eq('trainer_id', user.id)
-        .eq('status', 'active');
-      if (trainerClientsError || !trainerClients) {
-        setClients([]);
-        setLoading(false);
-        return;
-      }
-      const clientIds = trainerClients.map((tc: any) => tc.client_id);
-      if (clientIds.length === 0) {
-        setClients([]);
-        setLoading(false);
-        return;
-      }
-      // Вземи профилите на клиентите
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, goals')
-        .in('id', clientIds);
-      if (profilesError || !profiles) {
-        setClients([]);
-        setLoading(false);
-        return;
-      }
-      setClients(profiles);
-      setLoading(false);
-    };
     fetchClients();
   }, []);
+
+  const fetchClients = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      console.log('=== STARTING FETCH CLIENTS ===');
+      
+      const supabase = createSupabaseClient();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.log('User authentication error:', userError);
+        setError('Не сте влязъл в системата');
+        setClients([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Authenticated user ID:', user.id);
+
+      // Вземи всички активни клиенти, асоциирани с треньора
+      const { data: trainerClients, error: trainerClientsError } = await supabase
+        .from('trainer_clients')
+        .select('client_id, status')
+        .eq('trainer_id', user.id)
+        .eq('status', 'active');
+
+      console.log('Trainer clients query result:', { data: trainerClients, error: trainerClientsError });
+
+      if (trainerClientsError) {
+        console.error('Error fetching trainer clients:', trainerClientsError);
+        setError('Грешка при заредане на връзките с клиентите: ' + trainerClientsError.message);
+        setClients([]);
+        setLoading(false);
+        return;
+      }
+
+      if (!trainerClients || trainerClients.length === 0) {
+        console.log('No active clients found for trainer');
+        setClients([]);
+        setLoading(false);
+        return;
+      }
+
+      const clientIds = trainerClients.map(tc => tc.client_id);
+      console.log('Client IDs to fetch profiles for:', clientIds);
+
+      // Вземи профилите на клиентите (БЕЗ 'goals' полето което не съществува)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, avatar_url, phone')
+        .in('id', clientIds);
+
+      console.log('Profiles query result:', { data: profiles, error: profilesError });
+
+      if (profilesError) {
+        console.error('Error fetching client profiles:', profilesError);
+        setError('Грешка при заредане на профилите на клиентите: ' + profilesError.message);
+        setClients([]);
+        setLoading(false);
+        return;
+      }
+
+      if (!profiles || profiles.length === 0) {
+        console.log('No profiles found for the client IDs');
+        setClients([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log('Successfully loaded client profiles:', profiles);
+      setClients(profiles);
+      
+    } catch (error: any) {
+      console.error('Unexpected error in fetchClients:', error);
+      setError('Неочаквана грешка: ' + error.message);
+      setClients([]);
+    } finally {
+      setLoading(false);
+      console.log('=== FETCH CLIENTS COMPLETE ===');
+    }
+  };
 
   // Calendar generation functions
   const getDaysInMonth = (date: Date) => {
@@ -167,7 +226,7 @@ export default function CreateProgramsPage() {
               <Card 
                 key={dateKey}
                 className={`cursor-pointer transition-all duration-200 hover:shadow-md min-h-[120px] ${
-                  todayClass ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                  todayClass ? 'ring-2 ring-blue-500 bg-blue-50' : ''
                 }`}
                 onClick={() => {
                   setEditingWorkout({ date });
@@ -176,7 +235,7 @@ export default function CreateProgramsPage() {
               >
                 <CardContent className="p-3 h-full">
                   <div className="flex flex-col h-full">
-                    <div className="font-semibold text-lg mb-2">{date.getDate()}</div>
+                    <div className="text-lg font-bold mb-2">{date.getDate()}</div>
                     {workout && (
                       <div className="flex-1">
                         <Badge 
@@ -184,13 +243,11 @@ export default function CreateProgramsPage() {
                         >
                           {workoutTypes.find(t => t.value === workout.type)?.label}
                         </Badge>
-                        <div className="text-sm font-medium text-gray-900 line-clamp-2">{workout.name}</div>
-                        {workout.duration && (
-                          <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
-                            <Clock className="h-3 w-3" />
-                            {workout.duration} мин
-                          </div>
-                        )}
+                        <div className="text-sm font-medium text-gray-900">{workout.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          <Clock className="h-3 w-3 inline mr-1" />
+                          {workout.duration} мин
+                        </div>
                       </div>
                     )}
                   </div>
@@ -202,10 +259,11 @@ export default function CreateProgramsPage() {
       );
     }
 
+    // Month view
     return (
       <div className="grid grid-cols-7 gap-1">
         {daysOfWeek.map(day => (
-          <div key={day} className="p-2 text-center font-semibold text-gray-700 bg-gray-50">
+          <div key={day} className="p-2 text-center font-semibold text-gray-700 bg-gray-100">
             {day}
           </div>
         ))}
@@ -213,13 +271,13 @@ export default function CreateProgramsPage() {
           const dateKey = formatDate(date);
           const workout = workouts[dateKey];
           const todayClass = isToday(date);
-          const currentMonthClass = isCurrentMonth(date);
+          const isCurrentMonthDate = isCurrentMonth(date);
           
           return (
             <Card 
               key={dateKey}
-              className={`cursor-pointer transition-colors hover:bg-gray-50 min-h-[80px] ${
-                !currentMonthClass ? 'opacity-40' : ''
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md min-h-[80px] ${
+                !isCurrentMonthDate ? 'opacity-40' : ''
               } ${todayClass ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
               onClick={() => {
                 setEditingWorkout({ date });
@@ -254,6 +312,18 @@ export default function CreateProgramsPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Зареждане...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-lg font-semibold mb-4">Възникна грешка:</div>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={fetchClients}>Опитай отново</Button>
         </div>
       </div>
     );
@@ -326,22 +396,28 @@ export default function CreateProgramsPage() {
                     key={client.id}
                     className={`cursor-pointer transition-all duration-200 hover:shadow-md p-4 ${
                       selectedClient?.id === client.id 
-                        ? 'ring-2 ring-blue-500 bg-blue-50 shadow-md' 
+                        ? 'ring-2 ring-blue-500 bg-blue-50' 
                         : 'hover:bg-gray-50'
                     }`}
                     onClick={() => setSelectedClient(client)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                        {client.full_name.split(' ').map((n: string) => n[0]).join('')}
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback>
+                          {client.full_name?.charAt(0)?.toUpperCase() || 'К'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">
+                          {client.full_name || 'Без име'}
+                        </h3>
+                        <p className="text-sm text-gray-500">{client.email}</p>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">{client.full_name}</h3>
-                        <p className="text-sm text-gray-500 truncate">{client.email}</p>
-                        {client.goals && (
-                          <p className="text-sm text-blue-600 truncate">Цел: {client.goals}</p>
-                        )}
-                      </div>
+                      {selectedClient?.id === client.id && (
+                        <div className="text-blue-500">
+                          <Target className="h-5 w-5" />
+                        </div>
+                      )}
                     </div>
                   </Card>
                 ))}
@@ -357,27 +433,24 @@ export default function CreateProgramsPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
-                  Календар за {selectedClient?.full_name}
+                  Календар за {selectedClient.full_name}
                 </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => viewMode === 'month' ? navigateMonth(-1) : navigateWeek(-1)}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="px-4 py-2 bg-gray-100 rounded-md min-w-[200px] text-center">
-                    <span className="font-semibold text-gray-900">
-                      {currentDate.toLocaleDateString('bg-BG', { 
-                        month: 'long', 
-                        year: 'numeric',
-                        ...(viewMode === 'week' && { day: 'numeric' })
-                      })}
-                    </span>
-                  </div>
-                  <Button 
-                    variant="outline" 
+                  <Button variant="outline" size="sm">
+                    {viewMode === 'month' 
+                      ? currentDate.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' })
+                      : `${getWeekDays(currentDate)[0].getDate()} - ${getWeekDays(currentDate)[6].getDate()} ${currentDate.toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' })}`
+                    }
+                  </Button>
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => viewMode === 'month' ? navigateMonth(1) : navigateWeek(1)}
                   >
@@ -392,49 +465,53 @@ export default function CreateProgramsPage() {
           </Card>
         )}
 
-        {/* Quick Stats */}
-        {selectedClient && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Target className="h-5 w-5 text-blue-600" />
+        {/* Workout Statistics */}
+        {selectedClient && Object.keys(workouts).length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Dumbbell className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Общо тренировки</p>
+                    <p className="text-2xl font-bold text-gray-900">{Object.keys(workouts).length}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Планирани тренировки</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {Object.keys(workouts).length}
-                  </p>
-                </div>
-              </div>
+              </CardContent>
             </Card>
-            
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Clock className="h-5 w-5 text-green-600" />
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Clock className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Средно време</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {Math.round(Object.values(workouts).reduce((acc: any, w: any) => acc + (w.duration || 60), 0) / Object.keys(workouts).length)} мин
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Общо време</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {Object.values(workouts).reduce((total: number, workout: any) => total + (workout.duration || 0), 0)} мин
-                  </p>
-                </div>
-              </div>
+              </CardContent>
             </Card>
-            
-            <Card className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Dumbbell className="h-5 w-5 text-purple-600" />
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Target className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Типове тренировки</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {new Set(Object.values(workouts).map((w: any) => w.type)).size}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Типове тренировки</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {new Set(Object.values(workouts).map((w: any) => w.type)).size}
-                  </p>
-                </div>
-              </div>
+              </CardContent>
             </Card>
           </div>
         )}
@@ -459,9 +536,9 @@ export default function CreateProgramsPage() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editingWorkout?.date ? 
-                `Тренировка за ${editingWorkout.date.toLocaleDateString('bg-BG')}` : 
-                'Нова тренировка'
+              {editingWorkout?.date 
+                ? `Тренировка за ${editingWorkout.date.toLocaleDateString('bg-BG')}` 
+                : 'Нова тренировка'
               }
             </DialogTitle>
             <DialogDescription>
