@@ -29,6 +29,7 @@ import {
   Award
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/utils/supabase/client';
 
 const subscriptionPlans = {
@@ -40,6 +41,7 @@ const subscriptionPlans = {
 type SubscriptionPlan = keyof typeof subscriptionPlans;
 
 export default function ClientsPage() {
+  const router = useRouter();
   const [clients, setClients] = useState<any[]>([]);
   const [filteredClients, setFilteredClients] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,6 +57,13 @@ export default function ClientsPage() {
   useEffect(() => {
     filterClients();
   }, [searchTerm, selectedStatus, clients]);
+
+  const getProgressColor = (progress: number) => {
+    if (progress >= 80) return 'bg-green-500';
+    if (progress >= 60) return 'bg-yellow-500';
+    if (progress >= 40) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
 
   const fetchClients = async () => {
     setLoading(true);
@@ -390,116 +399,121 @@ export default function ClientsPage() {
         </Card>
 
         {/* Clients Grid */}
-        {filteredClients.length === 0 ? (
-          <Card className="shadow-sm border border-gray-200">
-            <CardContent className="p-12">
-              <div className="text-center">
-                <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                  <User className="h-10 w-10 text-gray-400" />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredClients.map(client => (
+            <Card key={client.id} className="p-5 hover:shadow-lg transition-all duration-200 border-0 shadow-md bg-white">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {client.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'К'}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base text-gray-900 truncate">{client.full_name}</h3>
+                    <p className="text-gray-500 truncate text-sm">{client.email}</p>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                  {clients.length === 0 ? 'Няmate клиенти все още' : 'Няма намерени клиенти'}
-                </h3>
-                <p className="text-gray-500 mb-8 max-w-md mx-auto">
-                  {clients.length === 0 
-                    ? 'Започнете да разширявате екипа си като поканите първия си клиент и започнете съвместното путешествие към фитнес целите.'
-                    : 'Опитайте различни критерии за търсене или филтриране, за да намерите желания клиент.'
-                  }
-                </p>
-                {clients.length === 0 && canAddMore && (
-                  <Button asChild size="lg" className="shadow-sm">
-                    <Link href="/protected/clients/invite">
-                      <Plus className="h-5 w-5 mr-2" />
-                      Покани първия си клиент
-                    </Link>
-                  </Button>
-                )}
+                <Badge 
+                  variant={client.trainer_status === 'active' ? 'default' : 'secondary'}
+                  className="text-xs py-1 px-2"
+                >
+                  {client.trainer_status === 'active' ? 'Активен' : 'Неактивен'}
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredClients.map((client) => (
-              <Card key={client.id} className="group hover:shadow-lg transition-all duration-300 shadow-sm border border-gray-200 hover:border-gray-300 bg-white">
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-14 w-14 ring-2 ring-gray-100">
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-lg">
-                          {client.full_name?.charAt(0)?.toUpperCase() || 'К'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-lg text-gray-900 truncate">
-                          {client.full_name || 'Без име'}
-                        </h3>
-                        <p className="text-sm text-gray-500 truncate">{client.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex-shrink-0">
-                      {getClientStatusBadge(client.trainer_status)}
-                    </div>
-                  </div>
-                </CardHeader>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-600">Напредък към целта</span>
+                  <span className="font-semibold text-gray-900">{client.progress || 0}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${getProgressColor(client.progress || 0)} transition-all duration-500`}
+                    style={{ width: `${client.progress || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Goal and Weight info */}
+              <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                <div>
+                  <p className="text-gray-500">Цел</p>
+                  <p className="font-semibold text-gray-900">{client.goals || 'Не е зададена'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500">Програми</p>
+                  <p className="font-semibold text-gray-900">{client.activePrograms || 0} активни</p>
+                </div>
+              </div>
+
+              {/* Weekly Progress */}
+              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Тази седмица</span>
+                  {client.streak > 0 && (
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs px-1.5 py-0.5">
+                      🔥 {client.streak}
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-gray-600">
+                    {client.completedWorkouts || 0}/{client.weeklyGoal || 3} тренировки
+                  </span>
+                  <span className="font-semibold text-gray-900">
+                    {Math.round(((client.completedWorkouts || 0) / (client.weeklyGoal || 3)) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="h-1.5 rounded-full bg-blue-500 transition-all duration-500"
+                    style={{ width: `${Math.min(((client.completedWorkouts || 0) / (client.weeklyGoal || 3)) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="text-xs h-8 bg-gradient-to-r from-blue-600 to-purple-600"
+                  onClick={() => router.push(`/protected/clients/${client.id}/programs/create`)}
+                >
+                  <Dumbbell className="h-3 w-3 mr-1" />
+                  Създай програма
+                </Button>
                 
-                <CardContent className="space-y-4">
-                  {/* Contact Info */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 text-sm text-gray-600 p-2 bg-gray-50 rounded-lg">
-                      <Mail className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                      <span className="truncate">{client.email}</span>
-                    </div>
-                    
-                    {client.phone && (
-                      <div className="flex items-center gap-3 text-sm text-gray-600 p-2 bg-gray-50 rounded-lg">
-                        <Phone className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span>{client.phone}</span>
-                      </div>
-                    )}
+                <Button variant="outline" size="sm" className="text-xs h-8">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Календар
+                </Button>
+              </div>
 
-                    {client.created_at && (
-                      <div className="flex items-center gap-3 text-sm text-gray-600 p-2 bg-gray-50 rounded-lg">
-                        <Clock className="h-4 w-4 text-purple-500 flex-shrink-0" />
-                        <span>Присъединен: {new Date(client.created_at).toLocaleDateString('bg-BG')}</span>
-                      </div>
-                    )}
-                  </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="ghost" size="sm" className="text-xs h-8" asChild>
+                  <Link href={`/protected/clients/${client.id}`}>
+                    <Eye className="h-3 w-3 mr-1" />
+                    Преглед
+                  </Link>
+                </Button>
+                
+                <Button variant="ghost" size="sm" className="text-xs h-8">
+                  <BarChart3 className="h-3 w-3 mr-1" />
+                  Прогрес
+                </Button>
+              </div>
 
-                  {/* Action Buttons */}
-                  <div className="pt-4 border-t border-gray-100">
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button variant="outline" size="sm" asChild className="h-9 shadow-sm hover:bg-blue-50 hover:border-blue-200">
-                        <Link href={`/protected/clients/${client.id}`}>
-                          <Eye className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild className="h-9 shadow-sm hover:bg-green-50 hover:border-green-200">
-                        <Link href={`/protected/clients/${client.id}/calendar`}>
-                          <Calendar className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild className="h-9 shadow-sm hover:bg-purple-50 hover:border-purple-200">
-                        <Link href={`/protected/clients/${client.id}/progress`}>
-                          <BarChart3 className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <Button variant="outline" size="sm" className="h-9 shadow-sm hover:bg-orange-50 hover:border-orange-200">
-                        <Dumbbell className="h-4 w-4 mr-2" />
-                        Програма
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-9 shadow-sm hover:bg-teal-50 hover:border-teal-200">
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Съобщение
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+              {/* Last activity */}
+              <div className="text-xs text-gray-500 pt-3 border-t mt-3 space-y-1">
+                <div>Последна активност: {client.lastActive || 'Никога'}</div>
+                <div>Присъединен: {client.joinedDate || 'Неизвестно'}</div>
+              </div>
+            </Card>
+          ))}
+        </div>
 
         {/* Upgrade Prompt */}
         {!canAddMore && (
