@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { sendInvitationAction } from "@/utils/actions/invitation-actions";
 import { 
   Send,
   Copy,
@@ -255,6 +256,67 @@ export default function InviteClientPage() {
     } catch (error) {
       console.error("Error resending invitation:", error);
       alert("Грешка при повторно изпращане");
+    }
+  };
+
+  const handleSendInvitation = async () => {
+    // Basic validation
+    if (!inviteForm.email.trim()) {
+      alert("Моля въведете имейл адрес");
+      return;
+    }
+  
+    // Check if trainer has reached client limit
+    if (!canSendMoreInvitations) {
+      alert(`Достигнахте лимита от ${subscription?.client_limit || 3} клиента. Надстройте абонамента си.`);
+      return;
+    }
+  
+    // Check if email already has pending invitation
+    const existingInvitation = invitations.find(
+      inv => inv.email === inviteForm.email && inv.status === 'pending'
+    );
+  
+    if (existingInvitation) {
+      alert("Вече има изпратена покана на този имейл адрес");
+      return;
+    }
+  
+    setSending(true);
+  
+    try {
+      // Use server action instead of API call
+      const result = await sendInvitationAction(
+        inviteForm.email,
+        inviteForm.first_name,
+        inviteForm.personal_message
+      );
+  
+      if (result.success) {
+        if (result.warning) {
+          alert(result.message); // Show warning about email not being sent
+        } else {
+          alert(result.message || "Поканата е изпратена успешно!");
+        }
+  
+        // Reset form
+        setInviteForm({
+          email: '',
+          first_name: '',
+          personal_message: ''
+        });
+  
+        // Refresh invitations
+        fetchInvitations();
+      } else {
+        alert(result.error || "Грешка при изпращане на поканата");
+      }
+  
+    } catch (error) {
+      console.error("Error sending invitation:", error);
+      alert("Грешка при изпращане на поканата");
+    } finally {
+      setSending(false);
     }
   };
 

@@ -2,6 +2,7 @@
 "use server";
 
 import { createClient } from '@supabase/supabase-js';
+import { createSupabaseClient } from '@/utils/supabase/server';
 import { invitationEmailService } from '@/utils/email/invitation-service';
 
 // Server action за приемане на покана
@@ -63,11 +64,12 @@ export async function acceptInvitationAction(
 
     // Check if email matches
     if (invitation.email !== clientData.email) {
-      console.error('Email mismatch');
+      console.error('Email mismatch:', { 
+        invitationEmail: invitation.email, 
+        clientEmail: clientData.email 
+      });
       return { success: false, error: "Email does not match invitation" };
     }
-
-    console.log('Invitation validation passed');
 
     // Check trainer's client limit
     const { data: subscription } = await supabase
@@ -84,37 +86,12 @@ export async function acceptInvitationAction(
       .eq("trainer_id", invitation.trainer_id)
       .eq("status", "active");
 
-    console.log('Client limit check:', { currentClients, clientLimit });
-
     if ((currentClients || 0) >= clientLimit) {
       console.error('Client limit reached');
       return { success: false, error: "Trainer has reached their client limit" };
     }
 
-    // Check if relationship already exists
-    const { data: existingRelation } = await supabase
-      .from("trainer_clients")
-      .select("id")
-      .eq("trainer_id", invitation.trainer_id)
-      .eq("client_id", clientId)
-      .single();
-
-    if (existingRelation) {
-      console.log('Relationship already exists, updating invitation status');
-      
-      // Just mark invitation as accepted if relationship exists
-      await supabase
-        .from("trainer_invitations")
-        .update({
-          status: 'accepted',
-          accepted_at: new Date().toISOString()
-        })
-        .eq("id", invitation.id);
-
-      return { success: true };
-    }
-
-    console.log('Creating trainer-client relationship...');
+    console.log('All validation passed, creating trainer-client relationship');
 
     // Create trainer-client relationship
     const { data: relationData, error: relationError } = await supabase
@@ -322,25 +299,23 @@ export async function sendInvitationAction(
   try {
     console.log('Server action: sendInvitationAction started', { email, firstName });
 
+    // Валидация на входните параметри
+    if (!email?.trim()) {
+      return { success: false, error: 'Имейл адресът е задължителен' };
+    }
+
+    // Проверка за валиден имейл формат
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return { success: false, error: 'Моля въведете валиден имейл адрес' };
+    }
+
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return { success: false, error: 'Server configuration error' };
     }
 
-    // Import cookies for server-side session access
-    const { cookies } = await import('next/headers');
-    
-    // Create Supabase client with cookies for proper session handling
-    const cookieStore = await cookies();
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
+    // Create Supabase client with proper session handling (NOT service role for auth)
+    const supabase = await createSupabaseClient();
 
     // Try to get current user from session
     const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
@@ -367,6 +342,12 @@ export async function sendInvitationAction(
     // Verify user is a trainer
     if (trainerProfile.role !== 'trainer') {
       return { success: false, error: 'Само треньори могат да изпращат покани' };
+    }
+
+    // Допълнителна проверка за имейл на треньора
+    if (!trainerProfile.email?.trim() && !currentUser.email?.trim()) {
+      console.error('No trainer email available');
+      return { success: false, error: 'Няма валиден имейл адрес на треньора. Моля обновете профила си.' };
     }
 
     console.log('Trainer profile found:', trainerProfile.full_name);
@@ -430,6 +411,19 @@ export async function sendInvitationAction(
       console.log('User does not exist yet - this is a new registration invitation');
     }
 
+    // NOW create service role client for creating the invitation record
+    // (because the invitation table might have RLS that requires service role)
+    const serviceSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+
     // Generate unique token
     const token = Math.random().toString(36).substring(2) + 
                  Math.random().toString(36).substring(2) + 
@@ -439,8 +433,8 @@ export async function sendInvitationAction(
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    // Create invitation record
-    const { data: newInvitation, error: insertError } = await supabase
+    // Create invitation record using service role
+    const { data: newInvitation, error: insertError } = await serviceSupabase
       .from("trainer_invitations")
       .insert({
         trainer_id: currentUser.id,
@@ -463,15 +457,37 @@ export async function sendInvitationAction(
     // Send invitation email
     try {
       console.log('Sending invitation email...');
-      const emailSuccess = await invitationEmailService.sendInvitationEmail({
+      
+      // Ensure we have valid trainer email
+      const validTrainerEmail = trainerProfile.email?.trim() || currentUser.email?.trim() || '';
+      
+      if (!validTrainerEmail) {
+        console.error('No valid trainer email found');
+        return { 
+          success: true, 
+          message: 'Поканата е създадена, но имейлът не беше изпратен поради липса на валиден имейл адрес на треньора. Можете да копирате линка ръчно.',
+          warning: true
+        };
+      }
+
+      const emailData = {
         recipientEmail: email.trim(),
         recipientName: firstName.trim() || undefined,
         trainerName: trainerProfile.full_name || 'Треньор',
-        trainerEmail: trainerProfile.email || '',
+        trainerEmail: validTrainerEmail,
         personalMessage: personalMessage.trim() || undefined,
         invitationToken: token,
         expiresAt: expiresAt.toISOString()
+      };
+
+      console.log('Email data:', {
+        recipientEmail: emailData.recipientEmail,
+        trainerName: emailData.trainerName,
+        trainerEmail: emailData.trainerEmail,
+        invitationToken: emailData.invitationToken ? 'present' : 'missing'
       });
+
+      const emailSuccess = await invitationEmailService.sendInvitationEmail(emailData);
 
       if (emailSuccess) {
         console.log('Invitation email sent successfully');
@@ -498,3 +514,4 @@ export async function sendInvitationAction(
     return { success: false, error: 'Вътрешна грешка на сървъра' };
   }
 }
+
