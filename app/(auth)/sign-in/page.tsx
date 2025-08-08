@@ -1,5 +1,6 @@
 import { signInAction } from "@/app/actions";
 import AuthSubmitButton from "@/components/auth-submit-button";
+import GoogleAuthButton from "@/components/google-auth-button";
 import { FormMessage, Message } from "@/components/form-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,21 @@ export default async function SignIn(props: {
             <p className="text-gray-600">
               Влезте в своя акаунт за да продължите
             </p>
+          </div>
+
+          {/* Google Auth */}
+          <div className="mb-6">
+            <GoogleAuthButton mode="sign-in" />
+          </div>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 text-gray-500 bg-white">или</span>
+            </div>
           </div>
 
           {/* Form */}

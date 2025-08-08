@@ -362,8 +362,23 @@ export default function ClientProgramCreator() {
     setSaving(true);
 
     try {
+      console.log('=== STARTING SAVE PROGRAM ===');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
+
+      console.log('User authenticated:', user.id);
+      console.log('Client ID:', clientId);
+      console.log('Program data:', {
+        trainer_id: user.id,
+        client_id: clientId,
+        name: programName,
+        description: programDescription,
+        program_type: "workout_only",
+        goals: { goals: programDescription || "" },
+        difficulty_level: difficultyLevel,
+        estimated_duration_weeks: durationWeeks,
+        is_active: true
+      });
 
       // Create workout program
       const { data: program, error: programError } = await supabase
@@ -377,50 +392,80 @@ export default function ClientProgramCreator() {
           goals: { goals: programDescription || "" },
           difficulty_level: difficultyLevel,
           estimated_duration_weeks: durationWeeks,
-          workouts_per_week: workoutDays.length,
           is_active: true
         })
         .select()
         .single();
 
-      if (programError) throw programError;
+      console.log('Program creation result:', { data: program, error: programError });
+
+      if (programError) {
+        console.error('Program creation error:', programError);
+        throw programError;
+      }
 
       // Create individual workouts for each day with exercises
+      console.log('Creating workouts for days:', workoutDays);
       for (const dateKey of workoutDays) {
         const date = new Date(dateKey);
         const dayWorkouts = workouts[dateKey];
         
-        const { error: workoutError } = await supabase
+        console.log(`Processing workout for ${dateKey}:`, dayWorkouts);
+        
+        const workoutData = {
+          program_id: program.id,
+          name: `Тренировка ${date.toLocaleDateString('bg-BG')}`,
+          day_of_week: date.getDay(),
+          week_number: 1,
+          workout_type: "strength",
+          exercises: dayWorkouts.map(ex => ({
+            exercise_id: ex.exercise_id,
+            sets: ex.sets,
+            reps: ex.reps,
+            weight: ex.weight,
+            rest_time: ex.rest_time,
+            notes: ex.notes,
+            order: ex.order
+          })),
+          estimated_duration_minutes: dayWorkouts.length * 10 + 30 // Rough estimate
+        };
+        
+        console.log('Workout data to insert:', workoutData);
+        
+        const { data: workoutResult, error: workoutError } = await supabase
           .from("workouts")
-          .insert({
-            program_id: program.id,
-            name: `Тренировка ${date.toLocaleDateString('bg-BG')}`,
-            day_of_week: date.getDay(),
-            week_number: 1,
-            workout_type: "strength",
-            exercises: dayWorkouts.map(ex => ({
-              exercise_id: ex.exercise_id,
-              sets: ex.sets,
-              reps: ex.reps,
-              weight: ex.weight,
-              rest_time: ex.rest_time,
-              notes: ex.notes,
-              order: ex.order
-            })),
-            estimated_duration_minutes: dayWorkouts.length * 10 + 30 // Rough estimate
-          });
+          .insert(workoutData)
+          .select();
 
-        if (workoutError) throw workoutError;
+        console.log('Workout creation result:', { data: workoutResult, error: workoutError });
+
+        if (workoutError) {
+          console.error('Workout creation error:', workoutError);
+          throw workoutError;
+        }
       }
 
+      console.log('=== PROGRAM SAVED SUCCESSFULLY ===');
       alert(`Програмата "${programName}" беше създадена успешно!`);
       router.push(`/protected/clients/${clientId}`);
       
-    } catch (error) {
-      console.error("Error saving program:", error);
-      alert("Грешка при запазване на програмата");
+    } catch (error: any) {
+      console.error("=== ERROR SAVING PROGRAM ===");
+      console.error("Full error object:", error);
+      console.error("Error message:", error?.message);
+      console.error("Error details:", error?.details);
+      console.error("Error hint:", error?.hint);
+      console.error("Error code:", error?.code);
+      
+      let errorMessage = "Грешка при запазване на програмата";
+      if (error?.message) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     } finally {
       setSaving(false);
+      console.log('=== SAVE PROGRAM COMPLETE ===');
     }
   };
 
