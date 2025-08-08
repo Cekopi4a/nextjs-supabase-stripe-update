@@ -281,15 +281,16 @@ export default function ClientsPage() {
               <p className="text-gray-600">Преглед и управление на вашите клиенти и тяхните програми</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 lg:ml-auto">
-              <Button variant="outline" size="lg" asChild className="shadow-sm">
-                <Link href="/protected/clients/programs/create">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Създай програма
-                </Link>
+              <Button variant="outline" size="lg" disabled className="shadow-sm">
+                <Calendar className="h-4 w-4 mr-2" />
+                Създай програма
+                <span className="text-xs ml-2">(избери клиент)</span>
               </Button>
-              <Button size="lg" disabled={!canAddMore} className="shadow-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-                <Plus className="h-4 w-4 mr-2" />
-                Покани клиент
+              <Button size="lg" disabled={!canAddMore} className="shadow-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800" asChild>
+                <Link href="/protected/clients/invite">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Покани клиент
+                </Link>
               </Button>
             </div>
           </div>

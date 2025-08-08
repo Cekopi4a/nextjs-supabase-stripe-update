@@ -12,8 +12,8 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Update Starter Kit",
-  description: "The fastest way to build apps with Next.js and Update",
+  title: "FitnessPlatform - Тренировъчна платформа",
+  description: "Най-бързият начин за изграждане на fitness приложения с Next.js и Update",
 };
 
 export default function RootLayout({
@@ -22,11 +22,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang="bg" suppressHydrationWarning>
+      <body className={`${inter.className} bg-gray-50`}>
         <ThemeProvider attribute="class" disableTransitionOnChange>
-          <Header />
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+          </div>
         </ThemeProvider>
       </body>
     </html>

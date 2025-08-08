@@ -5,6 +5,12 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createSupabaseClient } from '@/utils/supabase/client';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { 
   ChevronLeft, 
   ChevronRight,
@@ -20,91 +26,17 @@ import {
   Copy,
   Settings,
   Search,
-  Filter
+  Filter,
+  X,
+  Info,
+  CalendarDays,
+  Timer,
+  Weight,
+  Repeat,
+  BarChart3
 } from 'lucide-react';
 
-// UI Components
-interface CardProps {
-  children: ReactNode;
-  className?: string;
-  onClick?: () => void;
-}
-
-const Card = ({ children, className = "", onClick }: CardProps) => (
-  <div 
-    className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}
-    onClick={onClick}
-  >
-    {children}
-  </div>
-);
-
-interface CardContentProps {
-  children: ReactNode;
-  className?: string;
-}
-
-const CardContent = ({ children, className = "" }: CardContentProps) => (
-  <div className={`p-6 ${className}`}>{children}</div>
-);
-
-interface ButtonProps {
-  children: ReactNode;
-  variant?: "default" | "outline" | "secondary" | "ghost" | "destructive";
-  size?: "default" | "sm" | "lg";
-  className?: string;
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  disabled?: boolean;
-}
-
-const Button = ({ children, variant = "default", size = "default", className = "", onClick, disabled = false }: ButtonProps) => {
-  const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none";
-  const variants: Record<string, string> = {
-    default: "bg-blue-600 text-white hover:bg-blue-700",
-    outline: "border border-gray-300 bg-background hover:bg-gray-50",
-    secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
-    ghost: "hover:bg-gray-100",
-    destructive: "bg-red-600 text-white hover:bg-red-700"
-  };
-  const sizes: Record<string, string> = {
-    default: "h-10 px-4 py-2",
-    sm: "h-9 rounded-md px-3",
-    lg: "h-11 rounded-md px-8"
-  };
-  
-  return (
-    <button 
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  );
-};
-
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  className?: string;
-}
-
-const Input = ({ className = "", ...props }: InputProps) => (
-  <input 
-    className={`flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-    {...props}
-  />
-);
-
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  className?: string;
-}
-
-const Textarea = ({ className = "", ...props }: TextareaProps) => (
-  <textarea 
-    className={`flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-    {...props}
-  />
-);
-
+// Interfaces
 interface SelectProps {
   children: ReactNode;
   value: string;
@@ -167,46 +99,13 @@ const SelectItem = ({ children, value, onClick }: SelectItemProps) => (
   </div>
 );
 
-interface BadgeProps {
-  children: ReactNode;
-  className?: string;
-  variant?: "default" | "secondary" | "success" | "warning" | "destructive";
-}
-
-const Badge = ({ children, className = "", variant = "default" }: BadgeProps) => {
-  const variants: Record<string, string> = {
-    default: "bg-blue-100 text-blue-800",
-    secondary: "bg-gray-100 text-gray-800",
-    success: "bg-green-100 text-green-800",
-    warning: "bg-yellow-100 text-yellow-800",
-    destructive: "bg-red-100 text-red-800"
-  };
-  
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}>
-      {children}
-    </span>
-  );
-};
-
-interface LabelProps {
-  children: ReactNode;
-  htmlFor?: string;
-  className?: string;
-}
-
-const Label = ({ children, htmlFor, className = "" }: LabelProps) => (
-  <label htmlFor={htmlFor} className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className}`}>
-    {children}
-  </label>
-);
-
 interface Client {
   id: string;
   full_name: string;
   email: string;
   avatar_url?: string;
-  goals?: string;
+  phone?: string;
+  created_at?: string;
 }
 
 interface Exercise {
@@ -309,13 +208,24 @@ export default function ClientProgramCreator() {
 
   const fetchClientData = async () => {
     try {
+      console.log('Fetching client data for ID:', clientId);
+      
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, email, avatar_url, goals')
+        .select('id, full_name, email, avatar_url, phone, created_at')
         .eq('id', clientId)
         .single();
 
-      if (error) throw error;
+      console.log('Client query result:', { data, error });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error('No client data found');
+      }
       
       setClient(data);
       setProgramName(`Програма за ${data.full_name}`);
@@ -464,7 +374,7 @@ export default function ClientProgramCreator() {
           name: programName,
           description: programDescription,
           program_type: "workout_only",
-          goals: { goals: client?.goals || "" },
+          goals: { goals: programDescription || "" },
           difficulty_level: difficultyLevel,
           estimated_duration_weeks: durationWeeks,
           workouts_per_week: workoutDays.length,
@@ -544,11 +454,10 @@ export default function ClientProgramCreator() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button 
               variant="outline" 
@@ -556,10 +465,10 @@ export default function ClientProgramCreator() {
               onClick={() => router.push('/protected/clients')}
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Назад
+              Клиенти
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
                 {client.full_name.charAt(0).toUpperCase()}
               </div>
               <div>
@@ -571,148 +480,210 @@ export default function ClientProgramCreator() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
               onClick={() => setShowExerciseLibrary(!showExerciseLibrary)}
             >
               <Dumbbell className="h-4 w-4 mr-2" />
-              {showExerciseLibrary ? "Скрий" : "Покажи"} упражнения
+              {showExerciseLibrary ? "Скрий" : "Библиотека"}
             </Button>
             <Button 
               onClick={saveProgram} 
               disabled={saving || !programName.trim() || getTotalExercises() === 0}
-              className="bg-gradient-to-r from-blue-600 to-purple-600"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
             >
               <Save className="h-4 w-4 mr-2" />
               {saving ? "Запазване..." : "Запази програма"}
             </Button>
           </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          
-          {/* Program Settings Sidebar */}
-          <Card className="lg:col-span-1">
-            <CardContent>
-              <h2 className="text-lg font-semibold mb-4 flex items-center">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+        {/* Program Settings Sidebar */}
+        <div className="xl:col-span-1 space-y-6">
+          <Card className="shadow-sm border border-gray-200">
+            <div className="p-6">
+              <h2 className="text-lg font-semibold mb-6 flex items-center">
                 <Settings className="h-5 w-5 mr-2 text-blue-600" />
-                Настройки
+                Настройки на програмата
               </h2>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <Label htmlFor="program-name">Име на програмата</Label>
+                  <Label htmlFor="program-name" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Име на програмата
+                  </Label>
                   <Input
                     id="program-name"
                     value={programName}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProgramName(e.target.value)}
                     placeholder="Например: Силова програма"
-                    className="mt-1"
+                    className="w-full"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="program-description">Описание</Label>
+                  <Label htmlFor="program-description" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Описание
+                  </Label>
                   <Textarea
                     id="program-description"
                     value={programDescription}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setProgramDescription(e.target.value)}
-                    placeholder="Кратко описание..."
-                    className="mt-1"
+                    placeholder="Кратко описание на програмата..."
+                    className="w-full min-h-[100px]"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="difficulty-level">Ниво на сложност</Label>
+                  <Label htmlFor="difficulty-level" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Ниво на сложност
+                  </Label>
                   <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
-                    <SelectItem value="beginner" onClick={() => {}}>Начинаещ</SelectItem>
-                    <SelectItem value="intermediate" onClick={() => {}}>Средно ниво</SelectItem>
-                    <SelectItem value="advanced" onClick={() => {}}>Напреднал</SelectItem>
+                    <SelectItem value="beginner">Начинаещ</SelectItem>
+                    <SelectItem value="intermediate">Средно ниво</SelectItem>
+                    <SelectItem value="advanced">Напреднал</SelectItem>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="duration-weeks">Продължителност</Label>
+                  <Label htmlFor="duration-weeks" className="text-sm font-medium text-gray-700 mb-2 block">
+                    Продължителност
+                  </Label>
                   <Select value={durationWeeks.toString()} onValueChange={(val: string) => setDurationWeeks(parseInt(val))}>
-                    <SelectItem value="2" onClick={() => {}}>2 седмици</SelectItem>
-                    <SelectItem value="4" onClick={() => {}}>4 седмици</SelectItem>
-                    <SelectItem value="6" onClick={() => {}}>6 седмици</SelectItem>
-                    <SelectItem value="8" onClick={() => {}}>8 седмици</SelectItem>
-                    <SelectItem value="12" onClick={() => {}}>12 седмици</SelectItem>
+                    <SelectItem value="2">2 седмици</SelectItem>
+                    <SelectItem value="4">4 седмици</SelectItem>
+                    <SelectItem value="6">6 седмици</SelectItem>
+                    <SelectItem value="8">8 седмици</SelectItem>
+                    <SelectItem value="12">12 седмици</SelectItem>
                   </Select>
                 </div>
               </div>
-
-              {/* Client Info */}
-              <div className="mt-6 pt-6 border-t">
-                <h3 className="font-semibold mb-3 flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  Информация за клиента
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <p><span className="text-gray-500">Име:</span> {client.full_name}</p>
-                  <p><span className="text-gray-500">Имейл:</span> {client.email}</p>
-                  {client.goals && (
-                    <p><span className="text-gray-500">Цели:</span> {client.goals}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Program Summary */}
-              <div className="mt-6 pt-6 border-t">
-                <h3 className="font-semibold mb-3">Обобщение</h3>
-                <div className="space-y-3">
-                  <div className="bg-blue-50 p-3 rounded">
-                    <p className="text-blue-600 font-medium text-sm">Общо упражнения</p>
-                    <p className="text-xl font-bold text-blue-800">{getTotalExercises()}</p>
-                  </div>
-                  <div className="bg-green-50 p-3 rounded">
-                    <p className="text-green-600 font-medium text-sm">Дни с тренировки</p>
-                    <p className="text-xl font-bold text-green-800">
-                      {Object.keys(workouts).filter(date => workouts[date].length > 0).length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
+            </div>
           </Card>
 
-          {/* Calendar View */}
-          <Card className="lg:col-span-3">
-            <CardContent>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-purple-600" />
-                  Календар за програмата
+          {/* Client Info */}
+          <Card className="shadow-sm border border-gray-200">
+            <div className="p-6">
+              <h3 className="font-semibold mb-4 flex items-center">
+                <User className="h-5 w-5 mr-2 text-green-600" />
+                Информация за клиента
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    {client.full_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{client.full_name}</p>
+                    <p className="text-sm text-gray-500">{client.email}</p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500 space-y-1">
+                  {client.phone && <div>Телефон: {client.phone}</div>}
+                  <div>
+                    Присъединен: {client.created_at ? new Date(client.created_at).toLocaleDateString('bg-BG') : 'Неизвестно'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Program Summary */}
+          <Card className="shadow-sm border border-gray-200">
+            <div className="p-6">
+              <h3 className="font-semibold mb-4 flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2 text-purple-600" />
+                Обобщение
+              </h3>
+              <div className="space-y-4">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                      <Dumbbell className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-blue-600 font-medium text-sm">Общо упражнения</p>
+                      <p className="text-2xl font-bold text-blue-800">{getTotalExercises()}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                      <CalendarDays className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-green-600 font-medium text-sm">Дни с тренировки</p>
+                      <p className="text-2xl font-bold text-green-800">
+                        {Object.keys(workouts).filter(date => workouts[date].length > 0).length}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {getTotalExercises() > 0 && (
+                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                        <Timer className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-purple-600 font-medium text-sm">Очаквано време/ден</p>
+                        <p className="text-2xl font-bold text-purple-800">
+                          ~{Math.round((getTotalExercises() / Object.keys(workouts).filter(date => workouts[date].length > 0).length) * 4) || 0} мин
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Calendar View */}
+        <div className="xl:col-span-3">
+          <Card className="shadow-sm border border-gray-200">
+            <div className="p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <Calendar className="h-6 w-6 mr-3 text-purple-600" />
+                  Календар на програмата
+                  <Info className="h-4 w-4 ml-2 text-gray-400" />
                 </h2>
                 
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
                     <Button
-                      variant={viewMode === 'week' ? 'default' : 'outline'}
+                      variant={viewMode === 'week' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setViewMode('week')}
+                      className="h-8"
                     >
                       Седмица
                     </Button>
                     <Button
-                      variant={viewMode === 'month' ? 'default' : 'outline'}
+                      variant={viewMode === 'month' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setViewMode('month')}
+                      className="h-8"
                     >
                       Месец
                     </Button>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => navigateMonth('prev')}>
+                    <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <span className="text-lg font-semibold min-w-[200px] text-center">
                       {BULGARIAN_MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
                     </span>
-                    <Button variant="ghost" size="sm" onClick={() => navigateMonth('next')}>
+                    <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -720,204 +691,354 @@ export default function ClientProgramCreator() {
               </div>
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1 mb-4">
-                {BULGARIAN_DAYS.map(day => (
-                  <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
-                    {day}
-                  </div>
-                ))}
-              </div>
+              <div className="mb-6">
+                {/* Days Header */}
+                <div className="grid grid-cols-7 gap-2 mb-4">
+                  {BULGARIAN_DAYS.map(day => (
+                    <div key={day} className="p-3 text-center text-sm font-semibold text-gray-600 bg-gray-50 rounded-lg">
+                      {day}
+                    </div>
+                  ))}
+                </div>
 
-              <div className="grid grid-cols-7 gap-1">
-                {calendarDays.map((day, index) => {
-                  const dateKey = day.date.toISOString().split('T')[0];
-                  const dayWorkouts = workouts[dateKey] || [];
-                  const hasWorkouts = dayWorkouts.length > 0;
-                  
-                  return (
-                    <Card 
-                      key={index}
-                      className={`h-24 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        !day.isCurrentMonth ? 'opacity-30' : ''
-                      } ${day.isToday ? 'ring-2 ring-blue-500 bg-blue-50' : ''} ${
-                        hasWorkouts ? 'bg-green-50 border-green-200' : ''
-                      }`}
-                      onClick={() => {
-                        setSelectedDate(day.date);
-                        setShowExerciseLibrary(true);
-                      }}
-                    >
-                      <CardContent className="p-2 h-full">
+                {/* Calendar Days */}
+                <div className="grid grid-cols-7 gap-2">
+                  {calendarDays.map((day, index) => {
+                    const dateKey = day.date.toISOString().split('T')[0];
+                    const dayWorkouts = workouts[dateKey] || [];
+                    const hasWorkouts = dayWorkouts.length > 0;
+                    
+                    return (
+                      <div
+                        key={index}
+                        className={`
+                          h-28 p-3 rounded-lg cursor-pointer transition-all duration-200 border-2
+                          ${!day.isCurrentMonth ? 'opacity-40 bg-gray-50' : 'bg-white hover:bg-gray-50'}
+                          ${day.isToday ? 'ring-2 ring-blue-500 border-blue-200' : 'border-gray-200'}
+                          ${hasWorkouts ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:from-green-100 hover:to-emerald-100' : ''}
+                          ${selectedDate?.toDateString() === day.date.toDateString() ? 'ring-2 ring-purple-500 border-purple-200' : ''}
+                          hover:shadow-md hover:scale-[1.02]
+                        `}
+                        onClick={() => {
+                          setSelectedDate(day.date);
+                          setShowExerciseLibrary(true);
+                        }}
+                      >
                         <div className="flex flex-col h-full">
-                          <div className="text-sm font-semibold mb-1">
+                          <div className="text-sm font-bold mb-2 text-gray-900">
                             {day.date.getDate()}
                           </div>
                           {hasWorkouts && (
                             <div className="flex-1 flex flex-col gap-1">
-                              <Badge variant="success" className="text-xs">
+                              <Badge variant="default" className="text-xs bg-green-100 text-green-700 border-0">
                                 {dayWorkouts.length} упр.
                               </Badge>
-                              <div className="text-xs text-gray-600 truncate">
+                              <div className="text-xs text-gray-600 line-clamp-2 leading-tight">
                                 {dayWorkouts[0]?.exercise.name}
-                                {dayWorkouts.length > 1 && ` +${dayWorkouts.length - 1}`}
+                                {dayWorkouts.length > 1 && (
+                                  <span className="block text-gray-500">+{dayWorkouts.length - 1} още...</span>
+                                )}
                               </div>
                             </div>
                           )}
+                          {!hasWorkouts && day.isCurrentMonth && (
+                            <div className="flex-1 flex items-center justify-center">
+                              <Plus className="h-6 w-6 text-gray-300" />
+                            </div>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Selected Day Details */}
               {selectedDate && workouts[selectedDate.toISOString().split('T')[0]]?.length > 0 && (
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-semibold mb-3">
-                    Тренировка за {selectedDate.toLocaleDateString('bg-BG')}
-                  </h3>
-                  <div className="space-y-2">
-                    {workouts[selectedDate.toISOString().split('T')[0]].map((workout, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
-                        <div className="flex items-center gap-3">
-                          <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <span className="font-medium">{workout.exercise.name}</span>
-                            <span className="text-sm text-gray-500 ml-2">
-                              {workout.sets} сета × {workout.reps}
-                            </span>
+                <div className="border-t pt-6">
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6">
+                    <h3 className="font-semibold text-lg mb-4 text-gray-900 flex items-center">
+                      <CalendarDays className="h-5 w-5 mr-2 text-purple-600" />
+                      Тренировка за {selectedDate.toLocaleDateString('bg-BG', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </h3>
+                    <div className="space-y-3">
+                      {workouts[selectedDate.toISOString().split('T')[0]].map((workout, index) => (
+                        <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-bold rounded-full flex items-center justify-center">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{workout.exercise.name}</h4>
+                              <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                                <span className="flex items-center gap-1">
+                                  <Repeat className="h-3 w-3" />
+                                  {workout.sets} сета × {workout.reps}
+                                </span>
+                                {workout.weight && (
+                                  <span className="flex items-center gap-1">
+                                    <Weight className="h-3 w-3" />
+                                    {workout.weight}
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1">
+                                  <Timer className="h-3 w-3" />
+                                  {workout.rest_time}с почивка
+                                </span>
+                              </div>
+                              {workout.notes && (
+                                <p className="text-sm text-gray-500 mt-1 italic">"{workout.notes}"</p>
+                              )}
+                            </div>
                           </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                              e.stopPropagation();
+                              removeExerciseFromDay(selectedDate, index);
+                            }}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                            e.stopPropagation();
-                            removeExerciseFromDay(selectedDate, index);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
-            </CardContent>
+            </div>
           </Card>
         </div>
 
         {/* Exercise Library Modal */}
         {showExerciseLibrary && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between p-6 border-b">
-                <h2 className="text-xl font-semibold">
-                  Добави упражнение {selectedDate && `за ${selectedDate.toLocaleDateString('bg-BG')}`}
-                </h2>
-                <Button variant="ghost" onClick={() => setShowExerciseLibrary(false)}>
-                  ✕
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden">
+              
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <Dumbbell className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Библиотека с упражнения
+                    </h2>
+                    {selectedDate && (
+                      <p className="text-sm text-gray-600">
+                        Избери упражнения за {selectedDate.toLocaleDateString('bg-BG', { 
+                          weekday: 'long', 
+                          day: 'numeric', 
+                          month: 'long' 
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowExerciseLibrary(false)}
+                  className="rounded-full h-10 w-10 p-0 hover:bg-gray-100"
+                >
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
               
               {/* Exercise Filters */}
-              <div className="p-6 border-b bg-gray-50">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <div className="p-6 border-b bg-gray-50/50">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       value={searchTerm}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                      placeholder="Търси упражнения..."
-                      className="pl-10"
+                      placeholder="Търси упражнения по име..."
+                      className="pl-10 h-11"
                     />
                   </div>
                   
-                  <Select value={selectedMuscleGroup} onValueChange={setSelectedMuscleGroup}>
-                    <SelectItem value="">Всички мускулни групи</SelectItem>
-                    {muscleGroups.map(group => (
-                      <SelectItem key={group} value={group}>
-                        {group.charAt(0).toUpperCase() + group.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </Select>
+                  <div className="relative">
+                    <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Select value={selectedMuscleGroup} onValueChange={setSelectedMuscleGroup}>
+                      <SelectItem value="">Всички мускулни групи</SelectItem>
+                      {muscleGroups.map(group => (
+                        <SelectItem key={group} value={group}>
+                          {group.charAt(0).toUpperCase() + group.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+                
+                {/* Filter Summary */}
+                <div className="mt-4 flex items-center gap-4 text-sm text-gray-600">
+                  <span>
+                    Показва се {filteredExercises.length} от {exercises.length} упражнения
+                  </span>
+                  {(searchTerm || selectedMuscleGroup) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSelectedMuscleGroup("");
+                      }}
+                      className="h-8 px-3"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Изчисти филтрите
+                    </Button>
+                  )}
                 </div>
               </div>
 
               {/* Exercise Grid */}
-              <div className="p-6 max-h-96 overflow-y-auto">
+              <div className="p-6 max-h-[600px] overflow-y-auto">
                 {filteredExercises.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Dumbbell className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Dumbbell className="h-10 w-10 text-gray-400" />
+                    </div>
                     <h3 className="text-lg font-semibold text-gray-600 mb-2">Няма намерени упражнения</h3>
-                    <p className="text-gray-500">Опитайте с различни филтри или създайте ново упражнение</p>
+                    <p className="text-gray-500 mb-4">Опитайте с различни филтри или създайте ново упражнение</p>
+                    <Button variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Създайте ново упражнение
+                    </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {filteredExercises.map(exercise => (
-                      <Card key={exercise.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-gray-900 mb-1">{exercise.name}</h4>
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge variant={
-                                  exercise.difficulty === 'beginner' ? 'success' :
-                                  exercise.difficulty === 'intermediate' ? 'warning' : 'destructive'
-                                }>
-                                  {exercise.difficulty === 'beginner' ? 'Начинаещ' :
-                                   exercise.difficulty === 'intermediate' ? 'Средно ниво' : 'Напреднал'}
-                                </Badge>
-                                <Badge variant="secondary" className="text-xs">
-                                  {exercise.exercise_type}
-                                </Badge>
+                      <Card key={exercise.id} className="hover:shadow-lg transition-all duration-200 border-0 shadow-md overflow-hidden">
+                        <div className="p-6">
+                          {/* Exercise Header */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                  <Dumbbell className="h-6 w-6 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-bold text-gray-900 text-lg leading-tight mb-1 line-clamp-2">
+                                    {exercise.name}
+                                  </h4>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <Badge 
+                                      variant={
+                                        exercise.difficulty === 'beginner' ? 'default' :
+                                        exercise.difficulty === 'intermediate' ? 'secondary' : 'destructive'
+                                      }
+                                      className={
+                                        exercise.difficulty === 'beginner' ? 'bg-green-100 text-green-700 border-0' :
+                                        exercise.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700 border-0' : 'bg-red-100 text-red-700 border-0'
+                                      }
+                                    >
+                                      {exercise.difficulty === 'beginner' ? 'Начинаещ' :
+                                       exercise.difficulty === 'intermediate' ? 'Средно' : 'Напреднал'}
+                                    </Badge>
+                                    <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-0">
+                                      {exercise.exercise_type}
+                                    </Badge>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-xs text-gray-600 mb-2">
-                                Мускули: {exercise.muscle_groups.join(", ")}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                Оборудване: {exercise.equipment.join(", ")}
+                            </div>
+                          </div>
+
+                          {/* Exercise Details */}
+                          <div className="space-y-3 mb-4">
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                              <p className="text-xs font-semibold text-blue-800 mb-1">Мускулни групи:</p>
+                              <p className="text-sm text-blue-700">
+                                {exercise.muscle_groups.map(group => 
+                                  group.charAt(0).toUpperCase() + group.slice(1)
+                                ).join(", ")}
                               </p>
                             </div>
                             
-                            <Button 
-                              size="sm"
-                              onClick={() => {
-                                if (selectedDate) {
-                                  addExerciseToDay(exercise, selectedDate);
-                                }
-                                setShowExerciseLibrary(false);
-                              }}
-                              disabled={!selectedDate}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          
-                          {exercise.instructions?.steps && (
-                            <div className="bg-gray-50 p-2 rounded text-xs">
-                              <p className="font-medium mb-1">Инструкции:</p>
-                              <ol className="space-y-1">
-                                {exercise.instructions.steps.slice(0, 2).map((step, idx) => (
-                                  <li key={idx} className="text-gray-600">
-                                    {idx + 1}. {step}
-                                  </li>
-                                ))}
-                                {exercise.instructions.steps.length > 2 && (
-                                  <li className="text-gray-500 italic">
-                                    +{exercise.instructions.steps.length - 2} още стъпки...
-                                  </li>
-                                )}
-                              </ol>
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <p className="text-xs font-semibold text-gray-800 mb-1">Необходимо оборудване:</p>
+                              <p className="text-sm text-gray-700">
+                                {exercise.equipment.length > 0 
+                                  ? exercise.equipment.join(", ") 
+                                  : "Без оборудване"}
+                              </p>
                             </div>
-                          )}
-                        </CardContent>
+                            
+                            {exercise.instructions?.steps && (
+                              <div className="bg-amber-50 p-3 rounded-lg">
+                                <p className="text-xs font-semibold text-amber-800 mb-2">Инструкции:</p>
+                                <ol className="space-y-1">
+                                  {exercise.instructions.steps.slice(0, 3).map((step, idx) => (
+                                    <li key={idx} className="text-sm text-amber-700 leading-relaxed">
+                                      {idx + 1}. {step}
+                                    </li>
+                                  ))}
+                                  {exercise.instructions.steps.length > 3 && (
+                                    <li className="text-sm text-amber-600 italic">
+                                      ... и {exercise.instructions.steps.length - 3} още стъпки
+                                    </li>
+                                  )}
+                                </ol>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Add Button */}
+                          <Button 
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md"
+                            onClick={(e) => {
+                              if (selectedDate) {
+                                addExerciseToDay(exercise, selectedDate);
+                                // Show success feedback
+                                const button = e.target as HTMLElement;
+                                const originalText = button.textContent;
+                                button.textContent = "Добавено! ✓";
+                                setTimeout(() => {
+                                  button.textContent = originalText;
+                                }, 1500);
+                              }
+                            }}
+                            disabled={!selectedDate}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Добави упражнение
+                          </Button>
+                        </div>
                       </Card>
                     ))}
                   </div>
                 )}
+              </div>
+              
+              {/* Modal Footer */}
+              <div className="border-t bg-gray-50/50 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    {selectedDate ? (
+                      <span>
+                        Избран ден: <strong>{selectedDate.toLocaleDateString('bg-BG')}</strong>
+                      </span>
+                    ) : (
+                      <span className="text-amber-600">Моля изберете ден от календара</span>
+                    )}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowExerciseLibrary(false)}
+                  >
+                    Затвори
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -925,8 +1046,8 @@ export default function ClientProgramCreator() {
 
         {/* Save Progress Bar */}
         {getTotalExercises() > 0 && (
-          <Card>
-            <CardContent className="p-4">
+          <Card className="shadow-sm border border-gray-200">
+            <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="text-sm">
@@ -969,7 +1090,7 @@ export default function ClientProgramCreator() {
                   ></div>
                 </div>
               </div>
-            </CardContent>
+            </div>
           </Card>
         )}
       </div>
