@@ -1,0 +1,500 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
+import { EnhancedCalendar } from "@/components/program-creation/EnhancedCalendar";
+import { ExerciseLibrarySidebar } from "@/components/program-creation/ExerciseLibrarySidebar";
+import { DayWorkoutEditor } from "@/components/program-creation/DayWorkoutEditor";
+import { DayOptionsModal, DayType } from "@/components/program-creation/DayOptionsModal";
+import { UnsavedChangesDialog } from "@/components/program-creation/UnsavedChangesDialog";
+import { Button } from "@/components/ui/button";
+import { createSupabaseClient } from "@/utils/supabase/client";
+import { ChevronLeft, Check } from "lucide-react";
+
+export interface Exercise {
+  id: string;
+  name: string;
+  muscle_groups: string[];
+  difficulty: string;
+  equipment: string[];
+  instructions: string | string[];
+  image_url?: string;
+  exercise_type: string;
+}
+
+export interface WorkoutExercise {
+  exercise_id: string;
+  exercise: Exercise;
+  sets: number;
+  reps: string;
+  weight?: string;
+  rest_time: number;
+  notes?: string;
+  order: number;
+}
+
+export interface ProgramData {
+  name: string;
+  difficulty: string;
+  durationWeeks: number;
+  description: string;
+}
+
+export default function CreateProgramStep2() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createSupabaseClient();
+
+  const [programData, setProgramData] = useState<ProgramData | null>(null);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [clients, setClients] = useState<{id: string; full_name: string; email: string}[]>([]);
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
+
+  // New calendar-based state
+  const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [workoutsByDate, setWorkoutsByDate] = useState<{[dateKey: string]: WorkoutExercise[]}>({});
+  const [dayTypes, setDayTypes] = useState<{[dateKey: string]: DayType}>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showDayOptions, setShowDayOptions] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [programStartDate] = useState<Date>(new Date());
+
+  const loadExercises = React.useCallback(async () => {
+    const { data } = await supabase
+      .from("exercises")
+      .select("*")
+      .or("is_global.eq.true,trainer_id.eq." + (await supabase.auth.getUser()).data.user?.id)
+      .order("name");
+    
+    if (data) {
+      setExercises(data);
+    }
+  }, [supabase]);
+
+  const loadClients = React.useCallback(async () => {
+    const user = await supabase.auth.getUser();
+    const { data } = await supabase
+      .from("trainer_clients")
+      .select(`
+        client_id,
+        profiles!trainer_clients_client_id_fkey(id, full_name, email)
+      `)
+      .eq("trainer_id", user.data.user?.id)
+      .eq("status", "active");
+    
+    if (data) {
+      setClients(data.map(tc => tc.profiles).filter(Boolean) as unknown as {id: string; full_name: string; email: string}[]);
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    const params = {
+      name: searchParams.get("name") || "",
+      difficulty: searchParams.get("difficulty") || "",
+      durationWeeks: Number(searchParams.get("durationWeeks")) || 8,
+      description: searchParams.get("description") || ""
+    };
+
+    setProgramData(params);
+    loadExercises();
+    loadClients();
+  }, [searchParams, loadExercises, loadClients]);
+
+  // Handle browser back/forward navigation with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    const handlePopState = () => {
+      if (hasUnsavedChanges) {
+        setShowUnsavedDialog(true);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [hasUnsavedChanges]);
+
+  // New calendar-based functions
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    setShowDayOptions(true);
+  };
+
+  const handleDayTypeSelect = (type: DayType) => {
+    if (!selectedDate) return;
+    
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    setDayTypes(prev => ({ ...prev, [dateKey]: type }));
+    setHasUnsavedChanges(true);
+    
+    // Clear workouts if changing from workout to rest/free
+    if (type !== 'workout' && workoutsByDate[dateKey]) {
+      setWorkoutsByDate(prev => {
+        const updated = { ...prev };
+        delete updated[dateKey];
+        return updated;
+      });
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const exerciseId = active.id as string;
+      const dateKey = over.id.toString().replace("day-", "");
+      
+      const exercise = exercises.find(ex => ex.id === exerciseId);
+      if (exercise) {
+        addExerciseToDate(exercise, dateKey);
+      }
+    }
+  };
+
+  const addExerciseToDate = (exercise: Exercise, dateKey: string) => {
+    // Set day type to workout if not already set
+    if (!dayTypes[dateKey]) {
+      setDayTypes(prev => ({ ...prev, [dateKey]: 'workout' }));
+    }
+
+    const newExercise: WorkoutExercise = {
+      exercise_id: exercise.id,
+      exercise: exercise,
+      sets: 3,
+      reps: "8-12",
+      weight: exercise.equipment.includes("none") ? "bodyweight" : "",
+      rest_time: 60,
+      notes: "",
+      order: workoutsByDate[dateKey]?.length || 0
+    };
+
+    setWorkoutsByDate(prev => ({
+      ...prev,
+      [dateKey]: [...(prev[dateKey] || []), newExercise]
+    }));
+    setHasUnsavedChanges(true);
+  };
+
+  const removeExerciseFromDate = (dateKey: string, exerciseIndex: number) => {
+    setWorkoutsByDate(prev => {
+      const updated = { ...prev };
+      if (updated[dateKey]) {
+        updated[dateKey].splice(exerciseIndex, 1);
+        // Reorder remaining exercises
+        updated[dateKey].forEach((ex, idx) => {
+          ex.order = idx;
+        });
+        if (updated[dateKey].length === 0) {
+          delete updated[dateKey];
+        }
+      }
+      return updated;
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const updateExerciseInDate = (dateKey: string, exerciseIndex: number, field: string, value: string | number) => {
+    setWorkoutsByDate(prev => {
+      const updated = { ...prev };
+      if (updated[dateKey] && updated[dateKey][exerciseIndex]) {
+        (updated[dateKey][exerciseIndex] as unknown as Record<string, string | number>)[field] = value;
+      }
+      return updated;
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const validateProgram = (): string[] => {
+    const errors: string[] = [];
+    
+    if (selectedClients.length === 0) {
+      errors.push("Моля изберете поне един клиент");
+    }
+
+    const workoutDates = Object.keys(workoutsByDate).filter(dateKey => workoutsByDate[dateKey].length > 0);
+    if (workoutDates.length === 0) {
+      errors.push("Моля добавете поне една тренировка в календара");
+    }
+
+    return errors;
+  };
+
+  const saveProgram = async () => {
+    const errors = validateProgram();
+    if (errors.length > 0) {
+      alert("Грешки при валидация:\n" + errors.join("\n"));
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const user = await supabase.auth.getUser();
+      
+      for (const clientId of selectedClients) {
+        const { data: program, error: programError } = await supabase
+          .from("workout_programs")
+          .insert({
+            trainer_id: user.data.user?.id,
+            client_id: clientId,
+            name: programData?.name,
+            description: programData?.description,
+            program_type: "workout_only",
+            goals: { goals: [] },
+            difficulty_level: programData?.difficulty,
+            estimated_duration_weeks: programData?.durationWeeks,
+            workouts_per_week: Object.keys(workoutsByDate).length,
+            is_active: true
+          })
+          .select()
+          .single();
+
+        if (programError) throw programError;
+
+        // Create workouts based on calendar data
+        for (const [dateKey, exercises] of Object.entries(workoutsByDate)) {
+          if (exercises.length === 0) continue;
+          
+          const date = new Date(dateKey);
+          const { error: workoutError } = await supabase
+            .from("workouts")
+            .insert({
+              program_id: program.id,
+              name: `Тренировка ${date.toLocaleDateString('bg-BG')}`,
+              day_of_week: date.getDay(),
+              week_number: 1,
+              workout_type: "strength",
+              exercises: exercises.map(ex => ({
+                exercise_id: ex.exercise_id,
+                sets: ex.sets,
+                reps: ex.reps,
+                weight: ex.weight,
+                rest_time: ex.rest_time,
+                notes: ex.notes,
+                order: ex.order
+              })),
+              estimated_duration_minutes: exercises.length * 10 + 30
+            });
+
+          if (workoutError) throw workoutError;
+        }
+
+        // Create workout sessions based on calendar data
+        for (const [dateKey, exercises] of Object.entries(workoutsByDate)) {
+          if (exercises.length === 0) continue;
+          
+          await supabase
+            .from("workout_sessions")
+            .insert({
+              program_id: program.id,
+              client_id: clientId,
+              scheduled_date: dateKey,
+              name: `Тренировка ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
+              description: `Планирана тренировка за ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
+              planned_duration_minutes: exercises.length * 10 + 30,
+              exercises: exercises.map(ex => ({
+                exercise_id: ex.exercise_id,
+                planned_sets: ex.sets,
+                planned_reps: ex.reps,
+                planned_weight: ex.weight,
+                rest_time: ex.rest_time,
+                notes: ex.notes,
+                order: ex.order,
+                actual_sets: 0,
+                actual_reps: "",
+                actual_weight: "",
+                completed: false
+              })),
+              status: "planned"
+            });
+        }
+      }
+
+      setHasUnsavedChanges(false);
+      router.push("/protected/programs?created=true");
+    } catch (error) {
+      console.error("Грешка при запазване на програмата:", error);
+      alert("Грешка при запазване на програмата. Моля опитайте отново.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!programData) return <div>Зарежда...</div>;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <DndContext onDragEnd={handleDragEnd}>
+        <div className="max-w-7xl mx-auto p-6">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center gap-4 mb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (hasUnsavedChanges) {
+                    setShowUnsavedDialog(true);
+                  } else {
+                    router.back();
+                  }
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Назад
+              </Button>
+              
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold">{programData.name}</h1>
+                <p className="text-muted-foreground">
+                  Стъпка 2 от 2: Календарен планер
+                </p>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center w-8 h-8 bg-muted text-muted-foreground rounded-full text-sm font-medium">
+                  1
+                </div>
+                <div className="w-16 h-1 bg-primary"></div>
+                <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium">
+                  2
+                </div>
+              </div>
+            </div>
+
+            {/* Client Selection */}
+            <div className="bg-card border rounded-lg p-4 mb-6">
+              <h3 className="font-semibold mb-2">Избери клиенти *</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                {clients.map((client) => (
+                  <label key={client.id} className="flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedClients.includes(client.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedClients([...selectedClients, client.id]);
+                        } else {
+                          setSelectedClients(selectedClients.filter(id => id !== client.id));
+                        }
+                      }}
+                    />
+                    <span>{client.full_name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid lg:grid-cols-4 gap-6">
+            {/* Calendar Planner */}
+            <div className={`${sidebarOpen ? "lg:col-span-2" : "lg:col-span-3"} space-y-6`}>
+              <EnhancedCalendar
+                currentDate={currentDate}
+                onDateChange={setCurrentDate}
+                view={calendarView}
+                onViewChange={setCalendarView}
+                selectedDate={selectedDate}
+                onDateSelect={handleDateSelect}
+                programStartDate={programStartDate}
+                programDurationWeeks={programData?.durationWeeks || 8}
+                dayTypes={dayTypes}
+                workoutsByDate={workoutsByDate}
+              />
+              
+              {selectedDate && workoutsByDate[selectedDate.toISOString().split('T')[0]] && (
+                <DayWorkoutEditor
+                  day={{
+                    day_of_week: selectedDate.getDay(),
+                    name: selectedDate.toLocaleDateString('bg-BG', { weekday: 'long' }),
+                    exercises: workoutsByDate[selectedDate.toISOString().split('T')[0]] || [],
+                    estimated_duration: 60,
+                    workout_type: 'strength'
+                  }}
+                  onRemoveExercise={(exerciseIndex) => 
+                    removeExerciseFromDate(selectedDate.toISOString().split('T')[0], exerciseIndex)
+                  }
+                  onUpdateExercise={(exerciseIndex, field, value) => 
+                    updateExerciseInDate(selectedDate.toISOString().split('T')[0], exerciseIndex, field, value)
+                  }
+                />
+              )}
+            </div>
+
+            {/* Exercise Library Sidebar */}
+            <div className={`${sidebarOpen ? "lg:col-span-2" : "lg:col-span-1"}`}>
+              <ExerciseLibrarySidebar
+                exercises={exercises}
+                isOpen={sidebarOpen}
+                onToggle={() => setSidebarOpen(!sidebarOpen)}
+                onAddExercise={(exercise) => {
+                  if (selectedDate) {
+                    addExerciseToDate(exercise, selectedDate.toISOString().split('T')[0]);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="fixed bottom-6 right-6">
+            <Button
+              onClick={saveProgram}
+              disabled={saving}
+              size="lg"
+              className="shadow-lg"
+            >
+              {saving ? (
+                "Запазва..."
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Запази програмата
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Day Options Modal */}
+        <DayOptionsModal
+          date={selectedDate || new Date()}
+          currentType={selectedDate ? dayTypes[selectedDate.toISOString().split('T')[0]] : undefined}
+          isOpen={showDayOptions}
+          onClose={() => setShowDayOptions(false)}
+          onSelectType={handleDayTypeSelect}
+        />
+
+        {/* Unsaved Changes Dialog */}
+        <UnsavedChangesDialog
+          isOpen={showUnsavedDialog}
+          onSave={() => {
+            saveProgram();
+            setShowUnsavedDialog(false);
+          }}
+          onDiscard={() => {
+            setHasUnsavedChanges(false);
+            setShowUnsavedDialog(false);
+            router.back();
+          }}
+          onCancel={() => setShowUnsavedDialog(false)}
+        />
+      </DndContext>
+    </div>
+  );
+}

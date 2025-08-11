@@ -4,7 +4,10 @@ import * as React from "react"
 import { cn } from "@/utils/styles"
 
 export interface TextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+    // Adding a property to make the interface non-empty
+    placeholder?: string;
+  }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, ...props }, ref) => {

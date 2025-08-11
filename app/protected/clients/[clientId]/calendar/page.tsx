@@ -697,13 +697,13 @@ function WorkoutModal({
               <Label htmlFor="program">Програма</Label>
               <Select
                 value={workoutForm.program_id}
-                onValueChange={(value) => setWorkoutForm({...workoutForm, program_id: value})}
+                onValueChange={(value) => setWorkoutForm({...workoutForm, program_id: value === 'none' ? '' : value})}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Избери програма (опционално)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Без програма</SelectItem>
+                  <SelectItem value="none">Без програма</SelectItem>
                   {programs.map((program) => (
                     <SelectItem key={program.id} value={program.id}>
                       {program.name}
