@@ -1,6 +1,5 @@
 "use client";
 
-import { useDroppable } from "@dnd-kit/core";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarViewToggle } from "@/components/program-creation/CalendarViewToggle";
@@ -38,16 +37,13 @@ const BULGARIAN_MONTHS = [
 const BULGARIAN_DAYS = ["Пон", "Вто", "Сря", "Чет", "Пет", "Съб", "Нед"];
 const BULGARIAN_DAYS_FULL = ["Понеделник", "Вторник", "Сряда", "Четвъртък", "Петък", "Събота", "Неделя"];
 
-function DroppableDay({ 
+function CalendarDayCell({ 
   day, 
   onSelect 
 }: { 
   day: CalendarDay; 
   onSelect: () => void; 
 }) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `day-${day.date.toISOString().split('T')[0]}`,
-  });
 
   const getDayIcon = () => {
     if (day.dayType === 'workout') return <Dumbbell className="h-3 w-3" />;
@@ -88,11 +84,6 @@ function DroppableDay({
       baseStyles += "ring-2 ring-purple-500 border-purple-200 ";
     }
     
-    // Drag over styling
-    if (isOver) {
-      baseStyles += "bg-primary/5 border-primary scale-105 ";
-    }
-    
     baseStyles += "hover:shadow-md hover:scale-[1.02] ";
     
     return baseStyles;
@@ -100,7 +91,6 @@ function DroppableDay({
 
   return (
     <div
-      ref={setNodeRef}
       className={getDayStyles()}
       onClick={onSelect}
     >
@@ -146,7 +136,7 @@ function WeekView({
           </div>
           {days[index] && (
             <div className="h-32">
-              <DroppableDay
+              <CalendarDayCell
                 day={{ ...days[index], isCurrentMonth: true }}
                 onSelect={() => onDateSelect(days[index].date)}
               />
@@ -179,7 +169,7 @@ function MonthView({
       {/* Calendar Days */}
       <div className="grid grid-cols-7 gap-2">
         {days.map((day, index) => (
-          <DroppableDay
+          <CalendarDayCell
             key={index}
             day={day}
             onSelect={() => onDateSelect(day.date)}

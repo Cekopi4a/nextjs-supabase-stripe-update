@@ -2,11 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { DndContext, DragEndEvent } from "@dnd-kit/core";
-import { EnhancedCalendar } from "@/components/program-creation/EnhancedCalendar";
+import { WorkoutCalendarWithEditor } from "@/components/program-creation/WorkoutCalendarWithEditor";
 import { ExerciseLibrarySidebar } from "@/components/program-creation/ExerciseLibrarySidebar";
-import { DayWorkoutEditor } from "@/components/program-creation/DayWorkoutEditor";
-import { DayOptionsModal, DayType } from "@/components/program-creation/DayOptionsModal";
+import { DayType } from "@/components/program-creation/DayOptionsModal";
 import { UnsavedChangesDialog } from "@/components/program-creation/UnsavedChangesDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,7 +30,16 @@ export interface WorkoutExercise {
   weight?: string;
   rest_time: number;
   notes?: string;
-  order: number;
+  order?: number;
+}
+
+interface WorkoutDay {
+  day_of_week: number;
+  name: string;
+  exercises: WorkoutExercise[];
+  estimated_duration: number;
+  workout_type: string;
+  status?: 'assigned' | 'completed' | 'skipped';
 }
 
 export interface ProgramData {
@@ -65,12 +72,10 @@ export default function CreateClientProgramStep2() {
 
   // New calendar-based state
   const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [workoutsByDate, setWorkoutsByDate] = useState<{[dateKey: string]: WorkoutExercise[]}>({});
+  const [workoutsByDate, setWorkoutsByDate] = useState<{[dateKey: string]: WorkoutDay}>({});
   const [dayTypes, setDayTypes] = useState<{[dateKey: string]: DayType}>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [showDayOptions, setShowDayOptions] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [programStartDate] = useState<Date>(new Date());
 
@@ -142,99 +147,30 @@ export default function CreateClientProgramStep2() {
   }, [hasUnsavedChanges]);
 
   // New calendar-based functions
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-    setShowDayOptions(true);
-  };
-
-  const handleDayTypeSelect = (type: DayType) => {
-    if (!selectedDate) return;
-    
-    const dateKey = selectedDate.toISOString().split('T')[0];
-    setDayTypes(prev => ({ ...prev, [dateKey]: type }));
-    setHasUnsavedChanges(true);
-    
-    // Clear workouts if changing from workout to rest/free
-    if (type !== 'workout' && workoutsByDate[dateKey]) {
-      setWorkoutsByDate(prev => {
-        const updated = { ...prev };
-        delete updated[dateKey];
-        return updated;
-      });
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (over && active.id !== over.id) {
-      const exerciseId = active.id as string;
-      const dateKey = over.id.toString().replace("day-", "");
-      
-      const exercise = exercises.find(ex => ex.id === exerciseId);
-      if (exercise) {
-        addExerciseToDate(exercise, dateKey);
-      }
-    }
-  };
-
-  const addExerciseToDate = (exercise: Exercise, dateKey: string) => {
-    // Set day type to workout if not already set
-    if (!dayTypes[dateKey]) {
-      setDayTypes(prev => ({ ...prev, [dateKey]: 'workout' }));
-    }
-
-    const newExercise: WorkoutExercise = {
-      exercise_id: exercise.id,
-      exercise: exercise,
-      sets: 3,
-      reps: "8-12",
-      weight: exercise.equipment.includes("none") ? "bodyweight" : "",
-      rest_time: 60,
-      notes: "",
-      order: workoutsByDate[dateKey]?.length || 0
-    };
-
-    setWorkoutsByDate(prev => ({
-      ...prev,
-      [dateKey]: [...(prev[dateKey] || []), newExercise]
-    }));
+  const handleSaveWorkout = (date: Date, workout: WorkoutDay) => {
+    const dateKey = date.toISOString().split('T')[0];
+    setWorkoutsByDate(prev => ({ ...prev, [dateKey]: workout }));
+    setDayTypes(prev => ({ ...prev, [dateKey]: 'workout' }));
     setHasUnsavedChanges(true);
   };
 
-  const removeExerciseFromDate = (dateKey: string, exerciseIndex: number) => {
+  const handleUpdateWorkoutStatus = (date: Date, status: 'assigned' | 'completed' | 'skipped') => {
+    const dateKey = date.toISOString().split('T')[0];
     setWorkoutsByDate(prev => {
-      const updated = { ...prev };
-      if (updated[dateKey]) {
-        updated[dateKey].splice(exerciseIndex, 1);
-        // Reorder remaining exercises
-        updated[dateKey].forEach((ex, idx) => {
-          ex.order = idx;
-        });
-        if (updated[dateKey].length === 0) {
-          delete updated[dateKey];
-        }
-      }
-      return updated;
+      if (!prev[dateKey]) return prev;
+      return {
+        ...prev,
+        [dateKey]: { ...prev[dateKey], status }
+      };
     });
     setHasUnsavedChanges(true);
   };
 
-  const updateExerciseInDate = (dateKey: string, exerciseIndex: number, field: string, value: string | number) => {
-    setWorkoutsByDate(prev => {
-      const updated = { ...prev };
-      if (updated[dateKey] && updated[dateKey][exerciseIndex]) {
-        (updated[dateKey][exerciseIndex] as unknown as Record<string, string | number>)[field] = value;
-      }
-      return updated;
-    });
-    setHasUnsavedChanges(true);
-  };
 
   const validateProgram = (): string[] => {
     const errors: string[] = [];
     
-    const workoutDates = Object.keys(workoutsByDate).filter(dateKey => workoutsByDate[dateKey].length > 0);
+    const workoutDates = Object.keys(workoutsByDate).filter(dateKey => workoutsByDate[dateKey].exercises.length > 0);
     if (workoutDates.length === 0) {
       errors.push("Моля добавете поне една тренировка в календара");
     }
@@ -245,7 +181,7 @@ export default function CreateClientProgramStep2() {
   const saveProgram = async () => {
     const errors = validateProgram();
     if (errors.length > 0) {
-      alert("Грешки при валидация:\\n" + errors.join("\\n"));
+      alert("Грешки при валидация:\n" + errors.join("\n"));
       return;
     }
 
@@ -265,7 +201,7 @@ export default function CreateClientProgramStep2() {
           goals: { goals: [] },
           difficulty_level: programData?.difficulty,
           estimated_duration_weeks: programData?.durationWeeks,
-          workouts_per_week: Object.keys(workoutsByDate).length,
+          workouts_per_week: Object.keys(workoutsByDate).filter(k => workoutsByDate[k].exercises.length > 0).length,
           is_active: true
         })
         .select()
@@ -274,36 +210,36 @@ export default function CreateClientProgramStep2() {
       if (programError) throw programError;
 
       // Create workouts based on calendar data
-      for (const [dateKey, exercises] of Object.entries(workoutsByDate)) {
-        if (exercises.length === 0) continue;
+      for (const [dateKey, workout] of Object.entries(workoutsByDate)) {
+        if (workout.exercises.length === 0) continue;
         
         const date = new Date(dateKey);
         const { error: workoutError } = await supabase
           .from("workouts")
           .insert({
             program_id: program.id,
-            name: `Тренировка ${date.toLocaleDateString('bg-BG')}`,
+            name: workout.name,
             day_of_week: date.getDay(),
             week_number: 1,
-            workout_type: "strength",
-            exercises: exercises.map(ex => ({
+            workout_type: workout.workout_type,
+            estimated_duration: workout.estimated_duration,
+            exercises: workout.exercises.map(ex => ({
               exercise_id: ex.exercise_id,
               sets: ex.sets,
               reps: ex.reps,
               weight: ex.weight,
               rest_time: ex.rest_time,
               notes: ex.notes,
-              order: ex.order
-            })),
-            estimated_duration_minutes: exercises.length * 10 + 30
+              order: ex.order || 0
+            }))
           });
 
         if (workoutError) throw workoutError;
       }
 
       // Create workout sessions based on calendar data
-      for (const [dateKey, exercises] of Object.entries(workoutsByDate)) {
-        if (exercises.length === 0) continue;
+      for (const [dateKey, workout] of Object.entries(workoutsByDate)) {
+        if (workout.exercises.length === 0) continue;
         
         await supabase
           .from("workout_sessions")
@@ -311,17 +247,17 @@ export default function CreateClientProgramStep2() {
             program_id: program.id,
             client_id: clientId,
             scheduled_date: dateKey,
-            name: `Тренировка ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
+            name: workout.name,
             description: `Планирана тренировка за ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
-            planned_duration_minutes: exercises.length * 10 + 30,
-            exercises: exercises.map(ex => ({
+            planned_duration_minutes: workout.estimated_duration,
+            exercises: workout.exercises.map(ex => ({
               exercise_id: ex.exercise_id,
               planned_sets: ex.sets,
               planned_reps: ex.reps,
               planned_weight: ex.weight,
               rest_time: ex.rest_time,
               notes: ex.notes,
-              order: ex.order,
+              order: ex.order || 0,
               actual_sets: 0,
               actual_reps: "",
               actual_weight: "",
@@ -356,7 +292,6 @@ export default function CreateClientProgramStep2() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DndContext onDragEnd={handleDragEnd}>
         <div className="max-w-7xl mx-auto p-6">
           {/* Client Header */}
           <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 mb-6">
@@ -416,38 +351,22 @@ export default function CreateClientProgramStep2() {
           </div>
 
           <div className="grid lg:grid-cols-4 gap-6">
-            {/* Calendar Planner */}
-            <div className={`${sidebarOpen ? "lg:col-span-2" : "lg:col-span-3"} space-y-6`}>
-              <EnhancedCalendar
+            {/* Calendar with Inline Editor */}
+            <div className={`${sidebarOpen ? "lg:col-span-2" : "lg:col-span-3"}`}>
+              <WorkoutCalendarWithEditor
                 currentDate={currentDate}
                 onDateChange={setCurrentDate}
                 view={calendarView}
                 onViewChange={setCalendarView}
-                selectedDate={selectedDate}
-                onDateSelect={handleDateSelect}
                 programStartDate={programStartDate}
                 programDurationWeeks={programData?.durationWeeks || 8}
                 dayTypes={dayTypes}
                 workoutsByDate={workoutsByDate}
+                onSaveWorkout={handleSaveWorkout}
+                onUpdateWorkoutStatus={handleUpdateWorkoutStatus}
+                isTrainer={true}
+                availableExercises={exercises}
               />
-              
-              {selectedDate && workoutsByDate[selectedDate.toISOString().split('T')[0]] && (
-                <DayWorkoutEditor
-                  day={{
-                    day_of_week: selectedDate.getDay(),
-                    name: selectedDate.toLocaleDateString('bg-BG', { weekday: 'long' }),
-                    exercises: workoutsByDate[selectedDate.toISOString().split('T')[0]] || [],
-                    estimated_duration: 60,
-                    workout_type: 'strength'
-                  }}
-                  onRemoveExercise={(exerciseIndex) => 
-                    removeExerciseFromDate(selectedDate.toISOString().split('T')[0], exerciseIndex)
-                  }
-                  onUpdateExercise={(exerciseIndex, field, value) => 
-                    updateExerciseInDate(selectedDate.toISOString().split('T')[0], exerciseIndex, field, value)
-                  }
-                />
-              )}
             </div>
 
             {/* Exercise Library Sidebar */}
@@ -456,11 +375,6 @@ export default function CreateClientProgramStep2() {
                 exercises={exercises}
                 isOpen={sidebarOpen}
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
-                onAddExercise={(exercise) => {
-                  if (selectedDate) {
-                    addExerciseToDate(exercise, selectedDate.toISOString().split('T')[0]);
-                  }
-                }}
               />
             </div>
           </div>
@@ -485,30 +399,20 @@ export default function CreateClientProgramStep2() {
           </div>
         </div>
 
-        {/* Day Options Modal */}
-        <DayOptionsModal
-          date={selectedDate || new Date()}
-          currentType={selectedDate ? dayTypes[selectedDate.toISOString().split('T')[0]] : undefined}
-          isOpen={showDayOptions}
-          onClose={() => setShowDayOptions(false)}
-          onSelectType={handleDayTypeSelect}
-        />
-
-        {/* Unsaved Changes Dialog */}
-        <UnsavedChangesDialog
-          isOpen={showUnsavedDialog}
-          onSave={() => {
-            saveProgram();
-            setShowUnsavedDialog(false);
-          }}
-          onDiscard={() => {
-            setHasUnsavedChanges(false);
-            setShowUnsavedDialog(false);
-            router.push('/protected/clients');
-          }}
-          onCancel={() => setShowUnsavedDialog(false)}
-        />
-      </DndContext>
+      {/* Unsaved Changes Dialog */}
+      <UnsavedChangesDialog
+        isOpen={showUnsavedDialog}
+        onSave={() => {
+          saveProgram();
+          setShowUnsavedDialog(false);
+        }}
+        onDiscard={() => {
+          setHasUnsavedChanges(false);
+          setShowUnsavedDialog(false);
+          router.push('/protected/clients');
+        }}
+        onCancel={() => setShowUnsavedDialog(false)}
+      />
     </div>
   );
 }

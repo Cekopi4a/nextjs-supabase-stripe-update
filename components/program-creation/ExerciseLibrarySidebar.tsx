@@ -19,7 +19,7 @@ interface ExerciseLibrarySidebarProps {
   exercises: Exercise[];
   isOpen: boolean;
   onToggle: () => void;
-  onAddExercise: (exercise: Exercise) => void;
+  onAddExercise?: (exercise: Exercise) => void;
 }
 
 const muscleGroups = [
@@ -218,7 +218,7 @@ export function ExerciseLibrarySidebar({
               <ExerciseCard
                 key={exercise.id}
                 exercise={exercise}
-                onAdd={() => onAddExercise(exercise)}
+                onAdd={onAddExercise ? () => onAddExercise(exercise) : undefined}
               />
             ))}
           </div>
