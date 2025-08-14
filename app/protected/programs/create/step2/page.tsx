@@ -41,6 +41,11 @@ interface WorkoutDay {
   status?: 'assigned' | 'completed' | 'skipped';
 }
 
+interface RestDay {
+  name: string;
+  description: string;
+}
+
 export interface ProgramData {
   name: string;
   difficulty: string;
@@ -64,6 +69,7 @@ export default function CreateProgramStep2() {
   const [calendarView, setCalendarView] = useState<'week' | 'month'>('week');
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [workoutsByDate, setWorkoutsByDate] = useState<{[dateKey: string]: WorkoutDay}>({});
+  const [restDaysByDate, setRestDaysByDate] = useState<{[dateKey: string]: RestDay}>({});
   const [dayTypes, setDayTypes] = useState<{[dateKey: string]: DayType}>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
@@ -150,6 +156,75 @@ export default function CreateProgramStep2() {
         ...prev,
         [dateKey]: { ...prev[dateKey], status }
       };
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSetDayType = (date: Date, type: DayType) => {
+    const dateKey = date.toISOString().split('T')[0];
+    setDayTypes(prev => ({ ...prev, [dateKey]: type }));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSaveRestDay = (date: Date, restDay: RestDay) => {
+    const dateKey = date.toISOString().split('T')[0];
+    setRestDaysByDate(prev => ({ ...prev, [dateKey]: restDay }));
+    setDayTypes(prev => ({ ...prev, [dateKey]: 'rest' }));
+    setHasUnsavedChanges(true);
+  };
+
+  const [selectedDateForExercise, setSelectedDateForExercise] = useState<Date | null>(null);
+
+  const handleAddExerciseFromLibrary = (exercise: any) => {
+    // First check if we have a selected date from the editor
+    const dateToUse = selectedDateForExercise;
+    
+    if (!dateToUse) {
+      alert("Моля изберете ден от календара преди да добавяте упражнения!");
+      return;
+    }
+    
+    const dateKey = dateToUse.toISOString().split('T')[0];
+    
+    // If day is not a workout day, make it one
+    if (dayTypes[dateKey] !== 'workout') {
+      setDayTypes(prev => ({ ...prev, [dateKey]: 'workout' }));
+    }
+
+    // Create or update workout
+    const newExercise = {
+      exercise_id: exercise.id,
+      exercise: exercise,
+      sets: 3,
+      reps: "8-12",
+      rest_time: 60,
+      weight: "",
+      notes: ""
+    };
+
+    setWorkoutsByDate(prev => {
+      const existingWorkout = prev[dateKey];
+      if (existingWorkout) {
+        return {
+          ...prev,
+          [dateKey]: {
+            ...existingWorkout,
+            exercises: [...existingWorkout.exercises, newExercise]
+          }
+        };
+      } else {
+        return {
+          ...prev,
+          [dateKey]: {
+            day_of_week: dateToUse.getDay(),
+            name: `Тренировка за ${dateToUse.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long' })}`,
+            exercises: [newExercise],
+            estimated_duration: 60,
+            workout_type: 'strength',
+            status: 'assigned'
+          }
+        };
+      }
     });
     setHasUnsavedChanges(true);
   };
@@ -274,6 +349,68 @@ export default function CreateProgramStep2() {
 
   if (!programData) return <div>Зарежда...</div>;
 
+
+  // Create global function for adding exercises
+  useEffect(() => {
+    (window as any).addExerciseToWorkout = (exercise: any) => {
+      if (!selectedDateForExercise) {
+        alert("Моля изберете ден от календара преди да добавяте упражнения!");
+        return;
+      }
+
+      const dateKey = selectedDateForExercise.toISOString().split('T')[0];
+      
+      // If day is not a workout day, make it one
+      if (dayTypes[dateKey] !== 'workout') {
+        setDayTypes(prev => ({ ...prev, [dateKey]: 'workout' }));
+      }
+
+      // Create new exercise
+      const newExercise = {
+        exercise_id: exercise.id,
+        exercise: exercise,
+        sets: 3,
+        reps: "8-12",
+        rest_time: 60,
+        weight: "",
+        notes: ""
+      };
+
+      setWorkoutsByDate(prev => {
+        const existingWorkout = prev[dateKey];
+        if (existingWorkout) {
+          return {
+            ...prev,
+            [dateKey]: {
+              ...existingWorkout,
+              exercises: [...existingWorkout.exercises, newExercise]
+            }
+          };
+        } else {
+          return {
+            ...prev,
+            [dateKey]: {
+              day_of_week: selectedDateForExercise.getDay(),
+              name: `Тренировка за ${selectedDateForExercise.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long' })}`,
+              exercises: [newExercise],
+              estimated_duration: 60,
+              workout_type: 'strength',
+              status: 'assigned'
+            }
+          };
+        }
+      });
+      setHasUnsavedChanges(true);
+      
+      alert(`Упражнението "${exercise.name}" е добавено към ${selectedDateForExercise.toLocaleDateString('bg-BG')}!`);
+    };
+
+    // Cleanup
+    return () => {
+      delete (window as any).addExerciseToWorkout;
+    };
+  }, [selectedDateForExercise, dayTypes, setDayTypes, setWorkoutsByDate, setHasUnsavedChanges]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto p-6">
@@ -349,8 +486,12 @@ export default function CreateProgramStep2() {
               programDurationWeeks={programData?.durationWeeks || 8}
               dayTypes={dayTypes}
               workoutsByDate={workoutsByDate}
+              restDaysByDate={restDaysByDate}
               onSaveWorkout={handleSaveWorkout}
+              onSaveRestDay={handleSaveRestDay}
               onUpdateWorkoutStatus={handleUpdateWorkoutStatus}
+              onSetDayType={handleSetDayType}
+              onSelectedDateChange={setSelectedDateForExercise}
               isTrainer={true}
               availableExercises={exercises}
             />
@@ -362,7 +503,8 @@ export default function CreateProgramStep2() {
               exercises={exercises}
               isOpen={sidebarOpen}
               onToggle={() => setSidebarOpen(!sidebarOpen)}
-              // Remove drag functionality - exercises are now added via inline editor
+              onAddExercise={handleAddExerciseFromLibrary}
+              selectedDate={selectedDateForExercise}
             />
           </div>
         </div>

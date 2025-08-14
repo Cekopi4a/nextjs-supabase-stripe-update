@@ -42,7 +42,7 @@ function CalendarDayCell({
   onSelect 
 }: { 
   day: CalendarDay; 
-  onSelect: () => void; 
+  onSelect: () => void;
 }) {
 
   const getDayIcon = () => {
@@ -313,22 +313,27 @@ export function EnhancedCalendar({
       )}
 
       {/* Legend */}
-      <div className="mt-6 flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-blue-100 border border-blue-200 rounded"></div>
-          <span className="text-gray-600">В рамките на програмата</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-100 border border-green-200 rounded flex items-center justify-center">
-            <Dumbbell className="h-2 w-2 text-green-600" />
+      <div className="mt-6 space-y-2">
+        <div className="flex flex-wrap gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-blue-100 border border-blue-200 rounded"></div>
+            <span className="text-gray-600">В рамките на програмата</span>
           </div>
-          <span className="text-gray-600">Тренировъчен ден</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-purple-100 border border-purple-200 rounded flex items-center justify-center">
-            <Moon className="h-2 w-2 text-purple-600" />
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-green-100 border border-green-200 rounded flex items-center justify-center">
+              <Dumbbell className="h-2 w-2 text-green-600" />
+            </div>
+            <span className="text-gray-600">Тренировъчен ден</span>
           </div>
-          <span className="text-gray-600">Почивен ден</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-purple-100 border border-purple-200 rounded flex items-center justify-center">
+              <Moon className="h-2 w-2 text-purple-600" />
+            </div>
+            <span className="text-gray-600">Почивен ден</span>
+          </div>
+        </div>
+        <div className="text-xs text-gray-500 italic">
+          💡 Кликнете върху ден за да го изберете и редактирате в секцията отдолу
         </div>
       </div>
     </Card>

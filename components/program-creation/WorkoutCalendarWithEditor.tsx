@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { EnhancedCalendar } from "@/components/program-creation/EnhancedCalendar";
-import { DayWorkoutInlineEditor } from "@/components/program-creation/DayWorkoutInlineEditor";
+import { DayEditorSection } from "@/components/program-creation/DayEditorSection";
 import { DayType } from "@/components/program-creation/DayOptionsModal";
 import { WorkoutExercise } from "@/app/protected/programs/create/step2/page";
 
@@ -15,6 +15,11 @@ interface WorkoutDay {
   status?: 'assigned' | 'completed' | 'skipped';
 }
 
+interface RestDay {
+  name: string;
+  description: string;
+}
+
 interface WorkoutCalendarWithEditorProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
@@ -24,8 +29,13 @@ interface WorkoutCalendarWithEditorProps {
   programDurationWeeks: number;
   dayTypes: Record<string, DayType>;
   workoutsByDate: Record<string, WorkoutDay>;
+  restDaysByDate: Record<string, RestDay>;
   onSaveWorkout: (date: Date, workout: WorkoutDay) => void;
+  onSaveRestDay: (date: Date, restDay: RestDay) => void;
   onUpdateWorkoutStatus: (date: Date, status: 'assigned' | 'completed' | 'skipped') => void;
+  onSetDayType?: (date: Date, type: DayType) => void;
+  onAddExerciseFromLibrary?: (exerciseId: string) => void;
+  onSelectedDateChange?: (date: Date | null) => void;
   isTrainer: boolean;
   availableExercises?: any[];
 }
@@ -39,39 +49,41 @@ export function WorkoutCalendarWithEditor({
   programDurationWeeks,
   dayTypes,
   workoutsByDate,
+  restDaysByDate,
   onSaveWorkout,
+  onSaveRestDay,
   onUpdateWorkoutStatus,
+  onSetDayType,
+  onAddExerciseFromLibrary,
+  onSelectedDateChange,
   isTrainer,
   availableExercises = []
 }: WorkoutCalendarWithEditorProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [editingDate, setEditingDate] = useState<Date | null>(null);
+  
+  // Ensure restDaysByDate is always defined
+  const safeRestDaysByDate = restDaysByDate || {};
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    setEditingDate(null);
-  };
-
-  const handleStartEdit = () => {
-    if (selectedDate) {
-      setEditingDate(selectedDate);
+    // Notify parent about selected date change
+    if (onSelectedDateChange) {
+      onSelectedDateChange(date);
     }
   };
 
-  const handleSaveWorkout = (workout: WorkoutDay) => {
-    if (editingDate) {
-      onSaveWorkout(editingDate, workout);
-      setEditingDate(null);
+  const handleDayTypeChange = (date: Date, type: DayType) => {
+    if (onSetDayType) {
+      onSetDayType(date, type);
     }
   };
 
-  const handleCancelEdit = () => {
-    setEditingDate(null);
-  };
-
-  const handleStatusUpdate = (status: 'assigned' | 'completed' | 'skipped') => {
-    if (selectedDate) {
-      onUpdateWorkoutStatus(selectedDate, status);
+  const handleAddExerciseFromLibrary = (exercise: any) => {
+    if (!selectedDate) return;
+    
+    // Call the parent function to add exercise
+    if (onAddExerciseFromLibrary) {
+      onAddExerciseFromLibrary(exercise.id);
     }
   };
 
@@ -83,7 +95,8 @@ export function WorkoutCalendarWithEditor({
 
   const selectedDateKey = selectedDate?.toISOString().split('T')[0];
   const selectedWorkout = selectedDateKey ? workoutsByDate[selectedDateKey] : undefined;
-  const isEditing = editingDate?.toDateString() === selectedDate?.toDateString();
+  const selectedRestDay = selectedDateKey ? safeRestDaysByDate[selectedDateKey] : undefined;
+  const selectedDayType = selectedDateKey ? dayTypes[selectedDateKey] : undefined;
 
   return (
     <div className="space-y-6">
@@ -101,22 +114,18 @@ export function WorkoutCalendarWithEditor({
         workoutsByDate={workoutsForCalendar}
       />
 
-      {/* Day Workout Editor */}
-      {selectedDate && (
-        <div className="mt-6">
-          <DayWorkoutInlineEditor
-            date={selectedDate}
-            workout={selectedWorkout}
-            isTrainer={isTrainer}
-            isEditing={isEditing}
-            onStartEdit={handleStartEdit}
-            onSave={handleSaveWorkout}
-            onCancel={handleCancelEdit}
-            onUpdateStatus={!isTrainer ? handleStatusUpdate : undefined}
-            availableExercises={availableExercises}
-          />
-        </div>
-      )}
+      {/* Day Editor Section */}
+      <DayEditorSection
+        selectedDate={selectedDate}
+        dayType={selectedDayType}
+        workout={selectedWorkout}
+        restDay={selectedRestDay}
+        isTrainer={isTrainer}
+        availableExercises={availableExercises}
+        onDayTypeChange={handleDayTypeChange}
+        onSaveWorkout={onSaveWorkout}
+        onSaveRestDay={onSaveRestDay}
+      />
     </div>
   );
 }

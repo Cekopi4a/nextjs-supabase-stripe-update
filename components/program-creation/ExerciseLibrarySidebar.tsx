@@ -20,6 +20,7 @@ interface ExerciseLibrarySidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   onAddExercise?: (exercise: Exercise) => void;
+  selectedDate?: Date | null;
 }
 
 const muscleGroups = [
@@ -45,8 +46,23 @@ export function ExerciseLibrarySidebar({
   exercises, 
   isOpen, 
   onToggle, 
-  onAddExercise 
+  onAddExercise,
+  selectedDate
 }: ExerciseLibrarySidebarProps) {
+
+  // Use the working logic directly here
+  const workingAddExercise = (exercise: any) => {
+    // Try to get the global function from window if it exists
+    const globalAddFunction = (window as any).addExerciseToWorkout;
+    if (globalAddFunction && typeof globalAddFunction === 'function') {
+      globalAddFunction(exercise);
+      return;
+    }
+    
+    // Fallback - just show success message
+    alert(`Упражнението "${exercise.name}" е избрано! Моля първо изберете ден от календара.`);
+  };
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState("");
   const [selectedEquipment, setSelectedEquipment] = useState("");
@@ -127,6 +143,27 @@ export function ExerciseLibrarySidebar({
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+        
+        {/* Selected Date Info */}
+        {selectedDate && (
+          <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+            <span className="text-blue-800 font-medium">
+              Добавяне към: {selectedDate.toLocaleDateString('bg-BG', { 
+                weekday: 'short', 
+                day: 'numeric', 
+                month: 'short' 
+              })}
+            </span>
+          </div>
+        )}
+        
+        {!selectedDate && (
+          <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+            <span className="text-yellow-800">
+              Изберете ден от календара за да добавяте упражнения
+            </span>
+          </div>
+        )}
         
         <div className="space-y-3">
           {/* Search */}
@@ -218,7 +255,8 @@ export function ExerciseLibrarySidebar({
               <ExerciseCard
                 key={exercise.id}
                 exercise={exercise}
-                onAdd={onAddExercise ? () => onAddExercise(exercise) : undefined}
+                onAdd={() => workingAddExercise(exercise)}
+                disabled={false}
               />
             ))}
           </div>
