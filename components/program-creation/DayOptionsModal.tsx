@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dumbbell, Moon, Calendar, X } from "lucide-react";
+import { Dumbbell, Moon, X } from "lucide-react";
 
-export type DayType = 'workout' | 'rest' | 'free';
+export type DayType = 'workout' | 'rest';
 
 interface DayOptionsModalProps {
   date: Date;
@@ -47,15 +47,6 @@ export function DayOptionsModal({
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50 border-purple-200',
       textColor: 'text-purple-700'
-    },
-    {
-      type: 'free' as DayType,
-      label: 'Свободен ден',
-      description: 'Без планирани дейности',
-      icon: Calendar,
-      color: 'bg-gray-400',
-      bgColor: 'bg-gray-50 border-gray-200',
-      textColor: 'text-gray-700'
     }
   ];
 

@@ -78,6 +78,8 @@ export default function CreateClientProgramStep2() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [programStartDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [restDaysByDate, setRestDaysByDate] = useState<{[dateKey: string]: any}>({});
 
   const loadExercises = React.useCallback(async () => {
     const { data } = await supabase
@@ -120,7 +122,26 @@ export default function CreateClientProgramStep2() {
     setProgramData(params);
     loadExercises();
     loadClient();
+    checkActiveProgram();
   }, [searchParams, clientId, loadExercises, loadClient]);
+
+  const checkActiveProgram = async () => {
+    try {
+      const { data } = await supabase
+        .from("workout_programs")
+        .select("id, name")
+        .eq("client_id", clientId)
+        .eq("is_active", true)
+        .limit(1);
+
+      if (data && data.length > 0) {
+        alert(`Клиентът вече има активна програма "${data[0].name}".\n\nМоля първо изтрийте я за да създадете нова.`);
+        router.push(`/protected/clients/${clientId}`);
+      }
+    } catch (error) {
+      console.error("Error checking active program:", error);
+    }
+  };
 
   // Handle browser back/forward navigation with unsaved changes
   useEffect(() => {
@@ -166,6 +187,46 @@ export default function CreateClientProgramStep2() {
     setHasUnsavedChanges(true);
   };
 
+  const handleAddExercise = (exercise: Exercise) => {
+    if (!selectedDate) {
+      alert('Моля първо изберете ден от календара.');
+      return;
+    }
+
+    const dateKey = selectedDate.toISOString().split('T')[0];
+    const workoutExercise: WorkoutExercise = {
+      exercise_id: exercise.id,
+      exercise: exercise,
+      sets: 3,
+      reps: "10",
+      rest_time: 60,
+      order: 0
+    };
+
+    setWorkoutsByDate(prev => {
+      const currentWorkout = prev[dateKey] || {
+        day_of_week: selectedDate.getDay(),
+        name: `Тренировка ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`,
+        exercises: [],
+        estimated_duration: 30,
+        workout_type: 'strength'
+      };
+
+      const updatedExercises = [...currentWorkout.exercises, workoutExercise];
+      
+      return {
+        ...prev,
+        [dateKey]: {
+          ...currentWorkout,
+          exercises: updatedExercises
+        }
+      };
+    });
+
+    setDayTypes(prev => ({ ...prev, [dateKey]: 'workout' }));
+    setHasUnsavedChanges(true);
+  };
+
 
   const validateProgram = (): string[] => {
     const errors: string[] = [];
@@ -179,6 +240,15 @@ export default function CreateClientProgramStep2() {
   };
 
   const saveProgram = async () => {
+    console.log("Започване на запазване на програмата...");
+    console.log("Program data:", programData);
+    console.log("Workouts by date:", workoutsByDate);
+    
+    if (!programData) {
+      alert("Няма данни за програмата. Моля върнете се към стъпка 1.");
+      return;
+    }
+
     const errors = validateProgram();
     if (errors.length > 0) {
       alert("Грешки при валидация:\n" + errors.join("\n"));
@@ -190,88 +260,106 @@ export default function CreateClientProgramStep2() {
     try {
       const user = await supabase.auth.getUser();
       
+      if (!user.data.user?.id) {
+        throw new Error("Потребителят не е влязъл в системата");
+      }
+
+      console.log("Запазване на програма:", {
+        trainer_id: user.data.user.id,
+        client_id: clientId,
+        name: programData?.name || "Нова програма",
+        description: programData?.description || "",
+        difficulty_level: programData?.difficulty || "beginner",
+        estimated_duration_weeks: programData?.durationWeeks || 8,
+        workouts_count: Object.keys(workoutsByDate).filter(k => workoutsByDate[k].exercises.length > 0).length
+      });
+
       const { data: program, error: programError } = await supabase
         .from("workout_programs")
         .insert({
-          trainer_id: user.data.user?.id,
+          trainer_id: user.data.user.id,
           client_id: clientId,
-          name: programData?.name,
-          description: programData?.description,
-          program_type: "workout_only",
-          goals: { goals: [] },
-          difficulty_level: programData?.difficulty,
-          estimated_duration_weeks: programData?.durationWeeks,
-          workouts_per_week: Object.keys(workoutsByDate).filter(k => workoutsByDate[k].exercises.length > 0).length,
+          name: programData?.name || "Нова програма",
+          description: programData?.description || "",
+          difficulty_level: programData?.difficulty || "beginner",
+          estimated_duration_weeks: programData?.durationWeeks || 8,
           is_active: true
         })
         .select()
         .single();
 
-      if (programError) throw programError;
-
-      // Create workouts based on calendar data
-      for (const [dateKey, workout] of Object.entries(workoutsByDate)) {
-        if (workout.exercises.length === 0) continue;
-        
-        const date = new Date(dateKey);
-        const { error: workoutError } = await supabase
-          .from("workouts")
-          .insert({
-            program_id: program.id,
-            name: workout.name,
-            day_of_week: date.getDay(),
-            week_number: 1,
-            workout_type: workout.workout_type,
-            estimated_duration: workout.estimated_duration,
-            exercises: workout.exercises.map(ex => ({
-              exercise_id: ex.exercise_id,
-              sets: ex.sets,
-              reps: ex.reps,
-              weight: ex.weight,
-              rest_time: ex.rest_time,
-              notes: ex.notes,
-              order: ex.order || 0
-            }))
-          });
-
-        if (workoutError) throw workoutError;
+      if (programError) {
+        console.error("Грешка при създаване на програма:", programError);
+        throw programError;
       }
 
-      // Create workout sessions based on calendar data
-      for (const [dateKey, workout] of Object.entries(workoutsByDate)) {
-        if (workout.exercises.length === 0) continue;
-        
-        await supabase
+      console.log("Програма създадена успешно:", program);
+
+      // Пропускаме създаването на workouts таблица - тя не съществува в схемата
+      const workoutEntries = Object.entries(workoutsByDate).filter(([_, workout]) => workout.exercises.length > 0);
+      console.log(`Готови за създаване на ${workoutEntries.length} workout sessions...`);
+
+      // Create workout sessions based on calendar data  
+      for (const [dateKey, workout] of workoutEntries) {
+        console.log(`Създаване на session за ${dateKey}:`, {
+          program_id: program.id,
+          client_id: clientId,
+          scheduled_date: dateKey,
+          name: workout.name || `Тренировка ${new Date(dateKey).getDate()}/${new Date(dateKey).getMonth() + 1}`,
+          exercises_count: workout.exercises.length
+        });
+
+        const { error: sessionError } = await supabase
           .from("workout_sessions")
           .insert({
             program_id: program.id,
             client_id: clientId,
             scheduled_date: dateKey,
-            name: workout.name,
-            description: `Планирана тренировка за ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
-            planned_duration_minutes: workout.estimated_duration,
+            name: workout.name || `Тренировка ${new Date(dateKey).getDate()}/${new Date(dateKey).getMonth() + 1}`,
+            status: "planned",
             exercises: workout.exercises.map(ex => ({
               exercise_id: ex.exercise_id,
               planned_sets: ex.sets,
               planned_reps: ex.reps,
-              planned_weight: ex.weight,
+              planned_weight: ex.weight || null,
               rest_time: ex.rest_time,
-              notes: ex.notes,
+              notes: ex.notes || null,
               order: ex.order || 0,
               actual_sets: 0,
               actual_reps: "",
               actual_weight: "",
               completed: false
-            })),
-            status: "planned"
+            }))
           });
+
+        if (sessionError) {
+          console.error(`Грешка при създаване на session за ${dateKey}:`, sessionError);
+          throw sessionError; // Спираме процеса при грешка в session
+        } else {
+          console.log(`Session за ${dateKey} създаден успешно`);
+        }
       }
 
       setHasUnsavedChanges(false);
       router.push(`/protected/clients/${clientId}?program_created=true`);
     } catch (error) {
       console.error("Грешка при запазване на програмата:", error);
-      alert("Грешка при запазване на програмата. Моля опитайте отново.");
+      
+      let errorMessage = "Неизвестна грешка при запазване на програмата.";
+      
+      if (error && typeof error === 'object') {
+        if ('message' in error) {
+          errorMessage = String(error.message);
+        } else if ('error' in error) {
+          errorMessage = String(error.error);
+        } else {
+          errorMessage = JSON.stringify(error);
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      alert(`Грешка при запазване на програмата: ${errorMessage}\n\nМоля проверете конзолата за повече детайли и опитайте отново.`);
     } finally {
       setSaving(false);
     }
@@ -362,8 +450,11 @@ export default function CreateClientProgramStep2() {
                 programDurationWeeks={programData?.durationWeeks || 8}
                 dayTypes={dayTypes}
                 workoutsByDate={workoutsByDate}
+                restDaysByDate={restDaysByDate}
                 onSaveWorkout={handleSaveWorkout}
+                onSaveRestDay={() => {}}
                 onUpdateWorkoutStatus={handleUpdateWorkoutStatus}
+                onSelectedDateChange={setSelectedDate}
                 isTrainer={true}
                 availableExercises={exercises}
               />
@@ -375,6 +466,8 @@ export default function CreateClientProgramStep2() {
                 exercises={exercises}
                 isOpen={sidebarOpen}
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
+                onAddExercise={handleAddExercise}
+                selectedDate={selectedDate}
               />
             </div>
           </div>

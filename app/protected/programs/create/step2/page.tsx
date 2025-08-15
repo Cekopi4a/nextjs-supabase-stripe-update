@@ -307,8 +307,8 @@ export default function CreateProgramStep2() {
         }
 
         // Create workout sessions based on calendar data
-        for (const [dateKey, exercises] of Object.entries(workoutsByDate)) {
-          if (exercises.length === 0) continue;
+        for (const [dateKey, workoutDay] of Object.entries(workoutsByDate)) {
+          if (workoutDay.exercises.length === 0) continue;
           
           await supabase
             .from("workout_sessions")
@@ -316,10 +316,10 @@ export default function CreateProgramStep2() {
               program_id: program.id,
               client_id: clientId,
               scheduled_date: dateKey,
-              name: `Тренировка ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
+              name: workoutDay.name || `Тренировка ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
               description: `Планирана тренировка за ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
-              planned_duration_minutes: exercises.length * 10 + 30,
-              exercises: exercises.map(ex => ({
+              planned_duration_minutes: workoutDay.estimated_duration || 60,
+              exercises: workoutDay.exercises.map((ex: WorkoutExercise) => ({
                 exercise_id: ex.exercise_id,
                 planned_sets: ex.sets,
                 planned_reps: ex.reps,

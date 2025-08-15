@@ -50,17 +50,12 @@ export function ExerciseLibrarySidebar({
   selectedDate
 }: ExerciseLibrarySidebarProps) {
 
-  // Use the working logic directly here
-  const workingAddExercise = (exercise: any) => {
-    // Try to get the global function from window if it exists
-    const globalAddFunction = (window as any).addExerciseToWorkout;
-    if (globalAddFunction && typeof globalAddFunction === 'function') {
-      globalAddFunction(exercise);
-      return;
+  const handleAddExercise = (exercise: Exercise) => {
+    if (onAddExercise) {
+      onAddExercise(exercise);
+    } else {
+      alert(`Упражнението "${exercise.name}" е избрано! Моля първо изберете ден от календара.`);
     }
-    
-    // Fallback - just show success message
-    alert(`Упражнението "${exercise.name}" е избрано! Моля първо изберете ден от календара.`);
   };
   
   const [searchTerm, setSearchTerm] = useState("");
@@ -255,7 +250,7 @@ export function ExerciseLibrarySidebar({
               <ExerciseCard
                 key={exercise.id}
                 exercise={exercise}
-                onAdd={() => workingAddExercise(exercise)}
+                onAdd={() => handleAddExercise(exercise)}
                 disabled={false}
               />
             ))}

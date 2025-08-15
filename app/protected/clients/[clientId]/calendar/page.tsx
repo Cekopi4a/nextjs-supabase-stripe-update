@@ -34,17 +34,16 @@ import {
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { WorkoutEditModal } from "@/components/calendar/WorkoutEditModal";
 
-interface Workout {
+interface WorkoutSession {
   id: string;
   name: string;
   scheduled_date: string;
-  estimated_duration_minutes: number;
-  workout_type: string;
-  difficulty_level?: string;
-  instructions?: string;
-  status?: 'scheduled' | 'completed' | 'skipped';
+  status: 'planned' | 'completed' | 'skipped';
   program_id?: string;
+  client_id: string;
+  exercises?: any[];
   workout_programs?: {
     name: string;
   };
@@ -61,7 +60,7 @@ interface CalendarDay {
   date: Date;
   isCurrentMonth: boolean;
   isToday: boolean;
-  workouts: Workout[];
+  workouts: WorkoutSession[];
 }
 
 interface WorkoutProgram {
@@ -97,14 +96,15 @@ export default function ClientCalendarPage() {
   const clientId = params.clientId as string;
   
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutSession[]>([]);
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
   const [client, setClient] = useState<Client | null>(null);
   const [programs, setPrograms] = useState<WorkoutProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
+  const [editingWorkout, setEditingWorkout] = useState<WorkoutSession | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Form states
   const [workoutForm, setWorkoutForm] = useState({
@@ -200,7 +200,7 @@ export default function ClientCalendarPage() {
       const endDate = endOfMonth.toISOString().split('T')[0];
 
       const { data, error } = await supabase
-        .from("workouts")
+        .from("workout_sessions")
         .select(`
           *,
           workout_programs(name)
@@ -212,24 +212,8 @@ export default function ClientCalendarPage() {
 
       if (error) throw error;
 
-      // Get workout completion status
-      const workoutIds = data?.map(w => w.id) || [];
-      if (workoutIds.length > 0) {
-        const { data: logs } = await supabase
-          .from("workout_logs")
-          .select("workout_id, completed")
-          .in("workout_id", workoutIds);
-
-        const workoutsWithStatus = data?.map(workout => ({
-          ...workout,
-          status: logs?.find(l => l.workout_id === workout.id)?.completed 
-            ? 'completed' : 'scheduled'
-        })) || [];
-
-        setWorkouts(workoutsWithStatus);
-      } else {
-        setWorkouts(data || []);
-      }
+      // workout_sessions вече има status поле, не е нужно да търсим в workout_logs
+      setWorkouts(data || []);
     } catch (error) {
       console.error("Error fetching workouts:", error);
     } finally {
@@ -295,18 +279,9 @@ export default function ClientCalendarPage() {
     setShowCreateModal(true);
   };
 
-  const openEditModal = (workout: Workout) => {
-    setSelectedDate(new Date(workout.scheduled_date));
-    setWorkoutForm({
-      name: workout.name,
-      workout_type: workout.workout_type,
-      difficulty_level: workout.difficulty_level || 'intermediate',
-      estimated_duration_minutes: workout.estimated_duration_minutes,
-      instructions: workout.instructions || '',
-      program_id: workout.program_id || ''
-    });
+  const openEditModal = (workout: WorkoutSession) => {
     setEditingWorkout(workout);
-    setShowCreateModal(true);
+    setShowEditModal(true);
   };
 
   const saveWorkout = async () => {
@@ -320,26 +295,23 @@ export default function ClientCalendarPage() {
         client_id: clientId,
         name: workoutForm.name,
         scheduled_date: selectedDate.toISOString().split('T')[0],
-        workout_type: workoutForm.workout_type,
-        difficulty_level: workoutForm.difficulty_level,
-        estimated_duration_minutes: workoutForm.estimated_duration_minutes,
-        instructions: workoutForm.instructions,
         program_id: workoutForm.program_id || null,
-        exercises: [] // Empty exercises array for now
+        status: 'planned',
+        exercises: editingWorkout?.exercises || [] // Keep existing exercises or empty array
       };
 
       if (editingWorkout) {
-        // Update existing workout
+        // Update existing workout session
         const { error } = await supabase
-          .from("workouts")
+          .from("workout_sessions")
           .update(workoutData)
           .eq("id", editingWorkout.id);
         
         if (error) throw error;
       } else {
-        // Create new workout
+        // Create new workout session
         const { error } = await supabase
-          .from("workouts")
+          .from("workout_sessions")
           .insert(workoutData);
         
         if (error) throw error;
@@ -360,7 +332,7 @@ export default function ClientCalendarPage() {
 
     try {
       const { error } = await supabase
-        .from("workouts")
+        .from("workout_sessions")
         .delete()
         .eq("id", workoutId);
 
@@ -492,6 +464,17 @@ export default function ClientCalendarPage() {
         />
       )}
 
+      {/* Advanced Edit Modal */}
+      <WorkoutEditModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        workout={editingWorkout}
+        onSave={() => {
+          setShowEditModal(false);
+          fetchWorkouts();
+        }}
+      />
+
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-8">
@@ -510,7 +493,7 @@ function CalendarDayCell({
 }: { 
   day: CalendarDay; 
   onCreateWorkout: (date: Date) => void;
-  onEditWorkout: (workout: Workout) => void;
+  onEditWorkout: (workout: WorkoutSession) => void;
   onDeleteWorkout: (workoutId: string) => void;
 }) {
   const dayNumber = day.date.getDate();
@@ -572,18 +555,19 @@ function WorkoutItem({
   onEdit, 
   onDelete 
 }: { 
-  workout: Workout; 
+  workout: WorkoutSession; 
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const isCompleted = workout.status === 'completed';
-  const workoutType = WORKOUT_TYPES.find(t => t.value === workout.workout_type);
+  const isPlanned = workout.status === 'planned';
   
   return (
     <div 
       className={`
         text-xs p-2 rounded border cursor-pointer transition-all hover:shadow-sm group
-        ${isCompleted ? 'bg-green-50 border-green-200 text-green-800' : workoutType?.color || 'bg-gray-100 text-gray-800'}
+        ${isCompleted ? 'bg-green-50 border-green-200 text-green-800' : 
+          isPlanned ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-gray-100 text-gray-800'}
       `}
     >
       <div className="flex items-center justify-between">
@@ -595,6 +579,12 @@ function WorkoutItem({
           )}
           <span className="font-medium truncate">{workout.name}</span>
         </div>
+        
+        {workout.exercises && workout.exercises.length > 0 && (
+          <span className="text-xs text-muted-foreground ml-1">
+            ({workout.exercises.length} упр.)
+          </span>
+        )}
         
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
           <Button
@@ -623,15 +613,9 @@ function WorkoutItem({
       </div>
       
       <div className="flex items-center gap-2 mt-1">
-        <span className="flex items-center gap-1">
-          <Clock className="h-2 w-2" />
-          {workout.estimated_duration_minutes}мин
+        <span className="text-[10px] opacity-75">
+          {workout.workout_programs?.name || 'Тренировка'}
         </span>
-        {workout.difficulty_level && (
-          <span className="text-[10px] opacity-75">
-            {DIFFICULTY_LEVELS.find(d => d.value === workout.difficulty_level)?.label}
-          </span>
-        )}
       </div>
     </div>
   );

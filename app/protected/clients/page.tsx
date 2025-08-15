@@ -139,12 +139,24 @@ export default function ClientsPage() {
         return;
       }
 
+      // Get active programs for clients
+      const { data: activePrograms } = await supabase
+        .from('workout_programs')
+        .select('client_id')
+        .in('client_id', clientIds)
+        .eq('is_active', true);
+
+      console.log('Active programs:', activePrograms);
+
       // Добавяме статуса от trainer_clients към профилите
       const clientsWithStatus = profiles.map((profile: any) => {
         const tc = trainerClients.find((tc: any) => tc.client_id === profile.id);
+        const hasActiveProgram = activePrograms?.some(ap => ap.client_id === profile.id) || false;
+        
         return { 
           ...profile, 
-          trainer_status: tc?.status || 'unknown' // Използваме trainer_status за избягване на объркване
+          trainer_status: tc?.status || 'unknown', // Използваме trainer_status за избягване на объркване
+          has_active_program: hasActiveProgram
         };
       });
 
@@ -481,15 +493,24 @@ export default function ClientsPage() {
                   variant="default" 
                   size="sm" 
                   className="text-xs h-8 bg-gradient-to-r from-blue-600 to-purple-600"
-                  onClick={() => router.push(`/protected/clients/${client.id}/programs/create`)}
+                  disabled={client.has_active_program}
+                  onClick={() => {
+                    if (client.has_active_program) {
+                      alert("Клиентът вече има активна програма");
+                    } else {
+                      router.push(`/protected/clients/${client.id}/programs/create`);
+                    }
+                  }}
                 >
                   <Dumbbell className="h-3 w-3 mr-1" />
-                  Създай програма
+                  {client.has_active_program ? "Има програма" : "Създай програма"}
                 </Button>
                 
-                <Button variant="outline" size="sm" className="text-xs h-8">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  Календар
+                <Button variant="outline" size="sm" className="text-xs h-8" asChild>
+                  <Link href={`/protected/clients/${client.id}/calendar`}>
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Календар
+                  </Link>
                 </Button>
               </div>
 

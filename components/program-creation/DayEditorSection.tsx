@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Dumbbell, Moon, Calendar, Save } from "lucide-react";
+import { Trash2, Dumbbell, Moon, Save, CalendarDays } from "lucide-react";
 import { DayType } from "@/components/program-creation/DayOptionsModal";
 import { WorkoutExercise } from "@/app/protected/programs/create/step2/page";
 
@@ -71,7 +71,7 @@ export function DayEditorSection({
     return (
       <Card className="p-8">
         <div className="text-center text-gray-500">
-          <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-50" />
           <h3 className="text-lg font-medium mb-2">Изберете ден от календара</h3>
           <p className="text-sm">Кликнете върху ден в календара за да го редактирате</p>
         </div>
@@ -156,12 +156,6 @@ export function DayEditorSection({
       label: 'Почивен ден',
       icon: Moon,
       color: 'text-purple-600'
-    },
-    {
-      value: 'free',
-      label: 'Свободен ден',
-      icon: Calendar,
-      color: 'text-gray-600'
     }
   ];
 
@@ -408,14 +402,6 @@ export function DayEditorSection({
         </div>
       )}
 
-      {/* Free Day */}
-      {localDayType === 'free' && (
-        <div className="text-center py-8 text-gray-500">
-          <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
-          <h3 className="text-lg font-medium mb-2">Свободен ден</h3>
-          <p className="text-sm">Няма планирани дейности за този ден</p>
-        </div>
-      )}
     </Card>
   );
 }
