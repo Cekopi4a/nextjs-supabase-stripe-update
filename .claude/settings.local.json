@@ -8,7 +8,12 @@
       "Bash(npx next build:*)",
       "Bash(curl:*)",
       "Bash(npm install:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(claude mcp:*)",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__apply_migration"
     ],
     "deny": []
   }

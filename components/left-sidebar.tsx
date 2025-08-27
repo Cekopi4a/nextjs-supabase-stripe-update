@@ -77,6 +77,11 @@ export default function LeftSidebar({
           icon: Dumbbell,
         },
         {
+          label: "Хранене",
+          href: "/nutrition",
+          icon: Apple,
+        },
+        {
           label: "Календар",
           href: "/calendar",
           icon: Calendar,
