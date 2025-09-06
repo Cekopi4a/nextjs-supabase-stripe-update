@@ -405,7 +405,7 @@ export default function CreateClientProgramStep2() {
                 {client.full_name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">
+                <h1 className="text-2xl font-bold text-foreground mb-1">
                   {programData.name}
                 </h1>
                 <p className="text-gray-600 flex items-center gap-2">

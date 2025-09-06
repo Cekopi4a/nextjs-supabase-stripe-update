@@ -6,6 +6,7 @@ import { createSupabaseClient } from "@/utils/supabase/client";
 import { Bell, Search, User, LogOut, Settings, UserCircle, ChevronDown } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
@@ -89,7 +90,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+    <header className="bg-background border-b border-border h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
       {/* Left section - Logo for non-protected pages */}
       <div className="flex items-center">
         {!user && (
@@ -97,7 +98,7 @@ export default function Header() {
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">F</span>
             </div>
-            <span className="font-semibold text-gray-900">FitnessPlatform</span>
+            <span className="font-semibold text-foreground">FitnessPlatform</span>
           </Link>
         )}
         
@@ -107,11 +108,11 @@ export default function Header() {
             {/* Search bar - hidden on mobile, shown on desktop for protected pages */}
             <div className="hidden md:flex items-center">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Търсене..."
-                  className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                  className="pl-9 pr-4 py-2 border border-input rounded-lg text-sm bg-muted focus:bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent w-64"
                 />
               </div>
             </div>
@@ -121,6 +122,9 @@ export default function Header() {
 
       {/* Right section */}
       <div className="flex items-center gap-3">
+        {/* Theme Toggle - always visible */}
+        <ThemeToggle />
+        
         {loading ? (
           /* Loading state */
           <div className="flex items-center gap-2">
@@ -147,27 +151,27 @@ export default function Header() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 pl-2 border-l border-gray-200 hover:bg-gray-50 rounded-r-lg py-2 px-2 transition-colors"
+                className="flex items-center gap-2 pl-2 border-l border-border hover:bg-muted rounded-r-lg py-2 px-2 transition-colors"
               >
                 <div className="hidden sm:block text-right">
-                  <p className="text-sm font-medium text-gray-900 leading-tight">
+                  <p className="text-sm font-medium text-foreground leading-tight">
                     {profile?.full_name || "Потребител"}
                   </p>
-                  <p className="text-xs text-gray-500 leading-tight capitalize">
+                  <p className="text-xs text-muted-foreground leading-tight capitalize">
                     {profile?.role || "client"}
                   </p>
                 </div>
-                <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-gray-600" />
+                <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <ChevronDown className="h-3 w-3 text-gray-400" />
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
               </button>
 
               {/* Dropdown menu */}
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-background rounded-lg shadow-lg border border-border py-2 z-50">
                   {/* User info in dropdown */}
-                  <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="px-4 py-3 border-b border-border">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
@@ -175,11 +179,11 @@ export default function Header() {
                         </span>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">
+                        <p className="font-medium text-foreground text-sm">
                           {profile?.full_name || "Потребител"}
                         </p>
-                        <p className="text-xs text-gray-500">{user?.email}</p>
-                        <p className="text-xs text-gray-400 capitalize">
+                        <p className="text-xs text-muted-foreground">{user?.email}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
                           {profile?.role || "client"}
                         </p>
                       </div>
@@ -193,7 +197,7 @@ export default function Header() {
                         router.push('/protected/account');
                         setShowUserMenu(false);
                       }}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted w-full text-left transition-colors"
                     >
                       <UserCircle className="h-4 w-4" />
                       Моят профил
@@ -204,17 +208,17 @@ export default function Header() {
                         router.push('/protected/settings');
                         setShowUserMenu(false);
                       }}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full text-left transition-colors"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted w-full text-left transition-colors"
                     >
                       <Settings className="h-4 w-4" />
                       Настройки
                     </button>
                   </div>
 
-                  <div className="border-t border-gray-100 pt-2">
+                  <div className="border-t border-border pt-2">
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left transition-colors"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 w-full text-left transition-colors"
                     >
                       <LogOut className="h-4 w-4" />
                       Изход

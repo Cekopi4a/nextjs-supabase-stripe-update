@@ -73,7 +73,7 @@ const WORKOUT_TYPES = [
   { value: 'strength', label: 'Силова тренировка', color: 'bg-blue-100 text-blue-800' },
   { value: 'cardio', label: 'Кардио', color: 'bg-red-100 text-red-800' },
   { value: 'flexibility', label: 'Гъвкавост', color: 'bg-green-100 text-green-800' },
-  { value: 'rest', label: 'Почивка', color: 'bg-gray-100 text-gray-800' },
+  { value: 'rest', label: 'Почивка', color: 'bg-muted text-muted-foreground' },
   { value: 'active_recovery', label: 'Активно възстановяване', color: 'bg-yellow-100 text-yellow-800' }
 ];
 
@@ -500,8 +500,8 @@ function CalendarDayCell({
   
   return (
     <div className={`
-      min-h-[120px] p-2 border border-gray-200 transition-colors hover:bg-gray-50
-      ${!day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''}
+      min-h-[120px] p-2 border border-border transition-colors hover:bg-muted/30
+      ${!day.isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : ''}
       ${day.isToday ? 'bg-blue-50 border-blue-300' : ''}
     `}>
       <div className="flex items-center justify-between mb-2">
@@ -567,7 +567,7 @@ function WorkoutItem({
       className={`
         text-xs p-2 rounded border cursor-pointer transition-all hover:shadow-sm group
         ${isCompleted ? 'bg-green-50 border-green-200 text-green-800' : 
-          isPlanned ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-gray-100 text-gray-800'}
+          isPlanned ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-muted text-muted-foreground'}
       `}
     >
       <div className="flex items-center justify-between">
@@ -663,7 +663,7 @@ function WorkoutModal({
                 type="date"
                 value={selectedDate.toISOString().split('T')[0]}
                 readOnly
-                className="bg-gray-50"
+                className="bg-muted/30"
               />
             </div>
 

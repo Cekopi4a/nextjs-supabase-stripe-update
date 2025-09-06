@@ -198,7 +198,7 @@ export default async function Page() {
         <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
           Техническа информация (за разработка)
         </summary>
-        <div className="mt-2 border p-4 rounded-lg bg-gray-50 dark:bg-gray-900">
+        <div className="mt-2 border p-4 rounded-lg bg-muted/30">
           <pre className="text-xs overflow-auto">{JSON.stringify(data.subscriptions, null, 2)}</pre>
         </div>
       </details>

@@ -145,11 +145,11 @@ export default function CreateNutritionPlanPage() {
 
   if (loadingClients) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-muted/30 to-muted/50 flex items-center justify-center">
         <Card className="p-8 shadow-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-3 border-orange-500 border-t-transparent mx-auto mb-4"></div>
-            <h3 className="font-semibold text-gray-900 mb-2">Зареждане на клиенти</h3>
+            <h3 className="font-semibold text-foreground mb-2">Зареждане на клиенти</h3>
             <p className="text-gray-600">Моля изчакайте...</p>
           </div>
         </Card>
@@ -158,7 +158,7 @@ export default function CreateNutritionPlanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <div className="max-w-4xl mx-auto p-4 lg:p-6 space-y-8">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -169,7 +169,7 @@ export default function CreateNutritionPlanPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Нов хранителен режим</h1>
+            <h1 className="text-3xl font-bold text-foreground">Нов хранителен режим</h1>
             <p className="text-gray-600">Създайте персонализиран хранителен план за вашия клиент</p>
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function CreateNutritionPlanPage() {
                       id="client_id"
                       value={formData.client_id}
                       onChange={(e) => handleInputChange('client_id', e.target.value)}
-                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full mt-1 px-3 py-2 border border-border rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                       required
                     >
                       <option value="">Изберете клиент</option>
@@ -266,7 +266,7 @@ export default function CreateNutritionPlanPage() {
                       id="plan_type"
                       value={formData.plan_type}
                       onChange={(e) => handleInputChange('plan_type', e.target.value)}
-                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className="w-full mt-1 px-3 py-2 border border-border rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     >
                       {Object.entries(planTypes).map(([key, type]) => (
                         <option key={key} value={key}>{type.name}</option>

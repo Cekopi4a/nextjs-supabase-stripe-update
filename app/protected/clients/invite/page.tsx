@@ -473,8 +473,8 @@ export default function InviteClientPage() {
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
                 </div>
               ))}
             </div>
@@ -527,7 +527,7 @@ function InvitationCard({
   
   const statusConfig = {
     pending: { 
-      color: isPending ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800',
+      color: isPending ? 'bg-blue-100 text-blue-800' : 'bg-muted text-muted-foreground',
       icon: isPending ? <Clock className="h-3 w-3" /> : <XCircle className="h-3 w-3" />,
       text: isPending ? 'Чакащ' : 'Изтекъл'
     },
@@ -537,7 +537,7 @@ function InvitationCard({
       text: 'Приет'
     },
     cancelled: {
-      color: 'bg-gray-100 text-gray-800',
+      color: 'bg-muted text-muted-foreground',
       icon: <XCircle className="h-3 w-3" />,
       text: 'Отменен'
     },
@@ -588,7 +588,7 @@ function InvitationCard({
       </div>
       
       {invitation.personal_message && (
-        <div className="text-xs text-muted-foreground mb-2 p-2 bg-gray-50 rounded">
+        <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/30 rounded">
           <p className="italic">"{invitation.personal_message}"</p>
         </div>
       )}

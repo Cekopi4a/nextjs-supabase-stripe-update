@@ -140,8 +140,8 @@ function ProgramCard({ program, userRole }: { program: any; userRole: string }) 
             <h3 className="font-semibold text-lg">{program.name}</h3>
             <span className={`text-xs px-2 py-1 rounded-full ${
               program.is_active 
-                ? "bg-green-100 text-green-800" 
-                : "bg-gray-100 text-gray-800"
+                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" 
+                : "bg-muted text-muted-foreground"
             }`}>
               {program.is_active ? "Active" : "Inactive"}
             </span>
@@ -180,11 +180,11 @@ function ProgramCard({ program, userRole }: { program: any; userRole: string }) 
         {/* Difficulty & Type */}
         <div className="flex gap-2">
           {program.difficulty_level && (
-            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded">
               {program.difficulty_level}
             </span>
           )}
-          <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded">
+          <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 rounded">
             {program.program_type.replace('_', ' ')}
           </span>
         </div>

@@ -102,8 +102,8 @@ export function WorkoutEditModal({
     if (availableExercises.length === 0) return;
 
     const newExercise: WorkoutExercise = {
-      exercise_id: availableExercises[0].id,
-      exercise: availableExercises[0],
+      exercise_id: "", // Start with empty selection
+      exercise: undefined, // No exercise selected initially
       planned_sets: 3,
       planned_reps: "10",
       planned_weight: "",
@@ -144,11 +144,14 @@ export function WorkoutEditModal({
 
     setSaving(true);
     try {
+      // Filter out exercises without selected exercise_id
+      const validExercises = exercises.filter(ex => ex.exercise_id && ex.exercise_id.trim() !== "");
+      
       const { error } = await supabase
         .from("workout_sessions")
         .update({
           name: workoutName,
-          exercises: exercises.map(ex => ({
+          exercises: validExercises.map(ex => ({
             exercise_id: ex.exercise_id,
             planned_sets: ex.planned_sets,
             planned_reps: ex.planned_reps,
@@ -239,7 +242,7 @@ export function WorkoutEditModal({
                             onValueChange={(value) => updateExercise(index, 'exercise_id', value)}
                           >
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Избери упражнение..." />
                             </SelectTrigger>
                             <SelectContent>
                               {availableExercises.map((ex) => (

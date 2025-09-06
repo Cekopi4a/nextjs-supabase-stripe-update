@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createSupabaseClient } from '@/utils/supabase/server';
 
 // GET - Получаване на всички клиенти на треньора
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();

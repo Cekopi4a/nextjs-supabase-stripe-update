@@ -1,5 +1,6 @@
 import LeftSidebar from "@/components/left-sidebar";
 import { createSupabaseClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 export default async function ProtectedLayout({
   children,
@@ -11,15 +12,20 @@ export default async function ProtectedLayout({
     data: { user },
   } = await client.auth.getUser();
 
+  // If no user, redirect to sign-in (backup to middleware)
+  if (!user) {
+    redirect("/sign-in");
+  }
+
   // Get user profile for sidebar props
   const { data: profile } = await client
     .from("profiles")
     .select("*")
-    .eq("id", user?.id || "")
+    .eq("id", user.id)
     .single();
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-gray-50">
+    <div className="flex h-[calc(100vh-64px)] bg-background">
       {/* Left Sidebar */}
       <LeftSidebar 
         userRole={profile?.role as "trainer" | "client" || "client"}

@@ -156,7 +156,7 @@ export default function LeftSidebar({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className={cn(
-        "p-4 border-b border-gray-200 bg-white",
+        "p-4 border-b border-border bg-background",
         isCollapsed && !isMobile && "px-3"
       )}>
         <div className="flex items-center justify-between">
@@ -169,8 +169,8 @@ export default function LeftSidebar({
             </div>
             {(!isCollapsed || isMobile) && (
               <div className="min-w-0 flex-1">
-                <h2 className="font-semibold text-gray-900 text-sm truncate">FitnessPlatform</h2>
-                <p className="text-xs text-gray-500 capitalize truncate">{userRole}</p>
+                <h2 className="font-semibold text-foreground text-sm truncate">FitnessPlatform</h2>
+                <p className="text-xs text-muted-foreground capitalize truncate">{userRole}</p>
               </div>
             )}
           </div>
@@ -181,7 +181,7 @@ export default function LeftSidebar({
               variant="ghost"
               size="sm"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="h-8 w-8 p-0 hover:bg-gray-100"
+              className="h-8 w-8 p-0 hover:bg-muted"
             >
               <Menu className="h-4 w-4" />
             </Button>
@@ -193,7 +193,7 @@ export default function LeftSidebar({
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="h-8 w-8 p-0 hover:bg-gray-100 lg:hidden"
+              className="h-8 w-8 p-0 hover:bg-muted lg:hidden"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -227,10 +227,10 @@ export default function LeftSidebar({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative",
                   isActive
-                    ? "bg-blue-50 text-blue-700 font-medium border border-blue-100"
+                    ? "bg-primary/10 text-primary font-medium border border-primary/20"
                     : disabled
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900",
+                    ? "text-muted-foreground cursor-not-allowed"
+                    : "text-foreground hover:bg-muted hover:text-foreground",
                   isCollapsed && !isMobile && "justify-center px-2"
                 )}
                 title={isCollapsed && !isMobile ? label : undefined}
@@ -239,10 +239,10 @@ export default function LeftSidebar({
                   className={cn(
                     "h-4 w-4 flex-shrink-0",
                     isActive 
-                      ? "text-blue-600" 
+                      ? "text-primary" 
                       : disabled 
-                      ? "text-gray-300" 
-                      : "text-gray-500 group-hover:text-gray-700"
+                      ? "text-muted-foreground/50" 
+                      : "text-muted-foreground group-hover:text-foreground"
                   )} 
                 />
                 {(!isCollapsed || isMobile) && (
@@ -252,7 +252,7 @@ export default function LeftSidebar({
                     {/* Badges */}
                     <div className="ml-auto flex items-center gap-1">
                       {badge && (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 h-5">
+                        <Badge variant="secondary" className="bg-primary/10 text-primary text-xs px-1.5 py-0.5 h-5">
                           {badge}
                         </Badge>
                       )}
@@ -265,7 +265,7 @@ export default function LeftSidebar({
 
                 {/* Active indicator */}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-blue-600 rounded-r-full" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-primary rounded-r-full" />
                 )}
               </Link>
 
@@ -283,7 +283,7 @@ export default function LeftSidebar({
 
       {/* Upgrade prompt (for free users) */}
       {userRole === "trainer" && !hasPremiumAccess && (!isCollapsed || isMobile) && (
-        <div className="p-3 border-t border-gray-200">
+        <div className="p-3 border-t border-border">
           <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg p-3 text-white">
             <div className="flex items-center gap-2 mb-2">
               <Crown className="h-4 w-4 flex-shrink-0" />
@@ -305,26 +305,26 @@ export default function LeftSidebar({
 
       {/* User info */}
       <div className={cn(
-        "p-3 border-t border-gray-200 bg-gray-50/50",
+        "p-3 border-t border-border bg-muted/30",
         isCollapsed && !isMobile && "px-2"
       )}>
         {(!isCollapsed || isMobile) ? (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <User className="h-4 w-4 text-gray-600" />
+            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+              <User className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {userProfile?.full_name || (userRole === "trainer" ? "Треньор" : "Клиент")}
               </p>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {userProfile?.email || "Потребител"}
               </p>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
               title="Излизане"
             >
               <LogOut className="h-4 w-4" />
@@ -332,8 +332,8 @@ export default function LeftSidebar({
           </div>
         ) : (
           <div className="flex justify-center">
-            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-gray-600" />
+            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+              <User className="h-4 w-4 text-muted-foreground" />
             </div>
           </div>
         )}
@@ -345,7 +345,7 @@ export default function LeftSidebar({
     <>
       {/* Desktop Sidebar */}
       <div className={cn(
-        "hidden lg:flex flex-col bg-white border-r border-gray-200 shadow-sm transition-all duration-300",
+        "hidden lg:flex flex-col bg-background border-r border-border shadow-sm transition-all duration-300",
         isCollapsed ? "w-16" : "w-64"
       )}>
         <SidebarContent />
@@ -357,7 +357,7 @@ export default function LeftSidebar({
           variant="outline"
           size="sm"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="bg-white shadow-md"
+          className="bg-background shadow-md border border-border"
         >
           <Menu className="h-4 w-4" />
         </Button>
@@ -373,7 +373,7 @@ export default function LeftSidebar({
           />
           
           {/* Sidebar */}
-          <div className="absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-white shadow-xl transform transition-transform duration-300">
+          <div className="absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-background shadow-xl transform transition-transform duration-300">
             <SidebarContent isMobile />
           </div>
         </div>

@@ -123,7 +123,7 @@ export default function CreateClientProgramStep1() {
             {client.full_name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            <h1 className="text-2xl font-bold text-foreground mb-1">
               Програма за {client.full_name}
             </h1>
             <p className="text-gray-600 flex items-center gap-2">

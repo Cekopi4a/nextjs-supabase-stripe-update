@@ -628,7 +628,7 @@ function LoadingDashboard({ profile }: { profile: any }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Welcome back, {profile.full_name}!</h1>
-          <div className="h-4 bg-gray-200 rounded w-48 mt-1 animate-pulse"></div>
+          <div className="h-4 bg-muted rounded w-48 mt-1 animate-pulse"></div>
         </div>
       </div>
       
@@ -636,9 +636,9 @@ function LoadingDashboard({ profile }: { profile: any }) {
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="p-4">
             <div className="animate-pulse space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-8 bg-muted rounded w-1/2"></div>
+              <div className="h-3 bg-muted rounded w-2/3"></div>
             </div>
           </Card>
         ))}
@@ -649,10 +649,10 @@ function LoadingDashboard({ profile }: { profile: any }) {
           {[1, 2].map((i) => (
             <Card key={i} className="p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                <div className="h-6 bg-muted rounded w-1/3"></div>
                 <div className="space-y-3">
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-4 bg-muted rounded"></div>
+                  <div className="h-4 bg-muted rounded w-5/6"></div>
                 </div>
               </div>
             </Card>
@@ -662,10 +662,10 @@ function LoadingDashboard({ profile }: { profile: any }) {
           {[1, 2, 3].map((i) => (
             <Card key={i} className="p-6">
               <div className="animate-pulse space-y-4">
-                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-5 bg-muted rounded w-1/2"></div>
                 <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded"></div>
-                  <div className="h-3 bg-gray-200 rounded w-4/5"></div>
+                  <div className="h-3 bg-muted rounded"></div>
+                  <div className="h-3 bg-muted rounded w-4/5"></div>
                 </div>
               </div>
             </Card>

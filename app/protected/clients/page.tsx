@@ -33,7 +33,7 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/utils/supabase/client';
 
 const subscriptionPlans = {
-  free: { name: 'Безплатен', limit: 3, color: 'bg-gray-100 text-gray-800' },
+  free: { name: 'Безплатен', limit: 3, color: 'bg-muted text-muted-foreground' },
   pro: { name: 'Pro', limit: 6, color: 'bg-blue-100 text-blue-800' },
   beast: { name: 'Beast', limit: null, color: 'bg-purple-100 text-purple-800' }
 } as const;
@@ -53,6 +53,7 @@ export default function ClientsPage() {
   useEffect(() => {
     fetchClients();
   }, []);
+  
 
   useEffect(() => {
     filterClients();
@@ -73,13 +74,31 @@ export default function ClientsPage() {
       console.log('=== STARTING FETCH CLIENTS (Main Page) ===');
       
       const supabase = createSupabaseClient();
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      if (userError || !user) {
-        console.log('User authentication error:', userError);
+      // Try to get current session first
+      console.log('Attempting to get Supabase session...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('Session result:', { session: !!session, error: sessionError });
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        setError('Проблем с автентификацията: ' + sessionError.message);
+        setLoading(false);
+        return;
+      }
+      
+      if (!session) {
+        console.log('No session found');
         setError('Не сте влязъл в системата');
-        setClients([]);
-        setFilteredClients([]);
+        setLoading(false);
+        return;
+      }
+      
+      const user = session.user;
+      if (!user) {
+        console.log('No user found in session');
+        setError('Няма потребителска информация');
         setLoading(false);
         return;
       }
@@ -240,7 +259,7 @@ export default function ClientsPage() {
         );
       default:
         return (
-          <Badge className="bg-gray-100 text-gray-700 border-gray-200 font-medium">
+          <Badge className="bg-muted text-muted-foreground border-border font-medium">
             Неизвестен
           </Badge>
         );
@@ -249,12 +268,12 @@ export default function ClientsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-muted/30 to-muted/50 flex items-center justify-center">
         <Card className="p-8 shadow-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-3 border-blue-500 border-t-transparent mx-auto mb-4"></div>
-            <h3 className="font-semibold text-gray-900 mb-2">Зареждане на клиенти</h3>
-            <p className="text-gray-600">Моля изчакайте...</p>
+            <h3 className="font-semibold text-foreground mb-2">Зареждане на клиенти</h3>
+            <p className="text-muted-foreground">Моля изчакайте...</p>
           </div>
         </Card>
       </div>
@@ -263,15 +282,20 @@ export default function ClientsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-muted/30 to-muted/50 flex items-center justify-center">
         <Card className="p-8 shadow-lg max-w-md w-full mx-4">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-red-900 mb-2">Възникна грешка</h3>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <Button onClick={fetchClients} className="w-full">
-              Опитай отново
-            </Button>
+            <h3 className="text-xl font-semibold text-destructive mb-2">Възникна грешка</h3>
+            <p className="text-muted-foreground mb-6">{error}</p>
+            <div className="space-y-2">
+              <Button onClick={fetchClients} className="w-full">
+                Опитай отново
+              </Button>
+              <Button onClick={() => window.location.href = '/sign-in'} variant="outline" className="w-full">
+                Влез отново
+              </Button>
+            </div>
           </div>
         </Card>
       </div>
@@ -283,14 +307,14 @@ export default function ClientsPage() {
   const canAddMore = planInfo.limit === null || activeClients.length < planInfo.limit;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       <div className="max-w-none mx-auto p-4 lg:p-6 lg:pr-2 space-y-8">
         {/* Header Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление на клиенти</h1>
-              <p className="text-gray-600">Преглед и управление на вашите клиенти и тяхните програми</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Управление на клиенти</h1>
+              <p className="text-muted-foreground">Преглед и управление на вашите клиенти и тяхните програми</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 lg:ml-auto">
               <Button variant="outline" size="lg" disabled className="shadow-sm">
@@ -317,7 +341,7 @@ export default function ClientsPage() {
                   <p className="text-blue-100 text-sm font-medium">Общо клиенти</p>
                   <p className="text-3xl font-bold mt-1">{clients.length}</p>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
+                <div className="p-3 bg-background/20 rounded-lg">
                   <Users className="h-8 w-8" />
                 </div>
               </div>
@@ -331,7 +355,7 @@ export default function ClientsPage() {
                   <p className="text-green-100 text-sm font-medium">Активни клиенти</p>
                   <p className="text-3xl font-bold mt-1">{activeClients.length}</p>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
+                <div className="p-3 bg-background/20 rounded-lg">
                   <CheckCircle className="h-8 w-8" />
                 </div>
               </div>
@@ -345,7 +369,7 @@ export default function ClientsPage() {
                   <p className="text-purple-100 text-sm font-medium">Текущ план</p>
                   <p className="text-xl font-bold mt-1">{planInfo.name}</p>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
+                <div className="p-3 bg-background/20 rounded-lg">
                   <Award className="h-8 w-8" />
                 </div>
               </div>
@@ -361,7 +385,7 @@ export default function ClientsPage() {
                     {activeClients.length}<span className="text-xl">/{planInfo.limit || '∞'}</span>
                   </p>
                 </div>
-                <div className="p-3 bg-white/20 rounded-lg">
+                <div className="p-3 bg-background/20 rounded-lg">
                   <TrendingUp className="h-8 w-8" />
                 </div>
               </div>
@@ -370,7 +394,7 @@ export default function ClientsPage() {
         </div>
 
         {/* Search and Filters */}
-        <Card className="shadow-sm border border-gray-200">
+        <Card className="shadow-sm border border-border">
           <CardContent className="p-6">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1">
@@ -414,7 +438,7 @@ export default function ClientsPage() {
         {/* Clients Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredClients.map(client => (
-            <Card key={client.id} className="p-5 hover:shadow-lg transition-all duration-200 border-0 shadow-md bg-white">
+            <Card key={client.id} className="p-5 hover:shadow-lg transition-all duration-200 border-0 shadow-md">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="h-11 w-11 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -423,7 +447,7 @@ export default function ClientsPage() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base text-gray-900 truncate">{client.full_name}</h3>
+                    <h3 className="font-semibold text-base text-foreground truncate">{client.full_name}</h3>
                     <p className="text-gray-500 truncate text-sm">{client.email}</p>
                   </div>
                 </div>
@@ -439,9 +463,9 @@ export default function ClientsPage() {
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-600">Напредък към целта</span>
-                  <span className="font-semibold text-gray-900">{client.progress || 0}%</span>
+                  <span className="font-semibold text-foreground">{client.progress || 0}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full ${getProgressColor(client.progress || 0)} transition-all duration-500`}
                     style={{ width: `${client.progress || 0}%` }}
@@ -453,16 +477,16 @@ export default function ClientsPage() {
               <div className="grid grid-cols-2 gap-3 text-sm mb-4">
                 <div>
                   <p className="text-gray-500">Цел</p>
-                  <p className="font-semibold text-gray-900">{client.goals || 'Не е зададена'}</p>
+                  <p className="font-semibold text-foreground">{client.goals || 'Не е зададена'}</p>
                 </div>
                 <div>
                   <p className="text-gray-500">Програми</p>
-                  <p className="font-semibold text-gray-900">{client.activePrograms || 0} активни</p>
+                  <p className="font-semibold text-foreground">{client.activePrograms || 0} активни</p>
                 </div>
               </div>
 
               {/* Weekly Progress */}
-              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+              <div className="bg-muted/50 rounded-lg p-3 mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700">Тази седмица</span>
                   {client.streak > 0 && (
@@ -475,11 +499,11 @@ export default function ClientsPage() {
                   <span className="text-gray-600">
                     {client.completedWorkouts || 0}/{client.weeklyGoal || 3} тренировки
                   </span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-foreground">
                     {Math.round(((client.completedWorkouts || 0) / (client.weeklyGoal || 3)) * 100)}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                <div className="w-full bg-muted rounded-full h-1.5">
                   <div 
                     className="h-1.5 rounded-full bg-blue-500 transition-all duration-500"
                     style={{ width: `${Math.min(((client.completedWorkouts || 0) / (client.weeklyGoal || 3)) * 100, 100)}%` }}

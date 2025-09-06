@@ -54,11 +54,11 @@ interface Client {
 }
 
 const planTypes = {
-  weight_loss: { name: 'Отслабване', color: 'bg-red-100 text-red-800', icon: '📉' },
-  weight_gain: { name: 'Качване на тегло', color: 'bg-green-100 text-green-800', icon: '📈' },
-  maintenance: { name: 'Поддържане', color: 'bg-blue-100 text-blue-800', icon: '⚖️' },
-  muscle_building: { name: 'Мускулна маса', color: 'bg-purple-100 text-purple-800', icon: '💪' },
-  cutting: { name: 'Релеф', color: 'bg-orange-100 text-orange-800', icon: '🔥' }
+  weight_loss: { name: 'Отслабване', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: '📉' },
+  weight_gain: { name: 'Качване на тегло', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: '📈' },
+  maintenance: { name: 'Поддържане', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300', icon: '⚖️' },
+  muscle_building: { name: 'Мускулна маса', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300', icon: '💪' },
+  cutting: { name: 'Релеф', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300', icon: '🔥' }
 };
 
 export default function NutritionPlansPage() {
@@ -199,7 +199,7 @@ export default function NutritionPlansPage() {
   const getPlanStatusBadge = (plan: NutritionPlan) => {
     if (!plan.is_active) {
       return (
-        <Badge className="bg-gray-100 text-gray-700 border-gray-200">
+        <Badge className="bg-muted text-muted-foreground border-border">
           <Clock className="h-3 w-3 mr-1" />
           Неактивен
         </Badge>
@@ -212,7 +212,7 @@ export default function NutritionPlansPage() {
 
     if (endDate && now > endDate) {
       return (
-        <Badge className="bg-red-100 text-red-700 border-red-200">
+        <Badge className="bg-red-100 text-red-700 border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-700">
           <AlertCircle className="h-3 w-3 mr-1" />
           Изтекъл
         </Badge>
@@ -221,7 +221,7 @@ export default function NutritionPlansPage() {
 
     if (now < startDate) {
       return (
-        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200">
+        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300 dark:border-yellow-700">
           <Clock className="h-3 w-3 mr-1" />
           Предстоящ
         </Badge>
@@ -229,7 +229,7 @@ export default function NutritionPlansPage() {
     }
 
     return (
-      <Badge className="bg-green-100 text-green-700 border-green-200">
+      <Badge className="bg-green-100 text-green-700 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-700">
         <CheckCircle className="h-3 w-3 mr-1" />
         Активен
       </Badge>
@@ -238,12 +238,12 @@ export default function NutritionPlansPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-muted/30 to-muted/50 flex items-center justify-center">
         <Card className="p-8 shadow-lg">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-3 border-orange-500 border-t-transparent mx-auto mb-4"></div>
-            <h3 className="font-semibold text-gray-900 mb-2">Зареждане на хранителни режими</h3>
-            <p className="text-gray-600">Моля изчакайте...</p>
+            <h3 className="font-semibold text-foreground mb-2">Зареждане на хранителни режими</h3>
+            <p className="text-muted-foreground">Моля изчакайте...</p>
           </div>
         </Card>
       </div>
@@ -252,12 +252,12 @@ export default function NutritionPlansPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-muted/30 to-muted/50 flex items-center justify-center">
         <Card className="p-8 shadow-lg max-w-md w-full mx-4">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-red-900 mb-2">Възникна грешка</h3>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <h3 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">Възникна грешка</h3>
+            <p className="text-muted-foreground mb-6">{error}</p>
             <Button onClick={fetchData} className="w-full">
               Опитай отново
             </Button>
@@ -287,14 +287,14 @@ export default function NutritionPlansPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-muted/30 to-muted/50">
       <div className="max-w-none mx-auto p-4 lg:p-6 space-y-8">
         {/* Header Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Хранителни режими</h1>
-              <p className="text-gray-600">Създавайте и управлявайте хранителните планове за вашите клиенти</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Хранителни режими</h1>
+              <p className="text-muted-foreground">Създавайте и управлявайте хранителните планове за вашите клиенти</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 lg:ml-auto">
               <Button size="lg" className="shadow-sm bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700" asChild>
@@ -367,7 +367,7 @@ export default function NutritionPlansPage() {
         </div>
 
         {/* Search and Filters */}
-        <Card className="shadow-sm border border-gray-200">
+        <Card className="shadow-sm border border-border">
           <CardContent className="p-6">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1">
@@ -385,7 +385,7 @@ export default function NutritionPlansPage() {
                 <select 
                   value={selectedClient} 
                   onChange={(e) => setSelectedClient(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="px-3 py-2 border border-border rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-background"
                 >
                   <option value="all">Всички клиенти</option>
                   {clients.map(client => (
@@ -395,7 +395,7 @@ export default function NutritionPlansPage() {
                 <select 
                   value={selectedType} 
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="px-3 py-2 border border-border rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-background"
                 >
                   <option value="all">Всички типове</option>
                   {Object.entries(planTypes).map(([key, type]) => (
@@ -413,12 +413,12 @@ export default function NutritionPlansPage() {
             const planType = planTypes[plan.plan_type as keyof typeof planTypes] || planTypes.maintenance;
             
             return (
-              <Card key={plan.id} className="p-6 hover:shadow-lg transition-all duration-200 border-0 shadow-md bg-white">
+              <Card key={plan.id} className="p-6 hover:shadow-lg transition-all duration-200 border-0 shadow-md bg-card">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg text-gray-900 truncate">{plan.name}</h3>
-                    <p className="text-gray-500 text-sm truncate">{plan.client?.full_name}</p>
-                    <p className="text-gray-400 text-xs truncate">{plan.client?.email}</p>
+                    <h3 className="font-semibold text-lg text-foreground truncate">{plan.name}</h3>
+                    <p className="text-muted-foreground text-sm truncate">{plan.client?.full_name}</p>
+                    <p className="text-muted-foreground/70 text-xs truncate">{plan.client?.email}</p>
                   </div>
                   {getPlanStatusBadge(plan)}
                 </div>
@@ -428,35 +428,35 @@ export default function NutritionPlansPage() {
                     {planType.icon} {planType.name}
                   </Badge>
                   {plan.description && (
-                    <p className="text-sm text-gray-600 line-clamp-2">{plan.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{plan.description}</p>
                   )}
                 </div>
 
                 {/* Nutritional Targets */}
-                <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Дневни цели</h4>
+                <div className="bg-muted/30 rounded-lg p-3 mb-4">
+                  <h4 className="text-sm font-medium text-foreground mb-2">Дневни цели</h4>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-500">Калории:</span>
+                      <span className="text-muted-foreground">Калории:</span>
                       <span className="ml-1 font-semibold">{plan.target_calories || 'Не е зададено'}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Протеини:</span>
+                      <span className="text-muted-foreground">Протеини:</span>
                       <span className="ml-1 font-semibold">{plan.target_protein || 0}г</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Въглехидрати:</span>
+                      <span className="text-muted-foreground">Въглехидрати:</span>
                       <span className="ml-1 font-semibold">{plan.target_carbs || 0}г</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Мазнини:</span>
+                      <span className="text-muted-foreground">Мазнини:</span>
                       <span className="ml-1 font-semibold">{plan.target_fat || 0}г</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Period */}
-                <div className="text-xs text-gray-500 mb-4">
+                <div className="text-xs text-muted-foreground mb-4">
                   <div className="flex items-center gap-1 mb-1">
                     <Calendar className="h-3 w-3" />
                     От: {new Date(plan.start_date).toLocaleDateString('bg-BG')}
@@ -471,32 +471,32 @@ export default function NutritionPlansPage() {
 
                 {/* Macros Summary */}
                 {macrosData[plan.id] && (
-                  <div className="bg-blue-50 rounded-lg p-3 mb-3">
-                    <h4 className="text-xs font-medium text-blue-700 mb-2 flex items-center gap-1">
+                  <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-3 mb-3">
+                    <h4 className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-1">
                       <BarChart3 className="h-3 w-3" />
                       Средни дневни макроси
                     </h4>
                     <div className="grid grid-cols-2 gap-1 text-xs">
                       <div>
-                        <span className="text-blue-600">Кал:</span>
+                        <span className="text-blue-600 dark:text-blue-400">Кал:</span>
                         <span className="ml-1 font-semibold">
                           {Math.round(macrosData[plan.id].average_macros?.avg_calories || 0)}
                         </span>
                       </div>
                       <div>
-                        <span className="text-blue-600">Бел:</span>
+                        <span className="text-blue-600 dark:text-blue-400">Бел:</span>
                         <span className="ml-1 font-semibold">
                           {Math.round(macrosData[plan.id].average_macros?.avg_protein || 0)}г
                         </span>
                       </div>
                       <div>
-                        <span className="text-blue-600">Въгл:</span>
+                        <span className="text-blue-600 dark:text-blue-400">Въгл:</span>
                         <span className="ml-1 font-semibold">
                           {Math.round(macrosData[plan.id].average_macros?.avg_carbs || 0)}г
                         </span>
                       </div>
                       <div>
-                        <span className="text-blue-600">Маз:</span>
+                        <span className="text-blue-600 dark:text-blue-400">Маз:</span>
                         <span className="ml-1 font-semibold">
                           {Math.round(macrosData[plan.id].average_macros?.avg_fat || 0)}г
                         </span>
@@ -568,14 +568,14 @@ export default function NutritionPlansPage() {
 
         {/* Empty State */}
         {filteredPlans.length === 0 && !loading && (
-          <Card className="border-2 border-dashed border-gray-300 shadow-sm">
+          <Card className="border-2 border-dashed border-border shadow-sm">
             <CardContent className="p-12">
               <div className="text-center">
-                <Apple className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <Apple className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">
                   {plans.length === 0 ? 'Няма създадени хранителни режими' : 'Няма резултати'}
                 </h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   {plans.length === 0 
                     ? 'Започнете да създавате персонализирани хранителни планове за вашите клиенти.'
                     : 'Опитайте с различни филтри или търсене.'

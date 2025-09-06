@@ -155,7 +155,7 @@ export default function ClientProfilePage() {
       case 'completed':
         return <Badge className="bg-green-100 text-green-800">Завършена</Badge>;
       case 'skipped':
-        return <Badge className="bg-gray-100 text-gray-800">Прескочена</Badge>;
+        return <Badge className="bg-muted text-muted-foreground">Прескочена</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -254,7 +254,7 @@ export default function ClientProfilePage() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+            <h1 className="text-2xl font-bold text-foreground mb-1">
               {client.full_name}
             </h1>
             <p className="text-gray-600 flex items-center gap-2">
@@ -326,7 +326,7 @@ export default function ClientProfilePage() {
           {!activeProgram ? (
             <div className="text-center py-8">
               <Dumbbell className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Няма активна програма</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">Няма активна програма</h3>
               <p className="text-gray-500 mb-4">Създайте тренировъчна програма за този клиент</p>
               <Link href={`/protected/clients/${clientId}/programs/create`}>
                 <Button>
@@ -376,10 +376,10 @@ export default function ClientProfilePage() {
                   <h4 className="text-sm font-medium text-gray-500 mb-3">Предишни програми</h4>
                   <div className="space-y-2">
                     {programs.filter(p => !p.is_active).map((program) => (
-                      <Card key={program.id} className="p-3 bg-gray-50">
+                      <Card key={program.id} className="p-3 bg-muted/30">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium text-gray-700">{program.name}</h4>
-                          <Badge className="bg-gray-100 text-gray-800">Неактивна</Badge>
+                          <Badge className="bg-muted text-muted-foreground">Неактивна</Badge>
                         </div>
                       </Card>
                     ))}
@@ -407,7 +407,7 @@ export default function ClientProfilePage() {
           {recentSessions.length === 0 ? (
             <div className="text-center py-8">
               <Clock className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Няма тренировки</h3>
+              <h3 className="text-lg font-medium text-foreground mb-2">Няма тренировки</h3>
               <p className="text-gray-500">Планираните тренировки ще се появят тук</p>
             </div>
           ) : (

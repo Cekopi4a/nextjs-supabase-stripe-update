@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 
 export default function AccountPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -23,7 +24,7 @@ export default function AccountPage() {
     const fetchUser = async () => {
       setLoading(true);
       const supabase = createSupabaseClient();
-      const { data, error } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       if (data?.user) {
         setUser(data.user);
         setFullName(data.user.user_metadata?.full_name || "");

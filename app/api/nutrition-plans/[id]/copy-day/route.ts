@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseClient } from '@/utils/supabase/server';
 
+interface NutritionPlanMealItem {
+  food_item_id: string;
+  quantity: number;
+  notes?: string;
+}
+
 // POST - Копиране на хранения от един ден в други дни
 export async function POST(
   request: NextRequest,
@@ -105,7 +111,7 @@ export async function POST(
           const newMeal = newMeals[i];
           
           if (sourceMeal.nutrition_plan_meal_items && sourceMeal.nutrition_plan_meal_items.length > 0) {
-            sourceMeal.nutrition_plan_meal_items.forEach((item: any) => {
+            sourceMeal.nutrition_plan_meal_items.forEach((item: NutritionPlanMealItem) => {
               mealItems.push({
                 meal_id: newMeal.id,
                 food_item_id: item.food_item_id,

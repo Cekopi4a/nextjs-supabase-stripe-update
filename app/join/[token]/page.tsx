@@ -1,13 +1,12 @@
 // app/join/[token]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { 
   User,
   Mail,
@@ -23,7 +22,6 @@ import {
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { acceptInvitationAction, validateInvitationAction } from "@/utils/actions/invitation-actions";
 import { useParams, useRouter } from "next/navigation";
-import { invitationAcceptanceHandler } from "@/utils/invitation/acceptance-handler";
 
 interface InvitationData {
   id: string;
@@ -37,8 +35,14 @@ interface InvitationData {
   expires_at: string;
 }
 
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
+  invitation?: InvitationData;
+}
+
 // Type guard за резултата от validateInvitationAction
-function hasInvitation(result: any): result is { valid: true; invitation: InvitationData } {
+function hasInvitation(result: ValidationResult): result is { valid: true; invitation: InvitationData } {
   return result && result.valid && "invitation" in result && !!result.invitation;
 }
 
@@ -66,9 +70,9 @@ export default function JoinPage() {
     if (token) {
       validateInvitation();
     }
-  }, [token]);
+  }, [token, validateInvitation]);
 
-  const validateInvitation = async () => {
+  const validateInvitation = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -107,7 +111,7 @@ export default function JoinPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   const handleRegistration = async () => {
     if (!invitation) return;
@@ -178,15 +182,17 @@ export default function JoinPage() {
       console.log('Registration and invitation acceptance successful');
       router.push("/protected");
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Registration error:", error);
       
-      if (error.message?.includes("already registered")) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes("already registered")) {
         setError("Този имейл адрес вече е регистриран. Моля влезте в акаунта си.");
-      } else if (error.message?.includes("Email not confirmed")) {
+      } else if (errorMessage.includes("Email not confirmed")) {
         setError("Моля проверете имейла си и потвърдете акаунта.");
       } else {
-        setError(error.message || "Грешка при създаване на акаунт");
+        setError(errorMessage || "Грешка при създаване на акаунт");
       }
     } finally {
       setCreating(false);
@@ -291,7 +297,7 @@ export default function JoinPage() {
               {invitation.personal_message && (
                 <div className="bg-blue-50 border border-blue-200 rounded p-3">
                   <p className="text-sm italic text-blue-800">
-                    "{invitation.personal_message}"
+                    &ldquo;{invitation.personal_message}&rdquo;
                   </p>
                 </div>
               )}

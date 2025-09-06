@@ -112,7 +112,7 @@ interface Client {
 
 // UI Components
 const Card: React.FC<CardProps> = ({ children, className = "" }) => (
-  <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
+  <div className={`bg-card rounded-lg border border-border shadow-sm ${className}`}>
     {children}
   </div>
 );
@@ -125,9 +125,9 @@ const Button: React.FC<ButtonProps> = ({ children, variant = "default", size = "
   const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none";
   const variants: Record<string, string> = {
     default: "bg-blue-600 text-white hover:bg-blue-700",
-    outline: "border border-gray-300 bg-background hover:bg-gray-50",
-    secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
-    ghost: "hover:bg-gray-100",
+    outline: "border border-border bg-background hover:bg-muted/30",
+    secondary: "bg-muted text-foreground hover:bg-muted/80",
+    ghost: "hover:bg-muted/30",
     destructive: "bg-red-600 text-white hover:bg-red-700"
   };
   const sizes: Record<string, string> = {
@@ -150,14 +150,14 @@ const Button: React.FC<ButtonProps> = ({ children, variant = "default", size = "
 
 const Input: React.FC<InputProps> = ({ className = "", ...props }) => (
   <input 
-    className={`flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    className={`flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     {...props}
   />
 );
 
 const Textarea: React.FC<TextareaProps> = ({ className = "", ...props }) => (
   <textarea 
-    className={`flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+    className={`flex min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     {...props}
   />
 );
@@ -173,14 +173,14 @@ const Select: React.FC<SelectProps> = ({ children, value, onValueChange, classNa
   return (
     <div className="relative">
       <button
-        className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+        className={`flex h-10 w-full items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span>{value || "Избери..."}</span>
         <ChevronRight className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white shadow-md">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-md border border-border bg-popover shadow-md">
           {React.Children.map(children, child => {
             if (React.isValidElement(child)) {
               const childElement = child as React.ReactElement<{ value: string; onClick?: () => void }>;
@@ -198,7 +198,7 @@ const Select: React.FC<SelectProps> = ({ children, value, onValueChange, classNa
 
 const SelectItem: React.FC<SelectItemProps> = ({ children, value, onClick }) => (
   <div 
-    className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+    className="px-3 py-2 text-sm hover:bg-muted/30 cursor-pointer"
     onClick={onClick}
   >
     {children}
@@ -208,7 +208,7 @@ const SelectItem: React.FC<SelectItemProps> = ({ children, value, onClick }) => 
 const Badge: React.FC<BadgeProps> = ({ children, className = "", variant = "default" }) => {
   const variants: Record<string, string> = {
     default: "bg-blue-100 text-blue-800",
-    secondary: "bg-gray-100 text-gray-800",
+    secondary: "bg-muted text-muted-foreground",
     success: "bg-green-100 text-green-800",
     warning: "bg-yellow-100 text-yellow-800",
     destructive: "bg-red-100 text-red-800"
@@ -459,7 +459,7 @@ export default function ExerciseBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header */}
@@ -470,7 +470,7 @@ export default function ExerciseBuilder() {
               Назад
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Exercise Builder</h1>
+              <h1 className="text-3xl font-bold text-foreground">Exercise Builder</h1>
               <p className="text-gray-600 mt-1">Създайте детайлни тренировъчни програми за вашите клиенти</p>
             </div>
           </div>
@@ -581,7 +581,7 @@ export default function ExerciseBuilder() {
                 </h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {mockClients.map(client => (
-                    <label key={client.id} className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50 cursor-pointer">
+                    <label key={client.id} className="flex items-center space-x-2 p-2 rounded hover:bg-muted/30 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={selectedClients.includes(client.id)}
@@ -592,7 +592,7 @@ export default function ExerciseBuilder() {
                             setSelectedClients(selectedClients.filter(id => id !== client.id));
                           }
                         }}
-                        className="rounded border-gray-300"
+                        className="rounded border-border"
                       />
                       <span className="text-sm">{client.full_name}</span>
                     </label>
@@ -643,7 +643,7 @@ export default function ExerciseBuilder() {
                     className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       activeDay === index 
                         ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
                     <div className="text-center">
@@ -658,7 +658,7 @@ export default function ExerciseBuilder() {
 
               {/* Active Day Settings */}
               {workoutDays[activeDay] && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="mb-6 p-4 bg-muted/30 rounded-lg">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="workout-name">Име на тренировката</Label>
@@ -728,7 +728,7 @@ export default function ExerciseBuilder() {
                 </div>
 
                 {workoutDays[activeDay]?.exercises.length === 0 ? (
-                  <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <div className="text-center py-12 bg-muted/30 rounded-lg border-2 border-dashed border-muted">
                     <Dumbbell className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                     <h3 className="text-lg font-semibold text-gray-600 mb-2">Няма добавени упражнения</h3>
                     <p className="text-gray-500 mb-4">
@@ -755,7 +755,7 @@ export default function ExerciseBuilder() {
                               
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <h4 className="font-semibold text-gray-900">
+                                  <h4 className="font-semibold text-foreground">
                                     {exercise.exercise.name}
                                   </h4>
                                   <Badge variant="secondary" className="text-xs">
@@ -870,7 +870,7 @@ export default function ExerciseBuilder() {
         {/* Exercise Library Modal */}
         {showExerciseLibrary && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-card rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between p-6 border-b">
                 <h2 className="text-xl font-semibold">Библиотека с упражнения</h2>
                 <Button variant="ghost" onClick={() => setShowExerciseLibrary(false)}>
@@ -879,7 +879,7 @@ export default function ExerciseBuilder() {
               </div>
               
               {/* Exercise Filters */}
-              <div className="p-6 border-b bg-gray-50">
+              <div className="p-6 border-b bg-muted/30">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -912,7 +912,7 @@ export default function ExerciseBuilder() {
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900 mb-1">{exercise.name}</h4>
+                            <h4 className="font-semibold text-foreground mb-1">{exercise.name}</h4>
                             <div className="flex items-center gap-2 mb-2">
                               <Badge className={difficultyLevels.find(d => d.value === exercise.difficulty)?.color}>
                                 {difficultyLevels.find(d => d.value === exercise.difficulty)?.label}
@@ -941,7 +941,7 @@ export default function ExerciseBuilder() {
                         </div>
                         
                         {exercise.instructions?.steps && (
-                          <div className="bg-gray-50 p-2 rounded text-xs">
+                          <div className="bg-muted/30 p-2 rounded text-xs">
                             <p className="font-medium mb-1">Инструкции:</p>
                             <ol className="space-y-1">
                               {exercise.instructions.steps.slice(0, 2).map((step, idx) => (
@@ -1025,7 +1025,7 @@ export default function ExerciseBuilder() {
                   {Math.round((workoutDays.filter(day => day.exercises.length > 0).length / workoutDays.length) * 100)}%
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div 
                   className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
                   style={{ 

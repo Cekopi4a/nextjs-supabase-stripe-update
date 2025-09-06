@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseClient } from '@/utils/supabase/server';
 
+interface MealItem {
+  food_item_id: string;
+  quantity: number;
+  notes?: string;
+}
+
+interface Meal {
+  day_of_week: number;
+  meal_type: string;
+  meal_order?: number;
+  items?: MealItem[];
+}
+
 // GET - Получаване на всички хранителни режими за треньора
 export async function GET(request: NextRequest) {
   try {
@@ -127,7 +140,7 @@ export async function POST(request: NextRequest) {
 
     // Добавяне на ястията, ако има такива
     if (meals.length > 0) {
-      const mealsToInsert = meals.map((meal: any) => ({
+      const mealsToInsert = meals.map((meal: Meal) => ({
         nutrition_plan_id: newPlan.id,
         day_of_week: meal.day_of_week,
         meal_type: meal.meal_type,
@@ -151,7 +164,7 @@ export async function POST(request: NextRequest) {
           const insertedMeal = insertedMeals[i];
           
           if (meal.items && meal.items.length > 0) {
-            meal.items.forEach((item: any) => {
+            meal.items.forEach((item: MealItem) => {
               mealItems.push({
                 meal_id: insertedMeal.id,
                 food_item_id: item.food_item_id,
