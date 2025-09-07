@@ -1,9 +1,20 @@
+// app/protected/clients/[clientId]/nutrition/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -24,7 +35,8 @@ import {
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { dateToLocalDateString } from "@/utils/date-utils";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface MealPlan {
   id: string;
@@ -107,7 +119,9 @@ const BULGARIAN_MONTHS = [
 const BULGARIAN_DAYS = ["Нед", "Пон", "Вто", "Сря", "Чет", "Пет", "Съб"];
 
 export default function ClientNutritionPage() {
+  const params = useParams();
   const router = useRouter();
+  const clientId = params.clientId as string;
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [meals, setMeals] = useState<MealPlan[]>([]);
@@ -116,12 +130,25 @@ export default function ClientNutritionPage() {
   const [loading, setLoading] = useState(true);
   const [showDayModal, setShowDayModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [editingMeal, setEditingMeal] = useState<MealPlan | null>(null);
+  const [selectedMealType, setSelectedMealType] = useState<string>('breakfast');
+
+  // Form states
+  const [mealForm, setMealForm] = useState({
+    meal_name: '',
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
+    notes: ''
+  });
 
   const supabase = createSupabaseClient();
 
   useEffect(() => {
     fetchClientData();
-  }, []);
+  }, [clientId]);
 
   useEffect(() => {
     if (client) {
@@ -138,17 +165,31 @@ export default function ClientNutritionPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Get current user's data
+      // Verify trainer has access to this client
+      const { data: relationship } = await supabase
+        .from("trainer_clients")
+        .select("*")
+        .eq("trainer_id", user.id)
+        .eq("client_id", clientId)
+        .single();
+
+      if (!relationship) {
+        router.push("/protected/clients");
+        return;
+      }
+
+      // Get client data
       const { data: clientData, error } = await supabase
         .from("profiles")
         .select("id, full_name, email, avatar_url")
-        .eq("id", user.id)
+        .eq("id", clientId)
         .single();
 
       if (error) throw error;
       setClient(clientData);
     } catch (error) {
       console.error("Error fetching client:", error);
+      router.push("/protected/clients");
     }
   };
 
@@ -165,27 +206,14 @@ export default function ClientNutritionPage() {
       const startDate = dateToLocalDateString(startOfMonth);
       const endDate = dateToLocalDateString(endOfMonth);
 
-      console.log("🔍 Client nutrition page - fetchMeals:", {
-        clientId: client.id,
-        startDate,
-        endDate,
-        currentDate
-      });
-
-      // Get daily meals for this month directly
+      // Get daily meals for this month
       const { data: dailyMeals, error: mealsError } = await supabase
         .from("daily_meals")
         .select("*")
-        .eq("client_id", client.id)
+        .eq("client_id", clientId)
         .gte("scheduled_date", startDate)
         .lte("scheduled_date", endDate)
         .order("scheduled_date", { ascending: true });
-
-      console.log("🍽️ Supabase query result:", { 
-        dailyMeals, 
-        mealsError, 
-        count: dailyMeals?.length || 0 
-      });
 
       if (mealsError) throw mealsError;
 
@@ -203,8 +231,6 @@ export default function ClientNutritionPage() {
         notes: meal.notes,
         status: meal.status
       }));
-      
-      console.log("✅ Transformed meals:", transformedMeals);
       
       setMeals(transformedMeals);
     } catch (error) {
@@ -263,6 +289,136 @@ export default function ClientNutritionPage() {
     setShowDayModal(true);
   };
 
+  const openAddMealModal = (mealType: string) => {
+    setSelectedMealType(mealType);
+    setMealForm({
+      meal_name: '',
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fats: 0,
+      notes: ''
+    });
+    setEditingMeal(null);
+    setShowAddMealModal(true);
+  };
+
+  const openEditModal = (meal: MealPlan) => {
+    setEditingMeal(meal);
+    setSelectedMealType(meal.meal_type);
+    setMealForm({
+      meal_name: meal.meal_name,
+      calories: meal.calories || 0,
+      protein: meal.protein || 0,
+      carbs: meal.carbs || 0,
+      fats: meal.fats || 0,
+      notes: meal.notes || ''
+    });
+    setShowAddMealModal(true);
+  };
+
+  const saveMeal = async () => {
+    if (!selectedDate || !mealForm.meal_name.trim()) {
+      alert("Моля въведете име на ястието");
+      return;
+    }
+
+    try {
+      const mealData = {
+        meal_type: selectedMealType,
+        meal_name: mealForm.meal_name,
+        scheduled_date: dateToLocalDateString(selectedDate),
+        client_id: clientId,
+        calories: mealForm.calories || null,
+        protein: mealForm.protein || null,
+        carbs: mealForm.carbs || null,
+        fats: mealForm.fats || null,
+        notes: mealForm.notes || null,
+        status: 'planned'
+      };
+
+      if (editingMeal) {
+        // Update existing meal
+        const response = await fetch('/api/daily-meals', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: editingMeal.id,
+            ...mealData
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update meal');
+        }
+
+        const result = await response.json();
+        
+        // Update local state
+        setMeals(prev => prev.map(m => m.id === editingMeal.id ? {
+          ...m,
+          ...mealData
+        } : m));
+      } else {
+        // Create new meal
+        const response = await fetch('/api/daily-meals', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(mealData),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to create meal');
+        }
+
+        const result = await response.json();
+        
+        // Add to local state
+        const newMeal: MealPlan = {
+          id: result.meal.id,
+          ...mealData
+        };
+        setMeals(prev => [...prev, newMeal]);
+      }
+
+      setShowAddMealModal(false);
+      generateCalendarDays();
+    } catch (error) {
+      console.error("Error saving meal:", error);
+      alert("Грешка при запазване на ястието");
+    }
+  };
+
+  const deleteMeal = async (mealId: string) => {
+    if (!confirm("Сигурни ли сте, че искате да изтриете това ястие?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/daily-meals?id=${mealId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete meal');
+      }
+
+      // Remove from local state
+      setMeals(prev => prev.filter(m => m.id !== mealId));
+      generateCalendarDays();
+    } catch (error) {
+      console.error("Error deleting meal:", error);
+      alert("Грешка при изтриване на ястието");
+    }
+  };
+
   if (!client) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -275,17 +431,41 @@ export default function ClientNutritionPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-semibold">
-            {client.full_name.charAt(0).toUpperCase()}
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/protected/clients">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Назад
+            </Link>
+          </Button>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-semibold">
+              {client.full_name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold flex items-center">
+                <Apple className="h-6 w-6 mr-2 text-green-600" />
+                Хранителен календар - {client.full_name}
+              </h1>
+              <p className="text-muted-foreground">{client.email}</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold flex items-center">
-              <Apple className="h-6 w-6 mr-2 text-green-600" />
-              Моят хранителен режим
-            </h1>
-            <p className="text-muted-foreground">{client.email}</p>
-          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href={`/protected/clients/${clientId}/calendar`}>
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              Тренировки
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href={`/protected/clients/${clientId}/progress`}>
+              <Target className="h-4 w-4 mr-2" />
+              Прогрес
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -344,13 +524,29 @@ export default function ClientNutritionPage() {
         </div>
       </Card>
 
-      {/* Day Modal - Read Only */}
+      {/* Day Modal */}
       {showDayModal && selectedDate && (
-        <ClientDayMealsModal
+        <DayMealsModal
           isOpen={showDayModal}
           selectedDate={selectedDate}
           meals={meals.filter(m => m.scheduled_date === dateToLocalDateString(selectedDate))}
           onClose={() => setShowDayModal(false)}
+          onAddMeal={openAddMealModal}
+          onEditMeal={openEditModal}
+          onDeleteMeal={deleteMeal}
+        />
+      )}
+
+      {/* Add/Edit Meal Modal */}
+      {showAddMealModal && (
+        <MealModal
+          isOpen={showAddMealModal}
+          isEditing={!!editingMeal}
+          selectedMealType={selectedMealType}
+          mealForm={mealForm}
+          setMealForm={setMealForm}
+          onSave={saveMeal}
+          onClose={() => setShowAddMealModal(false)}
         />
       )}
 
@@ -400,7 +596,7 @@ function CalendarDayCell({
       {/* Meal indicators */}
       {totalMeals > 0 && (
         <div className="space-y-1">
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-4 gap-1">
             {MEAL_TYPES.map((mealType) => {
               const hasMeal = day.meals.some(m => m.meal_type === mealType.value);
               const isCompleted = day.meals.some(m => m.meal_type === mealType.value && m.status === 'completed');
@@ -409,7 +605,7 @@ function CalendarDayCell({
                 <div
                   key={mealType.value}
                   className={`
-                    h-3 rounded-sm flex items-center justify-center text-xs
+                    h-4 rounded-sm flex items-center justify-center
                     ${hasMeal 
                       ? isCompleted 
                         ? 'bg-green-500 text-white' 
@@ -418,7 +614,7 @@ function CalendarDayCell({
                     }
                   `}
                 >
-                  <mealType.icon className="h-1.5 w-1.5" />
+                  <mealType.icon className="h-2 w-2" />
                 </div>
               );
             })}
@@ -436,23 +632,29 @@ function CalendarDayCell({
       
       {totalMeals === 0 && day.isCurrentMonth && (
         <div className="text-center text-xs text-muted-foreground mt-4">
-          Няма планирано хранене
+          Кликнете за добавяне
         </div>
       )}
     </div>
   );
 }
 
-function ClientDayMealsModal({
+function DayMealsModal({
   isOpen,
   selectedDate,
   meals,
-  onClose
+  onClose,
+  onAddMeal,
+  onEditMeal,
+  onDeleteMeal
 }: {
   isOpen: boolean;
   selectedDate: Date;
   meals: MealPlan[];
   onClose: () => void;
+  onAddMeal: (mealType: string) => void;
+  onEditMeal: (meal: MealPlan) => void;
+  onDeleteMeal: (mealId: string) => void;
 }) {
   if (!isOpen) return null;
 
@@ -483,7 +685,7 @@ function ClientDayMealsModal({
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {MEAL_TYPES.map((mealType) => {
               const typeMeals = getMealsByType(mealType.value);
               const totalCalories = typeMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
@@ -501,6 +703,14 @@ function ClientDayMealsModal({
                         <p className="text-sm text-muted-foreground">{mealType.time}</p>
                       </div>
                     </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onAddMeal(mealType.value)}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Добави
+                    </Button>
                   </div>
                   
                   {typeMeals.length > 0 && (
@@ -514,16 +724,18 @@ function ClientDayMealsModal({
                   
                   <div className="space-y-2">
                     {typeMeals.map((meal) => (
-                      <ClientMealItem
+                      <MealItem
                         key={meal.id}
                         meal={meal}
                         mealType={mealType}
+                        onEdit={() => onEditMeal(meal)}
+                        onDelete={() => onDeleteMeal(meal.id)}
                       />
                     ))}
                     
                     {typeMeals.length === 0 && (
                       <div className="text-center text-muted-foreground text-sm py-4 border-2 border-dashed rounded">
-                        Няма планирани храни
+                        Няма добавени храни
                       </div>
                     )}
                   </div>
@@ -570,12 +782,16 @@ function ClientDayMealsModal({
   );
 }
 
-function ClientMealItem({ 
+function MealItem({ 
   meal, 
-  mealType
+  mealType, 
+  onEdit, 
+  onDelete 
 }: { 
   meal: MealPlan; 
   mealType: typeof MEAL_TYPES[0];
+  onEdit: () => void;
+  onDelete: () => void;
 }) {
   const isCompleted = meal.status === 'completed';
   const isPlanned = meal.status === 'planned';
@@ -583,18 +799,45 @@ function ClientMealItem({
   return (
     <div 
       className={`
-        text-sm p-3 rounded border transition-all
+        text-sm p-3 rounded border cursor-pointer transition-all hover:shadow-sm group
         ${isCompleted ? 'bg-green-50 border-green-200 text-green-800' : 
           isPlanned ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-muted text-muted-foreground'}
       `}
     >
-      <div className="flex items-center gap-2 mb-2">
-        {isCompleted ? (
-          <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-        ) : (
-          <mealType.icon className="h-4 w-4 flex-shrink-0" />
-        )}
-        <span className="font-medium">{meal.meal_name}</span>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {isCompleted ? (
+            <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+          ) : (
+            <mealType.icon className="h-4 w-4 flex-shrink-0" />
+          )}
+          <span className="font-medium truncate">{meal.meal_name}</span>
+        </div>
+        
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
       </div>
       
       {(meal.calories || meal.protein || meal.carbs || meal.fats) && (
@@ -605,12 +848,135 @@ function ClientMealItem({
           {meal.fats && meal.fats > 0 && <span>{meal.fats}г М</span>}
         </div>
       )}
-      
-      {meal.notes && (
-        <div className="text-xs mt-2 p-2 bg-muted/30 rounded">
-          <strong>Бележки:</strong> {meal.notes}
+    </div>
+  );
+}
+
+function MealModal({ 
+  isOpen, 
+  isEditing, 
+  selectedMealType,
+  mealForm, 
+  setMealForm, 
+  onSave, 
+  onClose 
+}: {
+  isOpen: boolean;
+  isEditing: boolean;
+  selectedMealType: string;
+  mealForm: any;
+  setMealForm: (form: any) => void;
+  onSave: () => void;
+  onClose: () => void;
+}) {
+  if (!isOpen) return null;
+
+  const mealType = MEAL_TYPES.find(t => t.value === selectedMealType);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              {mealType && (
+                <div className={`p-2 rounded-lg ${mealType.color}`}>
+                  <mealType.icon className="h-4 w-4" />
+                </div>
+              )}
+              <h3 className="text-lg font-semibold">
+                {isEditing ? 'Редактирай ястие' : `Добави ${mealType?.label.toLowerCase()}`}
+              </h3>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="meal_name">Име на ястието *</Label>
+              <Input
+                id="meal_name"
+                value={mealForm.meal_name || ''}
+                onChange={(e) => setMealForm({...mealForm, meal_name: e.target.value})}
+                placeholder="Напр: Овесена каша с боровинки"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="calories">Калории</Label>
+                <Input
+                  id="calories"
+                  type="number"
+                  value={mealForm.calories || 0}
+                  onChange={(e) => setMealForm({...mealForm, calories: parseInt(e.target.value) || 0})}
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="protein">Протеини (г)</Label>
+                <Input
+                  id="protein"
+                  type="number"
+                  value={mealForm.protein || 0}
+                  onChange={(e) => setMealForm({...mealForm, protein: parseInt(e.target.value) || 0})}
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="carbs">Въглехидрати (г)</Label>
+                <Input
+                  id="carbs"
+                  type="number"
+                  value={mealForm.carbs || 0}
+                  onChange={(e) => setMealForm({...mealForm, carbs: parseInt(e.target.value) || 0})}
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="fats">Мазнини (г)</Label>
+                <Input
+                  id="fats"
+                  type="number"
+                  value={mealForm.fats || 0}
+                  onChange={(e) => setMealForm({...mealForm, fats: parseInt(e.target.value) || 0})}
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Бележки (опционално)</Label>
+              <Textarea
+                id="notes"
+                value={mealForm.notes || ''}
+                onChange={(e) => setMealForm({...mealForm, notes: e.target.value})}
+                placeholder="Специални инструкции, рецепта..."
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-2 mt-6">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Отказ
+            </Button>
+            <Button onClick={onSave} className="flex-1 bg-green-600 hover:bg-green-700">
+              <Save className="h-4 w-4 mr-2" />
+              {isEditing ? 'Запази промените' : 'Добави ястие'}
+            </Button>
+          </div>
         </div>
-      )}
+      </Card>
     </div>
   );
 }

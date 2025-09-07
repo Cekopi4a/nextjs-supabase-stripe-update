@@ -32,6 +32,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import { getTodayDateString, dateToLocalDateString } from "@/utils/date-utils";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { WorkoutEditModal } from "@/components/calendar/WorkoutEditModal";
@@ -196,8 +197,8 @@ export default function ClientCalendarPage() {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       
-      const startDate = startOfMonth.toISOString().split('T')[0];
-      const endDate = endOfMonth.toISOString().split('T')[0];
+      const startDate = dateToLocalDateString(startOfMonth);
+      const endDate = dateToLocalDateString(endOfMonth);
 
       const { data, error } = await supabase
         .from("workout_sessions")
@@ -239,7 +240,7 @@ export default function ClientCalendarPage() {
     const today = new Date();
     
     while (currentDateLoop <= endDate) {
-      const dateStr = currentDateLoop.toISOString().split('T')[0];
+      const dateStr = dateToLocalDateString(currentDateLoop);
       const dayWorkouts = workouts.filter(w => w.scheduled_date === dateStr);
       
       days.push({
@@ -294,7 +295,7 @@ export default function ClientCalendarPage() {
       const workoutData = {
         client_id: clientId,
         name: workoutForm.name,
-        scheduled_date: selectedDate.toISOString().split('T')[0],
+        scheduled_date: dateToLocalDateString(selectedDate),
         program_id: workoutForm.program_id || null,
         status: 'planned',
         exercises: editingWorkout?.exercises || [] // Keep existing exercises or empty array
@@ -661,7 +662,7 @@ function WorkoutModal({
               <Input
                 id="date"
                 type="date"
-                value={selectedDate.toISOString().split('T')[0]}
+                value={dateToLocalDateString(selectedDate)}
                 readOnly
                 className="bg-muted/30"
               />

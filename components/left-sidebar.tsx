@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { 
   Home, 
@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { createSupabaseClient } from "@/utils/supabase/client";
 
 type MenuItem = {
   label: string;
@@ -48,9 +49,20 @@ export default function LeftSidebar({
   userProfile 
 }: LeftSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createSupabaseClient();
   const basePath = "/protected";
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push('/sign-in');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   const getMenuItems = (): MenuItem[] => {
     if (userRole === "trainer") {
@@ -326,6 +338,7 @@ export default function LeftSidebar({
               size="sm"
               className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
               title="Излизане"
+              onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
             </Button>

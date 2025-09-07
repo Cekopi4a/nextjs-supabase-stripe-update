@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { formatScheduledDate, parseScheduledDate, dateToLocalDateString } from "@/utils/date-utils";
 import { 
   CalendarDays, 
   Target, 
@@ -42,6 +43,7 @@ interface DashboardData {
   upcomingWorkouts: any[];
   activePrograms: any[];
   todayNutrition: any | null;
+  todayDailyMeals: any[];
   workoutStreak: number;
   totalWorkoutsCompleted: number;
 }
@@ -59,29 +61,26 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
     const supabase = createSupabaseClient();
     
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const today = dateToLocalDateString(new Date());
+      const sevenDaysAgo = dateToLocalDateString(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
       
       // Parallel queries for dashboard data
       const [
-        { data: todayWorkouts },
+        { data: todayWorkouts, error: todayWorkoutsError },
         { data: activeGoals },
         { data: latestMeasurements },
         { data: upcomingWorkouts },
         { data: activePrograms },
         { data: workoutLogs },
-        { data: nutritionLogs }
+        { data: nutritionPlan },
+        { data: dailyMeals }
       ] = await Promise.all([
-        // Today's scheduled workouts
+        // Today's scheduled workouts - try simple query first
         supabase
-          .from("workouts")
-          .select(`
-            *,
-            workout_programs(name, description, trainer_id, profiles!workout_programs_trainer_id_fkey(full_name))
-          `)
+          .from("workout_sessions")
+          .select("*")
           .eq("client_id", user.id)
-          .eq("scheduled_date", today)
-          .order("created_at", { ascending: false }),
+          .eq("scheduled_date", today),
 
         // Active goals
         supabase
@@ -94,7 +93,7 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
 
         // Latest measurements
         supabase
-          .from("client_progress")
+          .from("body_measurements")
           .select("*")
           .eq("client_id", user.id)
           .order("date", { ascending: false })
@@ -102,14 +101,14 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
 
         // Upcoming workouts (next 7 days)
         supabase
-          .from("workouts")
+          .from("workout_sessions")
           .select(`
             *,
             workout_programs(name, description)
           `)
           .eq("client_id", user.id)
           .gte("scheduled_date", today)
-          .lte("scheduled_date", new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+          .lte("scheduled_date", dateToLocalDateString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)))
           .order("scheduled_date", { ascending: true })
           .limit(5),
 
@@ -124,28 +123,55 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           .eq("is_active", true)
           .order("created_at", { ascending: false }),
 
-        // Recent workout logs for streak calculation
+        // Recent workout sessions for streak calculation
         supabase
-          .from("workout_logs")
-          .select("date, completed")
+          .from("workout_sessions")
+          .select("scheduled_date, status, completed_date")
           .eq("client_id", user.id)
-          .gte("date", sevenDaysAgo)
-          .order("date", { ascending: false }),
+          .gte("scheduled_date", sevenDaysAgo)
+          .order("scheduled_date", { ascending: false }),
 
-        // Today's nutrition logs
+        // Today's nutrition plan
         supabase
-          .from("nutrition_logs")
+          .from("nutrition_plans")
+          .select(`
+            *,
+            nutrition_plan_meals!inner(
+              *,
+              nutrition_plan_meal_items(
+                *,
+                food_item_id,
+                quantity
+              )
+            )
+          `)
+          .eq("client_id", user.id)
+          .eq("is_active", true)
+          .eq("nutrition_plan_meals.day_of_week", new Date().getDay())
+          .order("created_at", { ascending: false })
+          .limit(1),
+
+        // Today's daily meals (explicit daily schedule)
+        supabase
+          .from("daily_meals")
           .select("*")
           .eq("client_id", user.id)
-          .eq("date", today)
+          .eq("scheduled_date", today)
+          .order("meal_type")
       ]);
+
+      if (todayWorkoutsError) {
+        console.error("Error fetching today's workouts:", todayWorkoutsError);
+      }
+      
+      
 
       // Calculate workout streak
       let streak = 0;
       if (workoutLogs && workoutLogs.length > 0) {
-        const sortedLogs = workoutLogs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const sortedLogs = workoutLogs.sort((a, b) => new Date(b.scheduled_date).getTime() - new Date(a.scheduled_date).getTime());
         for (const log of sortedLogs) {
-          if (log.completed) {
+          if (log.status === 'completed') {
             streak++;
           } else {
             break;
@@ -155,10 +181,10 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
 
       // Calculate total completed workouts
       const { count: totalCompleted } = await supabase
-        .from("workout_logs")
+        .from("workout_sessions")
         .select("*", { count: 'exact', head: true })
         .eq("client_id", user.id)
-        .eq("completed", true);
+        .eq("status", "completed");
 
       setData({
         todayWorkouts: todayWorkouts || [],
@@ -167,7 +193,8 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
         weeklyProgress: null, // TODO: Calculate from recent data
         upcomingWorkouts: upcomingWorkouts || [],
         activePrograms: activePrograms || [],
-        todayNutrition: nutritionLogs?.[0] || null,
+        todayNutrition: nutritionPlan?.[0] || null,
+        todayDailyMeals: dailyMeals || [],
         workoutStreak: streak,
         totalWorkoutsCompleted: totalCompleted || 0
       });
@@ -264,7 +291,7 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
         
         <StatsCard
           title="Current Weight"
-          value={data?.latestMeasurements?.weight || "—"}
+          value={data?.latestMeasurements?.weight_kg || "—"}
           subtitle="kg"
           icon={<TrendingUp className="h-4 w-4" />}
           color="green"
@@ -293,11 +320,11 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                Today's Schedule
+                <Dumbbell className="h-5 w-5 mr-2" />
+                Today's Workouts
               </h3>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/protected/calendar">
+                <Link href="/protected/workouts">
                   View Calendar
                 </Link>
               </Button>
@@ -311,11 +338,42 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <Dumbbell className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>No workouts scheduled for today</p>
                 <Button variant="outline" size="sm" className="mt-2" asChild>
                   <Link href="/protected/programs">
                     Browse Programs
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </Card>
+
+          {/* Today's Nutrition */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold flex items-center">
+                <Utensils className="h-5 w-5 mr-2" />
+                Today's Nutrition
+              </h3>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/protected/nutrition">
+                  View Plans
+                </Link>
+              </Button>
+            </div>
+            
+            {data?.todayDailyMeals && data.todayDailyMeals.length > 0 ? (
+              <TodayDailyMealsCard meals={data.todayDailyMeals} />
+            ) : data?.todayNutrition ? (
+              <TodayNutritionCard nutrition={data.todayNutrition} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Apple className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No nutrition plan for today</p>
+                <Button variant="outline" size="sm" className="mt-2" asChild>
+                  <Link href="/protected/nutrition">
+                    Browse Plans
                   </Link>
                 </Button>
               </div>
@@ -502,7 +560,7 @@ function StatsCard({
 }
 
 function TodayWorkoutCard({ workout }: { workout: any }) {
-  const duration = workout.estimated_duration_minutes || 45;
+  const duration = workout.planned_duration_minutes || 45;
   const isCompleted = workout.status === 'completed';
   
   return (
@@ -523,7 +581,7 @@ function TodayWorkoutCard({ workout }: { workout: any }) {
             </span>
             <span className="flex items-center gap-1">
               <Activity className="h-3 w-3" />
-              {workout.difficulty_level || 'Medium'}
+              {workout.difficulty_rating ? `${workout.difficulty_rating}/10` : 'Medium'}
             </span>
           </div>
         </div>
@@ -532,7 +590,7 @@ function TodayWorkoutCard({ workout }: { workout: any }) {
           variant={isCompleted ? "outline" : "default"}
           asChild
         >
-          <Link href={`/protected/workouts/${workout.id}`}>
+          <Link href={`/protected/workouts`}>
             {isCompleted ? "Review" : "Start"}
           </Link>
         </Button>
@@ -584,7 +642,7 @@ function GoalProgressCard({ goal }: { goal: any }) {
 }
 
 function UpcomingWorkoutCard({ workout }: { workout: any }) {
-  const date = new Date(workout.scheduled_date);
+  const date = parseScheduledDate(workout.scheduled_date);
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -608,14 +666,129 @@ function UpcomingWorkoutCard({ workout }: { workout: any }) {
             {dateLabel}
           </span>
           <span className="text-xs text-muted-foreground">
-            {workout.estimated_duration_minutes || 45}min
+            {workout.planned_duration_minutes || 45}min
           </span>
         </div>
         <p className="text-sm font-medium truncate mt-1">{workout.name}</p>
       </div>
       <Button size="sm" variant="ghost" asChild>
-        <Link href={`/protected/workouts/${workout.id}`}>
+        <Link href={`/protected/workouts`}>
           <Eye className="h-3 w-3" />
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+function TodayNutritionCard({ nutrition }: { nutrition: any }) {
+  // Calculate total calories and macros from meals
+  let totalCalories = 0;
+  let totalProtein = 0;
+  let totalCarbs = 0;
+  let totalFat = 0;
+  
+  if (nutrition?.nutrition_plan_meals) {
+    nutrition.nutrition_plan_meals.forEach((meal: any) => {
+      if (meal.nutrition_plan_meal_items) {
+        meal.nutrition_plan_meal_items.forEach((item: any) => {
+          // For now just count items since we don't have the food data
+          // TODO: Join with food_items table for proper nutrition calculation
+        });
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Nutrition Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="text-center p-3 bg-blue-50 rounded-lg">
+          <p className="text-lg font-bold text-blue-600">{Math.round(totalCalories)}</p>
+          <p className="text-xs text-blue-600">Calories</p>
+        </div>
+        <div className="text-center p-3 bg-green-50 rounded-lg">
+          <p className="text-lg font-bold text-green-600">{Math.round(totalProtein)}g</p>
+          <p className="text-xs text-green-600">Protein</p>
+        </div>
+        <div className="text-center p-3 bg-orange-50 rounded-lg">
+          <p className="text-lg font-bold text-orange-600">{Math.round(totalCarbs)}g</p>
+          <p className="text-xs text-orange-600">Carbs</p>
+        </div>
+        <div className="text-center p-3 bg-purple-50 rounded-lg">
+          <p className="text-lg font-bold text-purple-600">{Math.round(totalFat)}g</p>
+          <p className="text-xs text-purple-600">Fat</p>
+        </div>
+      </div>
+
+      {/* Meals */}
+      <div className="space-y-3">
+        <h4 className="font-medium text-sm text-muted-foreground">Today's Meals</h4>
+        {nutrition?.nutrition_plan_meals && nutrition.nutrition_plan_meals.length > 0 ? (
+          <div className="space-y-2">
+            {nutrition.nutrition_plan_meals.map((meal: any, index: number) => (
+              <div key={meal.id || index} className="border rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="font-medium text-sm">{meal.meal_type || `Meal ${index + 1}`}</h5>
+                  <Badge variant="outline" className="text-xs">
+                    {meal.nutrition_plan_meal_items?.length || 0} items
+                  </Badge>
+                </div>
+                
+                {meal.nutrition_plan_meal_items && meal.nutrition_plan_meal_items.length > 0 && (
+                  <div className="space-y-1">
+                    {meal.nutrition_plan_meal_items.slice(0, 3).map((item: any, itemIndex: number) => (
+                      <div key={item.id || itemIndex} className="flex justify-between text-xs text-muted-foreground">
+                        <span>Food item {itemIndex + 1}</span>
+                        <span>{item.quantity || 100}g</span>
+                      </div>
+                    ))}
+                    {meal.nutrition_plan_meal_items.length > 3 && (
+                      <p className="text-xs text-muted-foreground">
+                        +{meal.nutrition_plan_meal_items.length - 3} more items
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">No meals planned</p>
+        )}
+      </div>
+      
+      <Button variant="outline" size="sm" className="w-full" asChild>
+        <Link href="/protected/nutrition">
+          View Full Plan
+          <ArrowRight className="h-3 w-3 ml-1" />
+        </Link>
+      </Button>
+    </div>
+  );
+}
+
+function TodayDailyMealsCard({ meals }: { meals: any[] }) {
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        {meals.map((meal) => (
+          <div key={meal.id} className="flex items-center justify-between p-2 border rounded-lg">
+            <div className="flex items-center gap-2">
+              <Apple className="h-4 w-4 opacity-70" />
+              <span className="text-sm font-medium">{meal.meal_name || meal.meal_type}</span>
+            </div>
+            {meal.status === 'completed' ? (
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            ) : (
+              <Clock className="h-4 w-4 opacity-70" />
+            )}
+          </div>
+        ))}
+      </div>
+      <Button variant="outline" size="sm" className="w-full" asChild>
+        <Link href="/protected/nutrition">
+          View Full Plan
+          <ArrowRight className="h-3 w-3 ml-1" />
         </Link>
       </Button>
     </div>

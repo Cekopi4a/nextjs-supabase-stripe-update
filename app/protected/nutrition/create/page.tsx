@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { formatScheduledDate } from '@/utils/date-utils';
 
 interface Client {
   id: string;
@@ -408,14 +409,14 @@ export default function CreateNutritionPlanPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Начална дата:</span>
                       <span className="font-medium">
-                        {new Date(formData.start_date).toLocaleDateString('bg-BG')}
+                        {formatScheduledDate(formData.start_date)}
                       </span>
                     </div>
                     {formData.end_date && (
                       <div className="flex justify-between">
                         <span className="text-gray-600">Крайна дата:</span>
                         <span className="font-medium">
-                          {new Date(formData.end_date).toLocaleDateString('bg-BG')}
+                          {formatScheduledDate(formData.end_date)}
                         </span>
                       </div>
                     )}

@@ -16,6 +16,7 @@ import {
   Eye
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import { dateToLocalDateString } from "@/utils/date-utils";
 import Link from "next/link";
 
 interface Workout {
@@ -106,8 +107,8 @@ export default function WorkoutCalendarPage() {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       
-      const startDate = startOfMonth.toISOString().split('T')[0];
-      const endDate = endOfMonth.toISOString().split('T')[0];
+      const startDate = dateToLocalDateString(startOfMonth);
+      const endDate = dateToLocalDateString(endOfMonth);
 
       let query = supabase
         .from("workouts")
@@ -185,7 +186,7 @@ export default function WorkoutCalendarPage() {
     const today = new Date();
     
     while (currentDateLoop <= endDate) {
-      const dateStr = currentDateLoop.toISOString().split('T')[0];
+      const dateStr = dateToLocalDateString(currentDateLoop);
       const dayWorkouts = workouts.filter(w => w.scheduled_date === dateStr);
       
       days.push({
@@ -225,7 +226,7 @@ export default function WorkoutCalendarPage() {
         .upsert({
           client_id: user.id,
           workout_id: workoutId,
-          date: new Date().toISOString().split('T')[0],
+          date: dateToLocalDateString(new Date()),
           exercises_completed: [], // Empty for quick complete
           completed: true,
           completed_at: new Date().toISOString()

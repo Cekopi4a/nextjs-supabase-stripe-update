@@ -58,6 +58,8 @@ export default function ExercisesPageClient({
 }: ExercisesPageClientProps) {
   const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -75,8 +77,12 @@ export default function ExercisesPageClient({
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/exercises", {
-        method: "POST",
+      const isEditing = editingExercise !== null;
+      const url = isEditing ? `/api/exercises/${editingExercise.id}` : "/api/exercises";
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -87,12 +93,19 @@ export default function ExercisesPageClient({
       });
 
       if (!response.ok) {
-        throw new Error("Грешка при създаване на упражнението");
+        throw new Error(isEditing ? "Грешка при редактиране на упражнението" : "Грешка при създаване на упражнението");
       }
 
-      const newExercise = await response.json();
-      setExercises([newExercise, ...exercises]);
-      setIsCreateDialogOpen(false);
+      const updatedExercise = await response.json();
+      
+      if (isEditing) {
+        setExercises(exercises.map(ex => ex.id === editingExercise.id ? updatedExercise : ex));
+        setIsEditDialogOpen(false);
+        setEditingExercise(null);
+      } else {
+        setExercises([updatedExercise, ...exercises]);
+        setIsCreateDialogOpen(false);
+      }
       
       // Reset form
       setFormData({
@@ -106,8 +119,8 @@ export default function ExercisesPageClient({
         image_url: ""
       });
     } catch (error) {
-      console.error("Error creating exercise:", error);
-      alert("Грешка при създаване на упражнението");
+      console.error("Error saving exercise:", error);
+      alert(editingExercise ? "Грешка при редактиране на упражнението" : "Грешка при създаване на упражнението");
     } finally {
       setIsLoading(false);
     }
@@ -129,6 +142,21 @@ export default function ExercisesPageClient({
         ? prev.equipment.filter(eq => eq !== equipment)
         : [...prev.equipment, equipment]
     }));
+  };
+
+  const handleEdit = (exercise: Exercise) => {
+    setEditingExercise(exercise);
+    setFormData({
+      name: exercise.name,
+      description: exercise.description || "",
+      muscle_groups: exercise.muscle_groups,
+      difficulty: exercise.difficulty,
+      exercise_type: exercise.exercise_type,
+      equipment: exercise.equipment || [],
+      video_url: exercise.video_url || "",
+      image_url: exercise.image_url || ""
+    });
+    setIsEditDialogOpen(true);
   };
 
   const handleDelete = async (exerciseId: string) => {
@@ -335,6 +363,173 @@ export default function ExercisesPageClient({
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Редактиране на упражнение</DialogTitle>
+            </DialogHeader>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Име */}
+              <div>
+                <Label htmlFor="edit-name">Име на упражнението *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Например: Лицнци на лежанка"
+                  required
+                />
+              </div>
+
+              {/* Описание */}
+              <div>
+                <Label htmlFor="edit-description">Описание</Label>
+                <Textarea
+                  id="edit-description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Опишете как се изпълнява упражнението..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Мускулни групи */}
+              <div>
+                <Label>Мускулни групи *</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {MUSCLE_GROUPS.map((group) => (
+                    <button
+                      key={group}
+                      type="button"
+                      onClick={() => handleMuscleGroupToggle(group)}
+                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                        formData.muscle_groups.includes(group)
+                          ? "bg-blue-100 text-blue-800 border border-blue-200"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      {group}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Оборудване */}
+              <div>
+                <Label>Необходимо оборудване</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {EQUIPMENT_OPTIONS.map((equipment) => (
+                    <button
+                      key={equipment}
+                      type="button"
+                      onClick={() => handleEquipmentToggle(equipment)}
+                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                        formData.equipment.includes(equipment)
+                          ? "bg-green-100 text-green-800 border border-green-200"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      {equipment}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Трудност и Тип */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-difficulty">Трудност</Label>
+                  <Select 
+                    value={formData.difficulty} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DIFFICULTY_LEVELS.map((level) => (
+                        <SelectItem key={level.value} value={level.value}>
+                          {level.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-exercise_type">Тип упражнение</Label>
+                  <Select 
+                    value={formData.exercise_type} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, exercise_type: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EXERCISE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Видео URL */}
+              <div>
+                <Label htmlFor="edit-video_url">Видео URL</Label>
+                <Input
+                  id="edit-video_url"
+                  value={formData.video_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+              </div>
+
+              {/* Снимка URL */}
+              <div>
+                <Label htmlFor="edit-image_url">Снимка URL</Label>
+                <Input
+                  id="edit-image_url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              {/* Submit buttons */}
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsEditDialogOpen(false);
+                    setEditingExercise(null);
+                    setFormData({
+                      name: "",
+                      description: "",
+                      muscle_groups: [],
+                      difficulty: "beginner",
+                      exercise_type: "strength",
+                      equipment: [],
+                      video_url: "",
+                      image_url: ""
+                    });
+                  }}
+                >
+                  Отказ
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Запазване..." : "Запази промените"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Exercises List */}
@@ -369,7 +564,12 @@ export default function ExercisesPageClient({
                   </div>
                   
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleEdit(exercise)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button 

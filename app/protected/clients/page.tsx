@@ -12,20 +12,12 @@ import {
   Users, 
   Search, 
   Calendar, 
-  Target, 
   TrendingUp,
-  Dumbbell,
   Apple,
-  BarChart3,
   Eye,
-  Phone,
-  Mail,
   Clock,
   CheckCircle,
   AlertCircle,
-  User,
-  Settings,
-  MessageCircle,
   Award
 } from 'lucide-react';
 import Link from 'next/link';
@@ -317,11 +309,6 @@ export default function ClientsPage() {
               <p className="text-muted-foreground">Преглед и управление на вашите клиенти и тяхните програми</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 lg:ml-auto">
-              <Button variant="outline" size="lg" disabled className="shadow-sm">
-                <Calendar className="h-4 w-4 mr-2" />
-                Създай програма
-                <span className="text-xs ml-2">(избери клиент)</span>
-              </Button>
               <Button size="lg" disabled={!canAddMore} className="shadow-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800" asChild>
                 <Link href="/protected/clients/invite">
                   <Plus className="h-4 w-4 mr-2" />
@@ -473,15 +460,11 @@ export default function ClientsPage() {
                 </div>
               </div>
 
-              {/* Goal and Weight info */}
-              <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+              {/* Goal info */}
+              <div className="grid grid-cols-1 gap-3 text-sm mb-4">
                 <div>
                   <p className="text-gray-500">Цел</p>
-                  <p className="font-semibold text-foreground">{client.goals || 'Не е зададена'}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Програми</p>
-                  <p className="font-semibold text-foreground">{client.activePrograms || 0} активни</p>
+                  <p className="font-semibold text-foreground">{client.goals || 'Не е зadadена'}</p>
                 </div>
               </div>
 
@@ -511,44 +494,65 @@ export default function ClientsPage() {
                 </div>
               </div>
 
+              {/* Nutrition Calendar */}
+              <div className="bg-green-50 rounded-lg p-3 mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-green-700">Хранителен режим</span>
+                  <Apple className="h-4 w-4 text-green-600" />
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {['П', 'В', 'С', 'Ч', 'П', 'С', 'Н'].map((day, index) => {
+                    const dayCompleted = Math.random() > 0.3;
+                    return (
+                      <div key={index} className="text-center">
+                        <div className="text-xs text-gray-600 mb-1">{day}</div>
+                        <div 
+                          className={`h-6 w-6 rounded-full mx-auto flex items-center justify-center text-xs ${
+                            dayCompleted 
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-gray-200 text-gray-500'
+                          }`}
+                        >
+                          {dayCompleted ? '✓' : '○'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-xs text-green-600 text-center mt-2">
+                  5/7 дни спазени
+                </div>
+              </div>
+
               {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  className="text-xs h-8 bg-gradient-to-r from-blue-600 to-purple-600"
-                  disabled={client.has_active_program}
-                  onClick={() => {
-                    if (client.has_active_program) {
-                      alert("Клиентът вече има активна програма");
-                    } else {
-                      router.push(`/protected/clients/${client.id}/programs/create`);
-                    }
-                  }}
-                >
-                  <Dumbbell className="h-3 w-3 mr-1" />
-                  {client.has_active_program ? "Има програма" : "Създай програма"}
-                </Button>
-                
+              <div className="grid grid-cols-1 gap-2 mb-3">
                 <Button variant="outline" size="sm" className="text-xs h-8" asChild>
-                  <Link href={`/protected/clients/${client.id}/calendar`}>
-                    <Calendar className="h-3 w-3 mr-1" />
-                    Календар
+                  <Link href={`/protected/clients/${client.id}/nutrition`}>
+                    <Apple className="h-3 w-3 mr-1" />
+                    Храна
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs h-8" asChild>
+                  <Link href={`/protected/clients/${client.id}/progress`}>
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                    Прогрес
                   </Link>
                 </Button>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" className="text-xs h-8" asChild>
+                  <Link href={`/protected/clients/${client.id}/calendar`}>
+                    <Calendar className="h-3 w-3 mr-1" />
+                    Тренировки
+                  </Link>
+                </Button>
+                
                 <Button variant="ghost" size="sm" className="text-xs h-8" asChild>
                   <Link href={`/protected/clients/${client.id}`}>
                     <Eye className="h-3 w-3 mr-1" />
                     Преглед
                   </Link>
-                </Button>
-                
-                <Button variant="ghost" size="sm" className="text-xs h-8">
-                  <BarChart3 className="h-3 w-3 mr-1" />
-                  Прогрес
                 </Button>
               </div>
 

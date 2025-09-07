@@ -9,16 +9,20 @@ import {
   ChevronLeft, 
   Calendar as CalendarIcon,
   Target,
-  TrendingUp,
-  Dumbbell,
-  Plus,
   User,
-  CheckCircle2,
   Clock,
-  Settings
+  Settings,
+  Apple,
+  Dumbbell,
+  CheckCircle2,
+  AlertTriangle,
+  Coffee,
+  UtensilsCrossed,
+  Sunset
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { formatScheduledDate, getTodayDateString } from "@/utils/date-utils";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface Client {
@@ -29,15 +33,6 @@ interface Client {
   created_at?: string;
 }
 
-interface WorkoutProgram {
-  id: string;
-  name: string;
-  description?: string;
-  difficulty_level: string;
-  estimated_duration_weeks: number;
-  is_active: boolean;
-  created_at: string;
-}
 
 interface WorkoutSession {
   id: string;
@@ -46,35 +41,40 @@ interface WorkoutSession {
   status: 'planned' | 'completed' | 'skipped';
 }
 
+interface MealPlan {
+  id: string;
+  meal_type: 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'evening_snack';
+  meal_name: string;
+  scheduled_date: string;
+  calories?: number;
+  protein?: number;
+  status: 'planned' | 'completed' | 'skipped';
+}
+
 export default function ClientProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const clientId = params.clientId as string;
   
   const [client, setClient] = useState<Client | null>(null);
-  const [programs, setPrograms] = useState<WorkoutProgram[]>([]);
   const [recentSessions, setRecentSessions] = useState<WorkoutSession[]>([]);
+  const [todayWorkout, setTodayWorkout] = useState<WorkoutSession | null>(null);
+  const [todayMeals, setTodayMeals] = useState<MealPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [activeProgram, setActiveProgram] = useState<WorkoutProgram | null>(null);
+  const [deleting, setDeleting] = useState(false);
   
   const supabase = createSupabaseClient();
 
   useEffect(() => {
-    // Check if we just created a program
-    if (searchParams.get('program_created') === 'true') {
-      setShowSuccess(true);
-      // Remove the query parameter from URL
-      router.replace(`/protected/clients/${clientId}`);
-      // Hide success message after 5 seconds
-      setTimeout(() => setShowSuccess(false), 5000);
-    }
-    
     loadClientData();
-    loadPrograms();
-    loadRecentSessions();
-  }, [clientId, searchParams]);
+  }, [clientId]);
+
+  useEffect(() => {
+    if (client) {
+      loadRecentSessions();
+      loadTodayData();
+    }
+  }, [client]);
 
   const loadClientData = async () => {
     try {
@@ -109,26 +109,6 @@ export default function ClientProfilePage() {
     }
   };
 
-  const loadPrograms = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("workout_programs")
-        .select("*")
-        .eq("client_id", clientId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      
-      const programs = data || [];
-      setPrograms(programs);
-      
-      // Find the active program (only one should be active)
-      const active = programs.find(p => p.is_active);
-      setActiveProgram(active || null);
-    } catch (error) {
-      console.error("Error fetching programs:", error);
-    }
-  };
 
   const loadRecentSessions = async () => {
     try {
@@ -148,6 +128,45 @@ export default function ClientProfilePage() {
     }
   };
 
+  const loadTodayData = async () => {
+    try {
+      const today = getTodayDateString();
+      // Load today's workout
+      const { data: workoutData, error: workoutError } = await supabase
+        .from("workout_sessions")
+        .select("id, name, scheduled_date, status")
+        .eq("client_id", clientId)
+        .eq("scheduled_date", today)
+        .single();
+      
+      if (workoutError && workoutError.code !== 'PGRST116') {
+        console.error("Error loading workout:", workoutError);
+      }
+      
+      if (workoutData) {
+        setTodayWorkout(workoutData);
+      }
+      
+      // Load today's meals
+      const { data: mealsData, error: mealsError } = await supabase
+        .from("daily_meals")
+        .select("id, meal_type, meal_name, scheduled_date, calories, protein, status")
+        .eq("client_id", clientId)
+        .eq("scheduled_date", today)
+        .order("meal_type");
+      
+      if (mealsError) {
+        console.error("Error loading meals:", mealsError);
+      }
+      
+      if (mealsData && mealsData.length > 0) {
+        setTodayMeals(mealsData);
+      }
+    } catch (error) {
+      console.error("Error loading today's data:", error);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'planned':
@@ -161,48 +180,7 @@ export default function ClientProfilePage() {
     }
   };
 
-  const getDifficultyBadge = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner':
-        return <Badge className="bg-green-100 text-green-800">Начинаещ</Badge>;
-      case 'intermediate':
-        return <Badge className="bg-yellow-100 text-yellow-800">Средно ниво</Badge>;
-      case 'advanced':
-        return <Badge className="bg-red-100 text-red-800">Напреднал</Badge>;
-      default:
-        return <Badge>{difficulty}</Badge>;
-    }
-  };
 
-  const deleteProgram = async (programId: string) => {
-    if (!confirm("Сигурни ли сте, че искате да изтриете тази програма?\n\nТова ще изтрие всички планирани тренировки.")) {
-      return;
-    }
-
-    try {
-      // Delete all workout sessions for this program
-      await supabase
-        .from("workout_sessions")
-        .delete()
-        .eq("program_id", programId);
-
-      // Delete the program
-      const { error } = await supabase
-        .from("workout_programs")
-        .delete()
-        .eq("id", programId);
-
-      if (error) throw error;
-
-      // Reload programs
-      await loadPrograms();
-      
-      alert("Програмата е изтрита успешно!");
-    } catch (error) {
-      console.error("Error deleting program:", error);
-      alert("Грешка при изтриване на програмата");
-    }
-  };
 
   if (loading) {
     return (
@@ -222,16 +200,6 @@ export default function ClientProfilePage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
-      {/* Success Message */}
-      {showSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-green-600" />
-          <div>
-            <h3 className="font-medium text-green-800">Програмата е създадена успешно!</h3>
-            <p className="text-green-700 text-sm">Новата тренировъчна програма е запазена и готова за използване.</p>
-          </div>
-        </div>
-      )}
 
       {/* Back Button */}
       <div>
@@ -247,7 +215,8 @@ export default function ClientProfilePage() {
 
       {/* Client Header */}
       <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="flex items-center gap-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
           <Avatar className="w-16 h-16">
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-semibold">
               {client.full_name.charAt(0).toUpperCase()}
@@ -267,129 +236,194 @@ export default function ClientProfilePage() {
               </p>
             )}
           </div>
+          </div>
+          <div className="shrink-0">
+            <Button 
+              variant="outline"
+              className="border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+              disabled={deleting}
+              onClick={async () => {
+                if (!confirm('Сигурни ли сте, че искате да премахнете този клиент?')) return;
+                try {
+                  setDeleting(true);
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) return;
+                  const { error } = await supabase
+                    .from('trainer_clients')
+                    .delete()
+                    .eq('trainer_id', user.id)
+                    .eq('client_id', clientId);
+                  if (error) {
+                    console.error('Грешка при премахване на клиента:', error);
+                    alert('Грешка при премахване на клиента');
+                    setDeleting(false);
+                    return;
+                  }
+                  router.push('/protected/clients');
+                } catch (e) {
+                  console.error(e);
+                  alert('Грешка при премахване на клиента');
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+            >
+              Премахни клиента
+            </Button>
+          </div>
         </div>
       </Card>
 
+      {/* Today's Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Today's Workout */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <Dumbbell className="h-5 w-5 text-blue-600" />
+              Днешна тренировка
+            </h2>
+            <Link href={`/protected/clients/${clientId}/calendar`}>
+              <Button size="sm" variant="outline">
+                Календар
+              </Button>
+            </Link>
+          </div>
+          
+          {todayWorkout ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-lg">{todayWorkout.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {formatScheduledDate(todayWorkout.scheduled_date)}
+                  </p>
+                </div>
+                {getStatusBadge(todayWorkout.status)}
+              </div>
+              
+              {todayWorkout.status === 'planned' && (
+                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                  <Clock className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm text-blue-800">Предстои тренировка</span>
+                </div>
+              )}
+              
+              {todayWorkout.status === 'completed' && (
+                <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-800">Тренировката е завършена</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Dumbbell className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Няма планирана тренировка</h3>
+              <p className="text-gray-500">За днес няма запланирана тренировка</p>
+            </div>
+          )}
+        </Card>
+        
+        {/* Today's Meals */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <Apple className="h-5 w-5 text-green-600" />
+              Днешно хранене
+            </h2>
+            <Link href={`/protected/clients/${clientId}/nutrition`}>
+              <Button size="sm" variant="outline">
+                Планове
+              </Button>
+            </Link>
+          </div>
+          
+          {todayMeals.length > 0 ? (
+            <div className="space-y-4">
+              {/* Meal summary */}
+              <div className="grid grid-cols-2 gap-4 p-3 bg-green-50 rounded-lg">
+                <div className="text-center">
+                  <div className="text-xl font-bold text-green-600">
+                    {todayMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0)}
+                  </div>
+                  <div className="text-xs text-green-700">Калории</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-blue-600">
+                    {todayMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0)}г
+                  </div>
+                  <div className="text-xs text-blue-700">Протеин</div>
+                </div>
+              </div>
+              
+              {/* Meals list */}
+              <div className="space-y-2">
+                {todayMeals.slice(0, 3).map((meal) => {
+                  const getMealIcon = (type: string) => {
+                    switch (type) {
+                      case 'breakfast': return Coffee;
+                      case 'lunch': return UtensilsCrossed;
+                      case 'dinner': return Sunset;
+                      default: return Apple;
+                    }
+                  };
+                  
+                  const MealIcon = getMealIcon(meal.meal_type);
+                  
+                  return (
+                    <div key={meal.id} className="flex items-center justify-between p-2 bg-muted/30 rounded">
+                      <div className="flex items-center gap-2">
+                        <MealIcon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{meal.meal_name}</span>
+                      </div>
+                      {meal.status === 'completed' ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  );
+                })}
+                
+                {todayMeals.length > 3 && (
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    и още {todayMeals.length - 3} храни...
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Apple className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+              <h3 className="text-lg font-medium text-foreground mb-2">Няма планирано хранене</h3>
+              <p className="text-gray-500">За днес няма хранителен план</p>
+            </div>
+          )}
+        </Card>
+      </div>
+
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link href={`/protected/clients/${clientId}/calendar`}>
           <Button className="w-full h-20 flex flex-col items-center gap-2">
             <CalendarIcon className="h-6 w-6" />
-            Календар
+            Тренировки
           </Button>
         </Link>
-        {!activeProgram ? (
-          <Link href={`/protected/clients/${clientId}/programs/create`}>
-            <Button className="w-full h-20 flex flex-col items-center gap-2" variant="outline">
-              <Plus className="h-6 w-6" />
-              Създай програма
-            </Button>
-          </Link>
-        ) : (
-          <Button 
-            className="w-full h-20 flex flex-col items-center gap-2" 
-            variant="destructive"
-            onClick={() => deleteProgram(activeProgram.id)}
-          >
-            <Plus className="h-6 w-6" />
-            Изтрий програма
+        <Link href={`/protected/clients/${clientId}/nutrition`}>
+          <Button className="w-full h-20 flex flex-col items-center gap-2" variant="outline">
+            <Apple className="h-6 w-6" />
+            Хранене
           </Button>
-        )}
-        <Button className="w-full h-20 flex flex-col items-center gap-2" variant="outline">
-          <Target className="h-6 w-6" />
-          Прогрес
-        </Button>
+        </Link>
         <Button className="w-full h-20 flex flex-col items-center gap-2" variant="outline">
           <Settings className="h-6 w-6" />
           Настройки
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Programs */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Dumbbell className="h-5 w-5" />
-              Програми
-            </h2>
-            {!activeProgram && (
-              <Link href={`/protected/clients/${clientId}/programs/create`}>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Създай
-                </Button>
-              </Link>
-            )}
-          </div>
-          
-          {!activeProgram ? (
-            <div className="text-center py-8">
-              <Dumbbell className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-              <h3 className="text-lg font-medium text-foreground mb-2">Няма активна програма</h3>
-              <p className="text-gray-500 mb-4">Създайте тренировъчна програма за този клиент</p>
-              <Link href={`/protected/clients/${clientId}/programs/create`}>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Създай програма
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <Card key={activeProgram.id} className="p-4 border-green-200 bg-green-50">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium">{activeProgram.name}</h3>
-                  <div className="flex items-center gap-2">
-                    {getDifficultyBadge(activeProgram.difficulty_level)}
-                    <Badge className="bg-green-100 text-green-800">Активна програма</Badge>
-                  </div>
-                </div>
-                {activeProgram.description && (
-                  <p className="text-sm text-gray-600 mb-2">{activeProgram.description}</p>
-                )}
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-                  <span>{activeProgram.estimated_duration_weeks} седмици</span>
-                  <span>Създадена {new Date(activeProgram.created_at).toLocaleDateString('bg-BG')}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Link href={`/protected/clients/${clientId}/calendar`}>
-                    <Button size="sm" variant="outline">
-                      <CalendarIcon className="h-4 w-4 mr-2" />
-                      Виж в календара
-                    </Button>
-                  </Link>
-                  <Button 
-                    size="sm" 
-                    variant="destructive"
-                    onClick={() => deleteProgram(activeProgram.id)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Изтрий
-                  </Button>
-                </div>
-              </Card>
-              
-              {/* Show inactive programs if any */}
-              {programs.filter(p => !p.is_active).length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-sm font-medium text-gray-500 mb-3">Предишни програми</h4>
-                  <div className="space-y-2">
-                    {programs.filter(p => !p.is_active).map((program) => (
-                      <Card key={program.id} className="p-3 bg-muted/30">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-700">{program.name}</h4>
-                          <Badge className="bg-muted text-muted-foreground">Неактивна</Badge>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </Card>
-
+      <div className="max-w-3xl">
         {/* Recent Sessions */}
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
@@ -418,7 +452,7 @@ export default function ClientProfilePage() {
                     <div>
                       <h4 className="font-medium">{session.name}</h4>
                       <p className="text-sm text-gray-500">
-                        {new Date(session.scheduled_date).toLocaleDateString('bg-BG')}
+                        {formatScheduledDate(session.scheduled_date)}
                       </p>
                     </div>
                     {getStatusBadge(session.status)}

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Trash2, Plus, Save, X } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import { formatScheduledDate } from "@/utils/date-utils";
 
 interface WorkoutSession {
   id: string;
@@ -199,7 +200,7 @@ export function WorkoutEditModal({
           {/* Workout Info */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600">
-              <p><strong>Дата:</strong> {new Date(workout.scheduled_date).toLocaleDateString('bg-BG')}</p>
+              <p><strong>Дата:</strong> {formatScheduledDate(workout.scheduled_date)}</p>
               <p><strong>Статус:</strong> {
                 workout.status === 'planned' ? 'Планирана' :
                 workout.status === 'completed' ? 'Завършена' : 'Прескочена'
@@ -270,14 +271,14 @@ export function WorkoutEditModal({
                           <Input
                             type="number"
                             min="1"
-                            value={exercise.planned_sets}
+                            value={exercise.planned_sets || 1}
                             onChange={(e) => updateExercise(index, 'planned_sets', parseInt(e.target.value) || 1)}
                           />
                         </div>
                         <div>
                           <Label>Повторения</Label>
                           <Input
-                            value={exercise.planned_reps}
+                            value={exercise.planned_reps || ""}
                             onChange={(e) => updateExercise(index, 'planned_reps', e.target.value)}
                             placeholder="8-12"
                           />
@@ -295,7 +296,7 @@ export function WorkoutEditModal({
                           <Input
                             type="number"
                             min="0"
-                            value={exercise.rest_time}
+                            value={exercise.rest_time || 60}
                             onChange={(e) => updateExercise(index, 'rest_time', parseInt(e.target.value) || 0)}
                           />
                         </div>

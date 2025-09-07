@@ -14,6 +14,7 @@ import {
   User
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import { formatScheduledDate, dateToLocalDateString } from "@/utils/date-utils";
 
 interface WorkoutExercise {
   id?: string;
@@ -123,8 +124,8 @@ export default function ClientWorkoutsPage() {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       
-      const startDate = startOfMonth.toISOString().split('T')[0];
-      const endDate = endOfMonth.toISOString().split('T')[0];
+      const startDate = dateToLocalDateString(startOfMonth);
+      const endDate = dateToLocalDateString(endOfMonth);
 
       // Query workout sessions for client
       const { data, error } = await supabase
@@ -146,6 +147,44 @@ export default function ClientWorkoutsPage() {
 
       if (error) throw error;
 
+      // Get all unique exercise IDs from sessions
+      const exerciseIds = new Set<string>();
+      data?.forEach(session => {
+        if (Array.isArray(session.exercises)) {
+          session.exercises.forEach((ex: any) => {
+            if (ex.exercise_id) {
+              exerciseIds.add(ex.exercise_id);
+            }
+          });
+        }
+      });
+
+      // Fetch exercise details - use service role to bypass RLS for reading exercise names
+      let exerciseDetails: { [key: string]: any } = {};
+      if (exerciseIds.size > 0) {
+        try {
+          // Call API endpoint to get exercise details (bypasses RLS)
+          const response = await fetch('/api/exercises/details', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ exerciseIds: Array.from(exerciseIds) })
+          });
+          
+          if (response.ok) {
+            const exercises = await response.json();
+            exercises.forEach((ex: any) => {
+              exerciseDetails[ex.id] = ex;
+            });
+          } else {
+            console.error('Failed to fetch exercise details from API');
+          }
+        } catch (error) {
+          console.error('Error calling exercise details API:', error);
+        }
+      }
+
       // Transform data to match our interface
       const workoutsWithDetails = data?.map(session => ({
         id: session.id,
@@ -164,23 +203,46 @@ export default function ClientWorkoutsPage() {
           }
         },
         completed_at: session.completed_date,
-        exercises: Array.isArray(session.exercises) ? session.exercises.map((ex: any, index: number) => ({
-          id: `temp-${index}`,
-          exercise_id: '',
-          exercise: {
-            id: '',
-            name: ex.name || 'Неизвестно упражнение',
-            muscle_groups: ex.muscle_groups || [],
-            equipment: ex.equipment || [],
-            difficulty: ex.difficulty || 'средно'
-          },
-          planned_sets: ex.sets || 3,
-          planned_reps: ex.reps || '10',
-          planned_weight: ex.weight || '',
-          rest_time: ex.rest_time || 60,
-          notes: ex.notes || '',
-          order: index
-        })) : []
+        exercises: Array.isArray(session.exercises) ? session.exercises.map((ex: any, index: number) => {
+          // Handle both JSONB format (direct names) and reference format (exercise_id)
+          let exerciseName = 'Неизвестно упражнение';
+          let muscleGroups: string[] = [];
+          let equipment: string[] = [];
+          let difficulty = 'средно';
+          
+          if (ex.name) {
+            // Direct JSONB format
+            exerciseName = ex.name;
+            muscleGroups = ex.muscle_groups || [];
+          } else if (ex.exercise_id) {
+            // Reference format - use fetched exercise details
+            const exerciseData = exerciseDetails[ex.exercise_id];
+            if (exerciseData) {
+              exerciseName = exerciseData.name;
+              muscleGroups = exerciseData.muscle_groups || [];
+              equipment = exerciseData.equipment || [];
+              difficulty = exerciseData.difficulty || 'средно';
+            }
+          }
+          
+          return {
+            id: `temp-${index}`,
+            exercise_id: ex.exercise_id || '',
+            exercise: {
+              id: ex.exercise_id || '',
+              name: exerciseName,
+              muscle_groups: muscleGroups,
+              equipment: equipment,
+              difficulty: difficulty
+            },
+            planned_sets: ex.sets || ex.planned_sets || 3,
+            planned_reps: ex.reps || ex.planned_reps || '10',
+            planned_weight: ex.weight || ex.planned_weight || '',
+            rest_time: ex.rest_time || 60,
+            notes: ex.notes || '',
+            order: index
+          };
+        }) : []
       })) || [];
 
       setWorkouts(workoutsWithDetails);
@@ -209,7 +271,7 @@ export default function ClientWorkoutsPage() {
     const today = new Date();
     
     while (currentDateLoop <= endDate) {
-      const dateStr = currentDateLoop.toISOString().split('T')[0];
+      const dateStr = dateToLocalDateString(currentDateLoop);
       const dayWorkouts = workouts.filter(w => w.scheduled_date === dateStr);
       
       days.push({
@@ -248,7 +310,7 @@ export default function ClientWorkoutsPage() {
         .from("workout_sessions")
         .update({
           status: 'completed',
-          completed_date: new Date().toISOString().split('T')[0],
+          completed_date: dateToLocalDateString(new Date()),
           actual_duration_minutes: null // Could be filled in later
         })
         .eq("id", workoutId)
@@ -507,7 +569,7 @@ function ClientWorkoutDetailsModal({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Дата</p>
-                <p className="font-medium">{new Date(workout.scheduled_date).toLocaleDateString('bg-BG')}</p>
+                <p className="font-medium">{formatScheduledDate(workout.scheduled_date)}</p>
               </div>
             </div>
             
