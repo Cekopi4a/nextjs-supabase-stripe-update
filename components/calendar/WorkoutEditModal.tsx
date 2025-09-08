@@ -18,9 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, Plus, Save, X } from "lucide-react";
+import { Trash2, Plus, Save, X, Dumbbell } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { formatScheduledDate } from "@/utils/date-utils";
+import { Exercise } from "@/lib/types/exercises";
+import { ExerciseSelector } from "@/components/exercises/ExerciseSelector";
 
 interface WorkoutSession {
   id: string;
@@ -35,13 +37,6 @@ interface WorkoutSession {
   };
 }
 
-interface Exercise {
-  id: string;
-  name: string;
-  muscle_groups: string[];
-  difficulty: string;
-  equipment: string[];
-}
 
 interface WorkoutExercise {
   exercise_id: string;
@@ -72,6 +67,7 @@ export function WorkoutEditModal({
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
   
   const supabase = createSupabaseClient();
 
@@ -85,14 +81,13 @@ export function WorkoutEditModal({
 
   const loadExercises = async () => {
     try {
-      const { data } = await supabase
-        .from("exercises")
-        .select("*")
-        .or("is_global.eq.true,trainer_id.eq." + (await supabase.auth.getUser()).data.user?.id)
-        .order("name");
+      const response = await fetch('/api/exercises/search?limit=200');
+      const result = await response.json();
       
-      if (data) {
-        setAvailableExercises(data);
+      if (result.success) {
+        setAvailableExercises(result.data);
+      } else {
+        console.error('Failed to load exercises:', result.error);
       }
     } catch (error) {
       console.error("Error loading exercises:", error);
@@ -100,20 +95,23 @@ export function WorkoutEditModal({
   };
 
   const addExercise = () => {
-    if (availableExercises.length === 0) return;
+    setShowExerciseSelector(true);
+  };
 
-    const newExercise: WorkoutExercise = {
-      exercise_id: "", // Start with empty selection
-      exercise: undefined, // No exercise selected initially
+  const handleExerciseSelect = (exercise: Exercise) => {
+    const newWorkoutExercise: WorkoutExercise = {
+      exercise_id: exercise.id,
+      exercise: exercise,
       planned_sets: 3,
-      planned_reps: "10",
+      planned_reps: "8-12",
       planned_weight: "",
       rest_time: 60,
       notes: "",
       order: exercises.length
     };
 
-    setExercises([...exercises, newExercise]);
+    setExercises([...exercises, newWorkoutExercise]);
+    setShowExerciseSelector(false);
   };
 
   const updateExercise = (index: number, field: keyof WorkoutExercise, value: any) => {
@@ -139,6 +137,7 @@ export function WorkoutEditModal({
   const removeExercise = (index: number) => {
     setExercises(exercises.filter((_, i) => i !== index));
   };
+
 
   const saveWorkout = async () => {
     if (!workout) return;
@@ -179,163 +178,177 @@ export function WorkoutEditModal({
   if (!workout) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Редактиране на тренировка</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          {/* Workout Name */}
-          <div className="space-y-2">
-            <Label htmlFor="workout-name">Име на тренировката</Label>
-            <Input
-              id="workout-name"
-              value={workoutName}
-              onChange={(e) => setWorkoutName(e.target.value)}
-              placeholder="Въведете име на тренировката..."
-            />
-          </div>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Редактиране на тренировка</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Workout Name */}
+            <div className="space-y-2">
+              <Label htmlFor="workout-name">Име на тренировката</Label>
+              <Input
+                id="workout-name"
+                value={workoutName}
+                onChange={(e) => setWorkoutName(e.target.value)}
+                placeholder="Въведете име на тренировката..."
+              />
+            </div>
 
-          {/* Workout Info */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="text-sm text-gray-600">
-              <p><strong>Дата:</strong> {formatScheduledDate(workout.scheduled_date)}</p>
-              <p><strong>Статус:</strong> {
-                workout.status === 'planned' ? 'Планирана' :
-                workout.status === 'completed' ? 'Завършена' : 'Прескочена'
-              }</p>
-              {workout.workout_programs && (
-                <p><strong>Програма:</strong> {workout.workout_programs.name}</p>
+            {/* Workout Info */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">
+                <p><strong>Дата:</strong> {formatScheduledDate(workout.scheduled_date)}</p>
+                <p><strong>Статус:</strong> {
+                  workout.status === 'planned' ? 'Планирана' :
+                  workout.status === 'completed' ? 'Завършена' : 'Прескочена'
+                }</p>
+                {workout.workout_programs && (
+                  <p><strong>Програма:</strong> {workout.workout_programs.name}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Exercises */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Упражнения</h3>
+                <div className="flex gap-2">
+                  <Button onClick={addExercise} size="sm" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добави упражнение
+                  </Button>
+                </div>
+              </div>
+
+              {exercises.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <p className="text-gray-500">Няма добавени упражнения</p>
+                  <Button onClick={addExercise} className="mt-4">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Добави първото упражнение
+                  </Button>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {exercises.map((exercise, index) => (
+                    <Card key={index} className="p-4">
+                      <div className="space-y-4">
+                        {/* Exercise Name */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <Label>Упражнение</Label>
+                            <div className="flex items-center gap-3 p-3 border rounded-md bg-gray-50">
+                              <Dumbbell className="h-4 w-4 text-gray-600" />
+                              <span className="font-medium">
+                                {exercise.exercise?.name || 'Неизвестно упражнение'}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeExercise(index)}
+                            className="ml-4 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+
+                        {/* Exercise Parameters */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div>
+                            <Label>Серии</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={exercise.planned_sets || 1}
+                              onChange={(e) => updateExercise(index, 'planned_sets', parseInt(e.target.value) || 1)}
+                            />
+                          </div>
+                          <div>
+                            <Label>Повторения</Label>
+                            <Input
+                              value={exercise.planned_reps || ""}
+                              onChange={(e) => updateExercise(index, 'planned_reps', e.target.value)}
+                              placeholder="8-12"
+                            />
+                          </div>
+                          <div>
+                            <Label>Тежест (кг)</Label>
+                            <Input
+                              value={exercise.planned_weight || ""}
+                              onChange={(e) => updateExercise(index, 'planned_weight', e.target.value)}
+                              placeholder="20"
+                            />
+                          </div>
+                          <div>
+                            <Label>Почивка (сек)</Label>
+                            <Input
+                              type="number"
+                              min="0"
+                              value={exercise.rest_time || 60}
+                              onChange={(e) => updateExercise(index, 'rest_time', parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Notes */}
+                        <div>
+                          <Label>Бележки</Label>
+                          <Input
+                            value={exercise.notes || ""}
+                            onChange={(e) => updateExercise(index, 'notes', e.target.value)}
+                            placeholder="Бележки за упражнението..."
+                          />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               )}
             </div>
-          </div>
 
-          {/* Exercises */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Упражнения</h3>
-              <Button onClick={addExercise} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Добави упражнение
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-4 pt-4 border-t">
+              <Button variant="outline" onClick={onClose}>
+                Отказ
+              </Button>
+              <Button onClick={saveWorkout} disabled={saving}>
+                {saving ? (
+                  <>Запазване...</>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Запази промените
+                  </>
+                )}
               </Button>
             </div>
-
-            {exercises.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-gray-500">Няма добавени упражнения</p>
-                <Button onClick={addExercise} className="mt-4">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Добави първото упражнение
-                </Button>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {exercises.map((exercise, index) => (
-                  <Card key={index} className="p-4">
-                    <div className="space-y-4">
-                      {/* Exercise Selection */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <Label>Упражнение</Label>
-                          <Select
-                            value={exercise.exercise_id}
-                            onValueChange={(value) => updateExercise(index, 'exercise_id', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Избери упражнение..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableExercises.map((ex) => (
-                                <SelectItem key={ex.id} value={ex.id}>
-                                  {ex.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeExercise(index)}
-                          className="ml-4 text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {/* Exercise Parameters */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <Label>Серии</Label>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={exercise.planned_sets || 1}
-                            onChange={(e) => updateExercise(index, 'planned_sets', parseInt(e.target.value) || 1)}
-                          />
-                        </div>
-                        <div>
-                          <Label>Повторения</Label>
-                          <Input
-                            value={exercise.planned_reps || ""}
-                            onChange={(e) => updateExercise(index, 'planned_reps', e.target.value)}
-                            placeholder="8-12"
-                          />
-                        </div>
-                        <div>
-                          <Label>Тежест (кг)</Label>
-                          <Input
-                            value={exercise.planned_weight || ""}
-                            onChange={(e) => updateExercise(index, 'planned_weight', e.target.value)}
-                            placeholder="20"
-                          />
-                        </div>
-                        <div>
-                          <Label>Почивка (сек)</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            value={exercise.rest_time || 60}
-                            onChange={(e) => updateExercise(index, 'rest_time', parseInt(e.target.value) || 0)}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Notes */}
-                      <div>
-                        <Label>Бележки</Label>
-                        <Input
-                          value={exercise.notes || ""}
-                          onChange={(e) => updateExercise(index, 'notes', e.target.value)}
-                          placeholder="Бележки за упражнението..."
-                        />
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
           </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-4 pt-4 border-t">
-            <Button variant="outline" onClick={onClose}>
-              Отказ
-            </Button>
-            <Button onClick={saveWorkout} disabled={saving}>
-              {saving ? (
-                <>Запазване...</>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Запази промените
-                </>
-              )}
-            </Button>
+      {/* Exercise Selector Modal */}
+      <Dialog open={showExerciseSelector} onOpenChange={setShowExerciseSelector}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Избери упражнение</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <ExerciseSelector
+              onExerciseSelect={handleExerciseSelect}
+              selectedExercises={[]}
+              filters={{
+                limit: 50
+              }}
+            />
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

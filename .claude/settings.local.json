@@ -15,7 +15,10 @@
       "mcp__supabase__execute_sql",
       "mcp__supabase__apply_migration",
       "Read(//c/Users/User/Desktop/**)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(node:*)",
+      "Bash(supabase:*)"
     ],
     "deny": []
   }

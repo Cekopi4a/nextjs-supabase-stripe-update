@@ -38,6 +38,7 @@ interface WorkoutCalendarWithEditorProps {
   onSelectedDateChange?: (date: Date | null) => void;
   isTrainer: boolean;
   availableExercises?: any[];
+  onRefreshExercises?: () => void;
 }
 
 export function WorkoutCalendarWithEditor({
@@ -57,7 +58,8 @@ export function WorkoutCalendarWithEditor({
   onAddExerciseFromLibrary,
   onSelectedDateChange,
   isTrainer,
-  availableExercises = []
+  availableExercises = [],
+  onRefreshExercises
 }: WorkoutCalendarWithEditorProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
@@ -125,6 +127,7 @@ export function WorkoutCalendarWithEditor({
         onDayTypeChange={handleDayTypeChange}
         onSaveWorkout={onSaveWorkout}
         onSaveRestDay={onSaveRestDay}
+        onRefreshExercises={onRefreshExercises}
       />
     </div>
   );

@@ -10,16 +10,7 @@ import { Button } from "@/components/ui/button";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { ChevronLeft, Check } from "lucide-react";
 
-export interface Exercise {
-  id: string;
-  name: string;
-  muscle_groups: string[];
-  difficulty: string;
-  equipment: string[];
-  instructions: string | string[];
-  image_url?: string;
-  exercise_type: string;
-}
+import { Exercise } from '@/lib/types/exercises';
 
 export interface WorkoutExercise {
   exercise_id: string;
@@ -76,16 +67,20 @@ export default function CreateProgramStep2() {
   const [programStartDate] = useState<Date>(new Date());
 
   const loadExercises = React.useCallback(async () => {
-    const { data } = await supabase
-      .from("exercises")
-      .select("*")
-      .or("is_global.eq.true,trainer_id.eq." + (await supabase.auth.getUser()).data.user?.id)
-      .order("name");
-    
-    if (data) {
-      setExercises(data);
+    // Use the new exercises table and API
+    try {
+      const response = await fetch('/api/exercises/search?limit=100');
+      const result = await response.json();
+      
+      if (result.success) {
+        setExercises(result.data);
+      } else {
+        console.error('Failed to load exercises:', result.error);
+      }
+    } catch (error) {
+      console.error('Error loading exercises:', error);
     }
-  }, [supabase]);
+  }, []);
 
   const loadClients = React.useCallback(async () => {
     const user = await supabase.auth.getUser();
@@ -494,6 +489,7 @@ export default function CreateProgramStep2() {
               onSelectedDateChange={setSelectedDateForExercise}
               isTrainer={true}
               availableExercises={exercises}
+              onRefreshExercises={loadExercises}
             />
           </div>
 

@@ -468,6 +468,7 @@ export default function CreateClientProgramStep2() {
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
                 onAddExercise={handleAddExercise}
                 selectedDate={selectedDate}
+                onRefreshExercises={loadExercises}
               />
             </div>
           </div>

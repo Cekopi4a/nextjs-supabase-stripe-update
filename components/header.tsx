@@ -102,20 +102,13 @@ export default function Header() {
           </Link>
         )}
         
-        {/* For protected pages, we can add search or page title here */}
+        {/* For protected pages, show platform name */}
         {user && (
-          <div className="flex items-center gap-4">
-            {/* Search bar - hidden on mobile, shown on desktop for protected pages */}
-            <div className="hidden md:flex items-center">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Търсене..."
-                  className="pl-9 pr-4 py-2 border border-input rounded-lg text-sm bg-muted focus:bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent w-64"
-                />
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">F</span>
             </div>
+            <span className="font-semibold text-foreground">FitnessPlatform</span>
           </div>
         )}
       </div>
@@ -133,11 +126,6 @@ export default function Header() {
         ) : user ? (
           /* Authenticated user header */
           <>
-            {/* Mobile search toggle */}
-            <Button variant="ghost" size="sm" className="md:hidden">
-              <Search className="h-4 w-4" />
-            </Button>
-            
             {/* Notifications */}
             <Button variant="ghost" size="sm" className="relative">
               <Bell className="h-4 w-4" />

@@ -168,27 +168,42 @@ export default function LeftSidebar({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className={cn(
-        "p-4 border-b border-border bg-background",
-        isCollapsed && !isMobile && "px-3"
+        "border-b border-border bg-background",
+        isCollapsed && !isMobile ? "p-2" : "p-4"
       )}>
-        <div className="flex items-center justify-between">
-          <div className={cn(
-            "flex items-center gap-3",
-            isCollapsed && !isMobile && "justify-center"
-          )}>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Dumbbell className="h-4 w-4 text-white" />
+        {(!isCollapsed || isMobile) ? (
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground capitalize truncate">{userRole}</p>
             </div>
-            {(!isCollapsed || isMobile) && (
-              <div className="min-w-0 flex-1">
-                <h2 className="font-semibold text-foreground text-sm truncate">FitnessPlatform</h2>
-                <p className="text-xs text-muted-foreground capitalize truncate">{userRole}</p>
-              </div>
+            
+            {/* Desktop collapse toggle */}
+            {!isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="h-8 w-8 p-0 hover:bg-muted"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Mobile close button */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="h-8 w-8 p-0 hover:bg-muted lg:hidden"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             )}
           </div>
-          
-          {/* Desktop collapse toggle */}
-          {!isMobile && (
+        ) : (
+          /* Collapsed state - centered toggle button */
+          <div className="flex justify-center">
             <Button
               variant="ghost"
               size="sm"
@@ -197,24 +212,15 @@ export default function LeftSidebar({
             >
               <Menu className="h-4 w-4" />
             </Button>
-          )}
-          
-          {/* Mobile close button */}
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="h-8 w-8 p-0 hover:bg-muted lg:hidden"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className={cn(
+        "flex-1 space-y-1 overflow-y-auto",
+        isCollapsed && !isMobile ? "p-2" : "p-3"
+      )}>
         {menuItems.map((item, index) => {
           const { label, href, icon: Icon, disabled = false, badge, isPro = false } = item;
           const fullHref = `${basePath}${href}`;
@@ -243,7 +249,7 @@ export default function LeftSidebar({
                     : disabled
                     ? "text-muted-foreground cursor-not-allowed"
                     : "text-foreground hover:bg-muted hover:text-foreground",
-                  isCollapsed && !isMobile && "justify-center px-2"
+                  isCollapsed && !isMobile && "justify-center px-2 py-3"
                 )}
                 title={isCollapsed && !isMobile ? label : undefined}
               >
@@ -317,8 +323,8 @@ export default function LeftSidebar({
 
       {/* User info */}
       <div className={cn(
-        "p-3 border-t border-border bg-muted/30",
-        isCollapsed && !isMobile && "px-2"
+        "border-t border-border bg-muted/30",
+        isCollapsed && !isMobile ? "p-2" : "p-3"
       )}>
         {(!isCollapsed || isMobile) ? (
           <div className="flex items-center gap-3">
@@ -345,9 +351,15 @@ export default function LeftSidebar({
           </div>
         ) : (
           <div className="flex justify-center">
-            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-muted-foreground" />
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full h-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+              title="Излизане"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         )}
       </div>

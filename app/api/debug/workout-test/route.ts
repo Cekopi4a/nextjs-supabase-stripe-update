@@ -1,7 +1,6 @@
-import { NextRequest } from "next/server";
 import { createSupabaseClient } from "@/utils/supabase/server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createSupabaseClient();
     

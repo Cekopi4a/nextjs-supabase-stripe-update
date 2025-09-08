@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2, Dumbbell, Moon, Save, CalendarDays } from "lucide-react";
 import { DayType } from "@/components/program-creation/DayOptionsModal";
-import { WorkoutExercise } from "@/app/protected/programs/create/step2/page";
+import { WorkoutExercise, Exercise } from "@/app/protected/programs/create/step2/page";
 
 interface WorkoutDay {
   day_of_week: number;
@@ -31,7 +31,7 @@ interface DayEditorSectionProps {
   workout?: WorkoutDay;
   restDay?: RestDay;
   isTrainer: boolean;
-  availableExercises?: any[];
+  availableExercises?: Exercise[];
   onDayTypeChange: (date: Date, type: DayType) => void;
   onSaveWorkout: (date: Date, workout: WorkoutDay) => void;
   onSaveRestDay: (date: Date, restDay: RestDay) => void;
@@ -143,6 +143,7 @@ export function DayEditorSection({
       )
     }) : null);
   };
+
 
   const dayTypeOptions = [
     {
@@ -401,6 +402,7 @@ export function DayEditorSection({
           </div>
         </div>
       )}
+
 
     </Card>
   );

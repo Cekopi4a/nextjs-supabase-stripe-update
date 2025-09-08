@@ -1,0 +1,35 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Fitness App Project Rules
+
+## Technology Stack
+- Next.js 15.2.4 with App Router
+- TypeScript with strict typing
+- Supabase for database and auth
+- Tailwind CSS for styling
+- shadcn/ui components
+
+## Date Handling (CRITICAL!)
+- ВИНАГИ използвай dateToLocalDateString() от utils/date-utils.ts
+- НИКОГА не използвай toISOString().split('T')[0]
+- Всички дати в локално време
+
+## Database Operations
+- Използвай createSupabaseClient() за всички операции
+- Проверявай RLS политиките
+- Handle Supabase грешки с try/catch
+- Проверявай user authentication преди операции
+
+## User Roles
+- Треньори: създават програми, управляват клиенти
+- Клиенти: следват програми, отчитат напредък
+- Проверявай role преди операции
+
+## File Structure
+- API routes в app/api/
+- Protected pages в app/protected/
+- Components в components/
+- Utils в utils/
