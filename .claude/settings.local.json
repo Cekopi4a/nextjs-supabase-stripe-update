@@ -18,7 +18,8 @@
       "Bash(lsof:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(node:*)",
-      "Bash(supabase:*)"
+      "Bash(supabase:*)",
+      "Read(//c/Users/ICT platforms/Desktop/**)"
     ],
     "deny": []
   }

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
 
     let query = supabase
-      .from('food_items')
+      .from('foods')
       .select('*')
       .order('name', { ascending: true });
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from('food_items')
+      .from('foods')
       .insert([{
         name,
         calories_per_100g,

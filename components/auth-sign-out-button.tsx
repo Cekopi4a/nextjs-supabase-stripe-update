@@ -2,20 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { createSupabaseClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { signOutAction } from "@/app/actions";
 import { useState } from "react";
 
 export default function AuthPageSignOutButton() {
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const router = useRouter();
 
   async function signOut() {
     setIsSigningOut(true);
-    const client = createSupabaseClient();
-    await client.auth.signOut();
-    router.push("/sign-in");
-    router.refresh();
+    try {
+      await signOutAction();
+    } catch (error) {
+      console.error("Error signing out:", error);
+      setIsSigningOut(false);
+    }
   }
 
   return (

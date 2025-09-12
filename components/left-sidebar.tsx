@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { 
   Home, 
@@ -18,12 +18,10 @@ import {
   BookOpen,
   Menu,
   X,
-  LogOut
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { createSupabaseClient } from "@/utils/supabase/client";
 
 type MenuItem = {
   label: string;
@@ -41,28 +39,21 @@ interface LeftSidebarProps {
     full_name?: string;
     email?: string;
   };
+  clientsCount?: number;
+  planType?: "free" | "pro" | "beast";
 }
 
 export default function LeftSidebar({ 
   userRole = "client", 
   hasPremiumAccess = false,
-  userProfile 
+  userProfile,
+  clientsCount = 0,
+  planType = "free"
 }: LeftSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const supabase = createSupabaseClient();
   const basePath = "/protected";
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      router.push('/sign-in');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
 
   const getMenuItems = (): MenuItem[] => {
     if (userRole === "trainer") {
@@ -76,7 +67,7 @@ export default function LeftSidebar({
           label: "Клиенти",
           href: "/clients",
           icon: Users,
-          badge: "3",
+          badge: clientsCount > 0 ? clientsCount.toString() : undefined,
         },
         {
           label: "Програми",
@@ -299,16 +290,25 @@ export default function LeftSidebar({
         })}
       </nav>
 
-      {/* Upgrade prompt (for free users) */}
-      {userRole === "trainer" && !hasPremiumAccess && (!isCollapsed || isMobile) && (
+      {/* Upgrade prompt */}
+      {userRole === "trainer" && planType !== "beast" && (!isCollapsed || isMobile) && (
         <div className="p-3 border-t border-border">
-          <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg p-3 text-white">
+          <div className={cn(
+            "rounded-lg p-3 text-white",
+            planType === "free" 
+              ? "bg-gradient-to-r from-purple-500 to-blue-600"
+              : "bg-gradient-to-r from-orange-500 to-red-600"
+          )}>
             <div className="flex items-center gap-2 mb-2">
               <Crown className="h-4 w-4 flex-shrink-0" />
-              <span className="font-semibold text-sm">Pro план</span>
+              <span className="font-semibold text-sm">
+                {planType === "free" ? "Pro план" : "Beast план"}
+              </span>
             </div>
             <p className="text-xs opacity-90 mb-3 leading-relaxed">
-              Получете достъп до аналитика и премиум функции
+              {planType === "free" 
+                ? "Получете достъп до аналитика и премиум функции"
+                : "Неограничен брой клиенти и всички функции"}
             </p>
             <Link 
               href="/protected/subscription"
@@ -339,27 +339,12 @@ export default function LeftSidebar({
                 {userProfile?.email || "Потребител"}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-              title="Излизане"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
           </div>
         ) : (
           <div className="flex justify-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full h-8 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-              title="Излизане"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+              <User className="h-4 w-4 text-muted-foreground" />
+            </div>
           </div>
         )}
       </div>

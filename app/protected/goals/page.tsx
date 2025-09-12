@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { dateToLocalDateString } from "@/utils/date-utils";
 import { CheckCircle2, UploadCloud, Target, Image as ImageIcon, TrendingUp } from "lucide-react";
@@ -29,6 +30,7 @@ interface BodyMeasurement {
   date: string;
   weight_kg?: number;
   notes?: string;
+  progress_photos?: string[];
 }
 
 export default function GoalsPage() {
@@ -39,12 +41,12 @@ export default function GoalsPage() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>("");
-  const [photos, setPhotos] = useState<{ name: string; url: string }[]>([]);
 
   // Forms
   const [goalForm, setGoalForm] = useState({
     title: "",
     description: "",
+    goal_type: "general_fitness",
     target_value: "",
     unit: "kg",
     target_date: dateToLocalDateString(new Date()),
@@ -53,8 +55,10 @@ export default function GoalsPage() {
   const [weightForm, setWeightForm] = useState({
     date: dateToLocalDateString(new Date()),
     weight_kg: "",
-    notes: ""
+    notes: "",
+    photos: [] as File[]
   });
+
 
   useEffect(() => {
     fetchData();
@@ -78,19 +82,8 @@ export default function GoalsPage() {
       setUserId(userData.user.id);
       setGoals((goalsData || []) as ClientGoal[]);
       setMeasurements((measData || []) as BodyMeasurement[]);
-      await loadPhotos(userData.user.id);
-  async function loadPhotos(ownerId: string) {
-    try {
-      const { data: files } = await supabase.storage
-        .from("progress-photos")
-        .list(ownerId, { limit: 100, sortBy: { column: "name", order: "desc" } });
-      const list = (files || []).map((f) => {
-        const { data } = supabase.storage.from("progress-photos").getPublicUrl(`${ownerId}/${f.name}`);
-        return { name: f.name, url: data.publicUrl };
-      });
-      setPhotos(list);
-    } catch {}
-  }
+    } catch (error) {
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -98,60 +91,98 @@ export default function GoalsPage() {
 
   const addGoal = async () => {
     if (!goalForm.title.trim()) return;
-    const { error, data } = await supabase.from("client_goals").insert({
-      title: goalForm.title.trim(),
-      description: goalForm.description.trim() || null,
-      target_value: goalForm.target_value ? Number(goalForm.target_value) : null,
-      unit: goalForm.unit || null,
-      target_date: goalForm.target_date || null,
-      priority: goalForm.priority || 1,
-      is_achieved: false
-    }).select("*").single();
-    if (!error && data) {
-      setGoals(prev => [data as ClientGoal, ...prev]);
-      setGoalForm({ title: "", description: "", target_value: "", unit: "kg", target_date: dateToLocalDateString(new Date()), priority: 1 });
+    if (!userId) return;
+    
+    try {
+      const { error, data } = await supabase.from("client_goals").insert({
+        client_id: userId,
+        goal_type: goalForm.goal_type,
+        title: goalForm.title.trim(),
+        description: goalForm.description.trim() || null,
+        target_value: goalForm.target_value ? Number(goalForm.target_value) : null,
+        unit: goalForm.unit || null,
+        target_date: goalForm.target_date || null,
+        priority: goalForm.priority || 1,
+        is_achieved: false
+      }).select("*").single();
+      
+      if (error) {
+        console.error('Error adding goal:', error);
+        return;
+      }
+      
+      if (data) {
+        setGoals(prev => [data as ClientGoal, ...prev]);
+        setGoalForm({ title: "", description: "", goal_type: "general_fitness", target_value: "", unit: "kg", target_date: dateToLocalDateString(new Date()), priority: 1 });
+      }
+    } catch (error) {
+      console.error('Error adding goal:', error);
     }
   };
 
   const toggleGoalAchieved = async (goalId: string, value: boolean) => {
-    const { error } = await supabase.from("client_goals").update({ is_achieved: value }).eq("id", goalId);
-    if (!error) {
+    try {
+      const { error } = await supabase.from("client_goals").update({ is_achieved: value }).eq("id", goalId);
+      
+      if (error) {
+        console.error('Error updating goal:', error);
+        return;
+      }
+      
       setGoals(prev => prev.map(g => g.id === goalId ? { ...g, is_achieved: value } : g));
+    } catch (error) {
+      console.error('Error updating goal:', error);
     }
   };
 
   const addWeight = async () => {
     if (!weightForm.weight_kg) return;
-    const { error, data } = await supabase.from("body_measurements").insert({
-      date: weightForm.date,
-      weight_kg: Number(weightForm.weight_kg),
-      notes: weightForm.notes || null
-    }).select("*").single();
-    if (!error && data) {
-      setMeasurements(prev => [data as BodyMeasurement, ...prev].sort((a, b) => (a.date < b.date ? 1 : -1)));
-      setWeightForm({ date: dateToLocalDateString(new Date()), weight_kg: "", notes: "" });
-    }
-  };
-
-  const uploadPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!userId) return;
+    
     setUploading(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id;
-      if (!userId) return;
-
-      for (const file of Array.from(files)) {
-        const ext = file.name.split(".").pop();
-        const fileName = `${userId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        await supabase.storage.from("progress-photos").upload(fileName, file, { upsert: false });
+      // First upload photos if any
+      let photoUrls: string[] = [];
+      if (weightForm.photos.length > 0) {
+        for (const file of weightForm.photos) {
+          const ext = file.name.split(".").pop();
+          const fileName = `${userId}/${weightForm.date}_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("progress-photos").upload(fileName, file, { upsert: false });
+          
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("progress-photos").getPublicUrl(fileName);
+            photoUrls.push(urlData.publicUrl);
+          } else {
+            console.error('Error uploading photo:', uploadError);
+          }
+        }
       }
-      await loadPhotos(userId);
+      
+      // Then insert measurement record with photos
+      const { error, data } = await supabase.from("body_measurements").insert({
+        client_id: userId,
+        date: weightForm.date,
+        weight_kg: Number(weightForm.weight_kg),
+        notes: weightForm.notes || null,
+        progress_photos: photoUrls.length > 0 ? photoUrls : null
+      }).select("*").single();
+      
+      if (error) {
+        console.error('Error adding weight:', error);
+        return;
+      }
+      
+      if (data) {
+        setMeasurements(prev => [data as BodyMeasurement, ...prev].sort((a, b) => (a.date < b.date ? 1 : -1)));
+        setWeightForm({ date: dateToLocalDateString(new Date()), weight_kg: "", notes: "", photos: [] });
+      }
+    } catch (error) {
+      console.error('Error adding weight:', error);
     } finally {
       setUploading(false);
     }
   };
+
 
   const measurementsSorted = useMemo(() => {
     return [...measurements].sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -173,6 +204,25 @@ export default function GoalsPage() {
           <div>
             <Label>Заглавие *</Label>
             <Input value={goalForm.title} onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })} placeholder="Напр. - Сваляне на 5 кг" />
+          </div>
+          <div>
+            <Label>Вид цел</Label>
+            <Select value={goalForm.goal_type} onValueChange={(value) => setGoalForm({ ...goalForm, goal_type: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Избери вид цел" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="weight_loss">Сваляне на тегло</SelectItem>
+                <SelectItem value="weight_gain">Качване на тегло</SelectItem>
+                <SelectItem value="muscle_gain">Покачване на мускулна маса</SelectItem>
+                <SelectItem value="strength">Увеличаване на силата</SelectItem>
+                <SelectItem value="endurance">Издръжливост</SelectItem>
+                <SelectItem value="flexibility">Гъвкавост</SelectItem>
+                <SelectItem value="body_fat_reduction">Намаляване на мазнините</SelectItem>
+                <SelectItem value="general_fitness">Обща форма</SelectItem>
+                <SelectItem value="sport_specific">Спортно-специфична</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
@@ -198,9 +248,9 @@ export default function GoalsPage() {
         </div>
       </Card>
 
-      {/* Goals List and Progress Photos */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="p-6 lg:col-span-2">
+      {/* Goals List */}
+      <div className="grid gap-6">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Моите цели</h3>
           </div>
@@ -237,29 +287,6 @@ export default function GoalsPage() {
             <div className="text-center py-8 text-muted-foreground">Няма добавени цели</div>
           )}
         </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><ImageIcon className="h-5 w-5" /> Снимки на прогреса</h3>
-          <div className="space-y-3">
-            <Label htmlFor="photos" className="flex items-center gap-2">
-              <UploadCloud className="h-4 w-4" /> Качи снимки
-            </Label>
-            <Input id="photos" type="file" multiple accept="image/*" onChange={uploadPhotos} disabled={uploading} />
-            <p className="text-xs text-muted-foreground">Снимките се съхраняват в Supabase Storage bucket "progress-photos"</p>
-            {photos.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {photos.slice(0, 12).map((p) => (
-                  <div key={p.name} className="aspect-square overflow-hidden rounded border">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.url} alt={p.name} className="h-full w-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-xs text-muted-foreground">Няма качени снимки</div>
-            )}
-          </div>
-        </Card>
       </div>
 
       {/* Weight Log */}
@@ -282,8 +309,33 @@ export default function GoalsPage() {
             <Input value={weightForm.notes} onChange={(e) => setWeightForm({ ...weightForm, notes: e.target.value })} placeholder="По избор" />
           </div>
         </div>
+        <div className="mt-3">
+          <Label htmlFor="weight-photos" className="flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" /> Снимки за датата
+          </Label>
+          <Input 
+            id="weight-photos" 
+            type="file" 
+            multiple 
+            accept="image/*" 
+            onChange={(e) => {
+              const files = e.target.files;
+              if (files) {
+                setWeightForm({ ...weightForm, photos: Array.from(files) });
+              }
+            }} 
+            disabled={uploading} 
+          />
+          {weightForm.photos.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Избрани {weightForm.photos.length} снимки
+            </p>
+          )}
+        </div>
         <div className="flex justify-end mt-3">
-          <Button onClick={addWeight}>Запази тегло</Button>
+          <Button onClick={addWeight} disabled={uploading}>
+            {uploading ? "Запазване..." : "Запази тегло"}
+          </Button>
         </div>
 
         <div className="mt-6">
@@ -295,6 +347,7 @@ export default function GoalsPage() {
                     <th className="py-2">Дата</th>
                     <th className="py-2">Кг</th>
                     <th className="py-2">Бележки</th>
+                    <th className="py-2">Снимки</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -303,6 +356,30 @@ export default function GoalsPage() {
                       <td className="py-2">{m.date}</td>
                       <td className="py-2">{m.weight_kg ?? "—"}</td>
                       <td className="py-2">{m.notes || ""}</td>
+                      <td className="py-2">
+                        {m.progress_photos && m.progress_photos.length > 0 ? (
+                          <div className="flex gap-1">
+                            {m.progress_photos.slice(0, 3).map((photo, idx) => (
+                              <div key={idx} className="w-8 h-8 rounded overflow-hidden border">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img 
+                                  src={photo} 
+                                  alt={`Снимка ${idx + 1}`} 
+                                  className="w-full h-full object-cover cursor-pointer" 
+                                  onClick={() => window.open(photo, '_blank')}
+                                />
+                              </div>
+                            ))}
+                            {m.progress_photos.length > 3 && (
+                              <div className="w-8 h-8 rounded border flex items-center justify-center text-xs text-muted-foreground">
+                                +{m.progress_photos.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

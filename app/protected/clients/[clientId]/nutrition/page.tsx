@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import FoodSearch from "@/components/ui/food-search";
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -57,6 +58,16 @@ interface Client {
   full_name: string;
   email: string;
   avatar_url?: string;
+}
+
+interface Food {
+  id: string;
+  name: string;
+  calories_per_100g: number;
+  protein_per_100g: number;
+  carbs_per_100g: number;
+  fat_per_100g: number;
+  category: string;
 }
 
 interface CalendarDay {
@@ -143,6 +154,8 @@ export default function ClientNutritionPage() {
     fats: 0,
     notes: ''
   });
+  const [selectedFood, setSelectedFood] = useState<Food | null>(null);
+  const [quantity, setQuantity] = useState(100);
 
   const supabase = createSupabaseClient();
 
@@ -299,6 +312,8 @@ export default function ClientNutritionPage() {
       fats: 0,
       notes: ''
     });
+    setSelectedFood(null);
+    setQuantity(100);
     setEditingMeal(null);
     setShowAddMealModal(true);
   };
@@ -416,6 +431,31 @@ export default function ClientNutritionPage() {
     } catch (error) {
       console.error("Error deleting meal:", error);
       alert("Грешка при изтриване на ястието");
+    }
+  };
+
+  const handleFoodSelect = (food: Food) => {
+    setSelectedFood(food);
+    setMealForm({
+      ...mealForm,
+      meal_name: food.name,
+      calories: Math.round((food.calories_per_100g * quantity) / 100),
+      protein: Math.round((food.protein_per_100g * quantity) / 100),
+      carbs: Math.round((food.carbs_per_100g * quantity) / 100),
+      fats: Math.round((food.fat_per_100g * quantity) / 100)
+    });
+  };
+
+  const handleQuantityChange = (newQuantity: number) => {
+    setQuantity(newQuantity);
+    if (selectedFood) {
+      setMealForm({
+        ...mealForm,
+        calories: Math.round((selectedFood.calories_per_100g * newQuantity) / 100),
+        protein: Math.round((selectedFood.protein_per_100g * newQuantity) / 100),
+        carbs: Math.round((selectedFood.carbs_per_100g * newQuantity) / 100),
+        fats: Math.round((selectedFood.fat_per_100g * newQuantity) / 100)
+      });
     }
   };
 
@@ -545,6 +585,10 @@ export default function ClientNutritionPage() {
           selectedMealType={selectedMealType}
           mealForm={mealForm}
           setMealForm={setMealForm}
+          selectedFood={selectedFood}
+          quantity={quantity}
+          onFoodSelect={handleFoodSelect}
+          onQuantityChange={handleQuantityChange}
           onSave={saveMeal}
           onClose={() => setShowAddMealModal(false)}
         />
@@ -858,6 +902,10 @@ function MealModal({
   selectedMealType,
   mealForm, 
   setMealForm, 
+  selectedFood,
+  quantity,
+  onFoodSelect,
+  onQuantityChange,
   onSave, 
   onClose 
 }: {
@@ -866,6 +914,10 @@ function MealModal({
   selectedMealType: string;
   mealForm: any;
   setMealForm: (form: any) => void;
+  selectedFood: Food | null;
+  quantity: number;
+  onFoodSelect: (food: Food) => void;
+  onQuantityChange: (quantity: number) => void;
   onSave: () => void;
   onClose: () => void;
 }) {
@@ -875,7 +927,7 @@ function MealModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -894,6 +946,56 @@ function MealModal({
           </div>
           
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="food_search">Търсене на храна</Label>
+              <FoodSearch 
+                onFoodSelect={onFoodSelect}
+                placeholder="Търсете храна от базата данни..."
+              />
+              {selectedFood && (
+                <div className="mt-2 p-3 bg-muted/30 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium">{selectedFood.name}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {selectedFood.calories_per_100g} кал/100г
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="quantity">Количество (г)</Label>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => onQuantityChange(parseInt(e.target.value) || 100)}
+                        min="1"
+                        max="2000"
+                      />
+                    </div>
+                    <div className="pt-6">
+                      <div className="text-sm text-muted-foreground">
+                        П: {Math.round((selectedFood.protein_per_100g * quantity) / 100)}г • 
+                        В: {Math.round((selectedFood.carbs_per_100g * quantity) / 100)}г • 
+                        М: {Math.round((selectedFood.fat_per_100g * quantity) / 100)}г
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  или въведете ръчно
+                </span>
+              </div>
+            </div>
+            
             <div>
               <Label htmlFor="meal_name">Име на ястието *</Label>
               <Input

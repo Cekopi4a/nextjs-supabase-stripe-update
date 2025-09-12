@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { createSupabaseClient } from "@/utils/supabase/client";
-import { Bell, Search, User, LogOut, Settings, UserCircle, ChevronDown } from "lucide-react";
+import { Bell, Search, User, LogOut, Settings, UserCircle, ChevronDown, Menu, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -12,8 +12,10 @@ export default function Header() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [loading, setLoading] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createSupabaseClient();
 
@@ -67,7 +69,7 @@ export default function Header() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Handle clicking outside the menu
+  // Handle clicking outside the user menu
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -84,31 +86,94 @@ export default function Header() {
     };
   }, [showUserMenu]);
 
+  // Handle clicking outside the mobile menu
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setShowMobileMenu(false);
+      }
+    }
+
+    if (showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMobileMenu]);
+
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
+    try {
+      await supabase.auth.signOut();
+      router.push('/sign-in');
+      router.refresh();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
+  const navigationItems = [
+    { href: '/', label: 'Начало' },
+    { href: '/about', label: 'За нас' },
+    { href: '/pricing', label: 'Ценоразпис' },
+    { href: '/contact', label: 'Контакт' }
+  ];
+
   return (
-    <header className="bg-background border-b border-border h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
-      {/* Left section - Logo for non-protected pages */}
+    <>
+    <header className="bg-background/95 backdrop-blur-sm border-b border-border h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-40">
+      {/* Left section - Logo */}
       <div className="flex items-center">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            <span className="text-white font-bold text-lg">F</span>
+          </div>
+          <div className="hidden sm:block">
+            <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              FitLife Studio
+            </span>
+          </div>
+        </Link>
+        
+        {/* Desktop Navigation Menu - only for non-authenticated users */}
         {!user && (
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">F</span>
-            </div>
-            <span className="font-semibold text-foreground">FitnessPlatform</span>
-          </Link>
+          <nav className="hidden lg:flex ml-10 space-x-8">
+            {navigationItems.map((item) => (
+              <Link 
+                key={item.href}
+                href={item.href} 
+                className="text-sm font-medium text-foreground hover:text-blue-600 transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+        
+        {/* Mobile Menu Button - only for non-authenticated users */}
+        {!user && (
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="lg:hidden ml-4 p-2 rounded-lg hover:bg-muted transition-colors"
+          >
+            {showMobileMenu ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         )}
         
         {/* For protected pages, show platform name */}
         {user && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">F</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg">F</span>
             </div>
-            <span className="font-semibold text-foreground">FitnessPlatform</span>
+            <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              FitnessPlatform
+            </span>
           </div>
         )}
       </div>
@@ -127,10 +192,10 @@ export default function Header() {
           /* Authenticated user header */
           <>
             {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative">
+            <Button variant="ghost" size="sm" className="relative hover:bg-blue-50/50">
               <Bell className="h-4 w-4" />
               {/* Notification badge */}
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-lg">
                 2
               </span>
             </Button>
@@ -139,7 +204,7 @@ export default function Header() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 pl-2 border-l border-border hover:bg-muted rounded-r-lg py-2 px-2 transition-colors"
+                className="flex items-center gap-3 pl-3 border-l border-border hover:bg-blue-50/50 rounded-r-xl py-2 px-3 transition-all duration-200 hover:scale-[1.02]"
               >
                 <div className="hidden sm:block text-right">
                   <p className="text-sm font-medium text-foreground leading-tight">
@@ -149,10 +214,10 @@ export default function Header() {
                     {profile?.role || "client"}
                   </p>
                 </div>
-                <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-muted-foreground" />
+                <div className="h-9 w-9 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  <User className="h-4 w-4 text-blue-600" />
                 </div>
-                <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" style={{ transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </button>
 
               {/* Dropdown menu */}
@@ -219,15 +284,47 @@ export default function Header() {
         ) : (
           /* Guest user header */
           <>
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" className="border-blue-200 hover:border-blue-300 hover:bg-blue-50/50" asChild>
               <Link href="/sign-in">Вход</Link>
             </Button>
-            <Button size="sm" asChild>
+            <Button size="sm" className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg" asChild>
               <Link href="/sign-up">Регистрация</Link>
             </Button>
           </>
         )}
       </div>
     </header>
+    
+    {/* Mobile Navigation Menu */}
+    {!user && showMobileMenu && (
+      <div 
+        ref={mobileMenuRef}
+        className="fixed inset-x-0 top-16 bg-background/95 backdrop-blur-sm border-b border-border z-30 lg:hidden"
+      >
+        <nav className="px-4 py-6 space-y-2">
+          {navigationItems.map((item) => (
+            <Link 
+              key={item.href}
+              href={item.href}
+              onClick={() => setShowMobileMenu(false)}
+              className="block px-4 py-3 rounded-xl text-foreground hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium"
+            >
+              {item.label}
+            </Link>
+          ))}
+          
+          {/* Mobile Auth Buttons */}
+          <div className="pt-4 mt-4 border-t border-border space-y-3">
+            <Button variant="outline" className="w-full border-blue-200 hover:border-blue-300 hover:bg-blue-50/50" asChild>
+              <Link href="/sign-in">Вход в акаунта</Link>
+            </Button>
+            <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg" asChild>
+              <Link href="/sign-up">Създай акаунт безплатно</Link>
+            </Button>
+          </div>
+        </nav>
+      </div>
+    )}
+    </>
   );
 }

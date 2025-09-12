@@ -27,7 +27,7 @@ import { createSupabaseClient } from '@/utils/supabase/client';
 const subscriptionPlans = {
   free: { name: 'Безплатен', limit: 3, color: 'bg-muted text-muted-foreground' },
   pro: { name: 'Pro', limit: 6, color: 'bg-blue-100 text-blue-800' },
-  beast: { name: 'Beast', limit: null, color: 'bg-purple-100 text-purple-800' }
+  beast: { name: 'Beast', limit: 999999, color: 'bg-purple-100 text-purple-800' }
 } as const;
 
 type SubscriptionPlan = keyof typeof subscriptionPlans;
@@ -41,6 +41,7 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState('');
   const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan>('free');
+  const [currentLimit, setCurrentLimit] = useState<number | null>(3);
 
   useEffect(() => {
     fetchClients();
@@ -194,15 +195,27 @@ export default function ClientsPage() {
       const supabase = createSupabaseClient();
       const { data: subscription, error } = await supabase
         .from('trainer_subscriptions')
-        .select('plan_type')
+        .select('plan_type, client_limit')
         .eq('trainer_id', trainerId)
         .single();
 
+      console.log('Subscription data:', subscription, 'Error:', error);
+
       if (subscription && !error) {
-        setCurrentPlan(subscription.plan_type as SubscriptionPlan);
+        const planType = subscription.plan_type as SubscriptionPlan;
+        setCurrentPlan(planType);
+        setCurrentLimit(subscription.client_limit);
+        
+        console.log('Current plan set to:', planType, 'with limit:', subscription.client_limit);
+      } else {
+        console.log('No subscription found or error occurred, using default free plan');
+        setCurrentPlan('free');
+        setCurrentLimit(3);
       }
     } catch (error) {
-      console.log('No subscription found, using default free plan');
+      console.log('Error fetching subscription, using default free plan:', error);
+      setCurrentPlan('free');
+      setCurrentLimit(3);
     }
   };
 
@@ -294,9 +307,12 @@ export default function ClientsPage() {
     );
   }
 
-  const planInfo = subscriptionPlans[currentPlan];
+  const planInfo = {
+    ...subscriptionPlans[currentPlan],
+    limit: currentLimit
+  };
   const activeClients = clients.filter(client => client.trainer_status === 'active');
-  const canAddMore = planInfo.limit === null || activeClients.length < planInfo.limit;
+  const canAddMore = currentLimit === null || currentLimit >= 999999 || activeClients.length < currentLimit;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
@@ -369,7 +385,7 @@ export default function ClientsPage() {
                 <div>
                   <p className="text-orange-100 text-sm font-medium">Капацитет</p>
                   <p className="text-3xl font-bold mt-1">
-                    {activeClients.length}<span className="text-xl">/{planInfo.limit || '∞'}</span>
+                    {activeClients.length}<span className="text-xl">/{currentLimit >= 999999 ? '∞' : planInfo.limit}</span>
                   </p>
                 </div>
                 <div className="p-3 bg-background/20 rounded-lg">
@@ -566,7 +582,7 @@ export default function ClientsPage() {
         </div>
 
         {/* Upgrade Prompt */}
-        {!canAddMore && (
+        {!canAddMore && currentPlan !== 'beast' && (
           <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 shadow-sm">
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row lg:items-center gap-4">
@@ -578,7 +594,11 @@ export default function ClientsPage() {
                     Достигнахте лимита от {planInfo.limit} клиента
                   </h3>
                   <p className="text-amber-800">
-                    Надстройте до Pro план (до 6 клиента) или Beast план (неограничено) за да добавите повече клиенти и да разширите бизнеса си.
+                    {currentPlan === 'free' 
+                      ? 'Надстройте до Pro план (до 6 клиента) или Beast план (неограничено) за да добавите повече клиенти и да разширите бизнеса си.'
+                      : currentPlan === 'pro'
+                      ? 'Надстройте до Beast план (неограничено клиенти) за да добавите повече клиенти и да разширите бизнеса си.'
+                      : 'Вие имате максималния план - Beast.'}
                   </p>
                 </div>
                 <div className="lg:ml-auto flex-shrink-0">
