@@ -35,6 +35,11 @@ export default async function ProtectedPage() {
   }
 
   // Render different dashboards based on user role
+  if (profile.role === "admin") {
+    // Redirect admin to admin dashboard
+    redirect("/admin");
+  }
+
   if (profile.role === "trainer") {
     return <TrainerDashboard user={user} profile={profile} />;
   }

@@ -52,8 +52,8 @@ export default async function ProtectedLayout({
   return (
     <div className="flex h-[calc(100vh-64px)] bg-background">
       {/* Left Sidebar */}
-      <LeftSidebar 
-        userRole={profile?.role as "trainer" | "client" || "client"}
+      <LeftSidebar
+        userRole={profile?.role as "trainer" | "client" | "admin" || "client"}
         hasPremiumAccess={hasPremiumAccess}
         userProfile={{
           full_name: profile?.full_name,

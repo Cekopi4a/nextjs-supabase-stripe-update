@@ -33,7 +33,7 @@ type MenuItem = {
 };
 
 interface LeftSidebarProps {
-  userRole?: "trainer" | "client";
+  userRole?: "trainer" | "client" | "admin";
   hasPremiumAccess?: boolean;
   userProfile?: {
     full_name?: string;
@@ -56,7 +56,20 @@ export default function LeftSidebar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const getMenuItems = (): MenuItem[] => {
-    if (userRole === "trainer") {
+    if (userRole === "admin") {
+      return [
+        {
+          label: "Админ панел",
+          href: "/admin",
+          icon: Settings,
+        },
+        {
+          label: "Дашборд",
+          href: "/",
+          icon: Home,
+        },
+      ];
+    } else if (userRole === "trainer") {
       return [
         {
           label: "Начало",
@@ -214,9 +227,10 @@ export default function LeftSidebar({
       )}>
         {menuItems.map((item, index) => {
           const { label, href, icon: Icon, disabled = false, badge, isPro = false } = item;
-          const fullHref = `${basePath}${href}`;
-          const isActive =
-            href === "/"
+          const fullHref = href === "/admin" ? "/admin" : `${basePath}${href}`;
+          const isActive = href === "/admin"
+            ? pathname.startsWith("/admin")
+            : href === "/"
               ? pathname === basePath || pathname === `${basePath}/`
               : pathname === fullHref || pathname.startsWith(fullHref + "/");
 

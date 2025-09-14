@@ -8,25 +8,25 @@ export default function Home() {
 
   const testimonials = [
     {
-      name: "Мария Петрова",
-      role: "Фитнес ентусиаст",
-      content: "FitLife Studio промени живота ми! За 6 месеца свалих 15 кг и се чувствам невероятно.",
-      rating: 5,
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616c6e1e6d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
-    },
-    {
-      name: "Георги Иванов",
-      role: "Бизнесмен",
-      content: "Професионалните треньори и гъвкавите часове са идеални за моя график.",
+      name: "Мартин Стефанов",
+      role: "Персонален треньор",
+      content: "Управлявам всичките си клиенти лесно. Създавам програми и планове за хранене бързо и ефективно.",
       rating: 5,
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
     },
     {
-      name: "Анна Димитрова",
-      role: "Студентка",
-      content: "Групповите занятия са невероятни! Отлична атмосфера и мотивация.",
+      name: "Петя Николова", 
+      role: "Клиент",
+      content: "Имам всичко на едно място - програмата ми, хранителния план и проследяване на напредъка.",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616c6e1e6d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
+    },
+    {
+      name: "Александър Димитров",
+      role: "Фитнес треньор",
+      content: "Платформата ми спестява часове работа. Клиентите ми са доволни от персонализирания подход.",
+      rating: 5,
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
     }
   ];
 
@@ -35,11 +35,12 @@ export default function Home() {
       name: "Free",
       price: "0",
       period: "лв/месечно",
-      description: "Перфектно за започващи",
+      description: "Перфектно за започващи треньори",
       features: [
-        "Достъп до основни функции",
-        "1 клиент",
-        "Базови програми",
+        "До 3 клиента",
+        "Основни тренировъчни програми",
+        "Базови хранителни планове",
+        "Календар за всеки клиент",
         "Email поддръжка"
       ],
       popular: false
@@ -50,11 +51,12 @@ export default function Home() {
       period: "лв/месечно",
       description: "За професионални треньори",
       features: [
-        "Неограничени клиенти",
-        "Персонализирани програми",
-        "Хранителни планове",
-        "Приоритетна поддръжка",
-        "Аналитика и отчети"
+        "До 6 клиента",
+        "Детайлни тренировъчни програми",
+        "Персонализирани хранителни планове",
+        "Проследяване на напредъка",
+        "Известия за клиенти",
+        "Приоритетна поддръжка"
       ],
       popular: true
     },
@@ -62,13 +64,14 @@ export default function Home() {
       name: "Beast",
       price: "99",
       period: "лв/месечно",
-      description: "За фитнес студия",
+      description: "За фитнес студия и експерти",
       features: [
+        "Неограничени клиенти",
         "Всички Pro функции",
-        "Многоезична поддръжка",
+        "Детайлна аналитика",
+        "Брандинг опции",
         "API достъп",
-        "Custom брандинг",
-        "Dedicated поддръжка"
+        "24/7 поддръжка"
       ],
       popular: false
     }
@@ -78,51 +81,51 @@ export default function Home() {
     <div className="flex-1">
       {/* Hero Section */}
       <section className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-red-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10" />
         <div className="relative max-w-7xl mx-auto px-4 pt-20 pb-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
             {/* Left Content */}
             <div className="text-white">
               <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-8">
                 <Dumbbell className="h-4 w-4" />
-                #1 Fitness Platform в България
+                #1 Платформа за управление на фитнес клиенти
               </div>
               
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
-                TRANSFORM YOUR LIFE WITH
+                УПРАВЛЯВАЙТЕ КЛИЕНТИТЕ СИ С
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
                   {" "}FITLIFE STUDIO
                 </span>
               </h1>
               
               <p className="text-xl text-gray-300 mb-10 leading-relaxed max-w-lg">
-                Професионални треньори, персонализирани програми и модерно оборудване. Започнете трансформацията си днес!
+                Уеб платформа за персонални треньори. Създавайте индивидуални програми, хранителни планове и проследявайте напредъка на всеки клиент.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
                 <Button size="lg" className="px-10 py-4 text-lg h-auto bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0" asChild>
                   <Link href="/sign-up">
-                    ЗАПОЧНЕТЕ БЕЗПЛАТНО
+                    ЗАПОЧНЕТЕ БЕЗПЛАТНО - ДО 3 КЛИЕНТА
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
                 <Button variant="outline" size="lg" className="px-10 py-4 text-lg h-auto border-gray-600 text-gray-300 hover:bg-gray-800" asChild>
-                  <Link href="/sign-in">Вход</Link>
+                  <Link href="/sign-in">Вход за треньори</Link>
                 </Button>
               </div>
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-8 max-w-md text-center">
                 <div>
-                  <div className="text-3xl font-bold text-blue-400">1000+</div>
-                  <div className="text-sm text-gray-400">Активни клиенти</div>
+                  <div className="text-3xl font-bold text-blue-400">500+</div>
+                  <div className="text-sm text-gray-400">Управлявани клиенти</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-blue-400">50+</div>
-                  <div className="text-sm text-gray-400">Експерт треньори</div>
+                  <div className="text-3xl font-bold text-blue-400">100+</div>
+                  <div className="text-sm text-gray-400">Активни треньори</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-blue-400">4.9</div>
+                  <div className="text-3xl font-bold text-blue-400">4.8</div>
                   <div className="text-sm text-gray-400 flex items-center justify-center gap-1">
                     <Star className="h-4 w-4 fill-blue-400 text-blue-400" />
                     Рейтинг
@@ -146,8 +149,8 @@ export default function Home() {
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                   <div className="absolute bottom-8 left-8 text-white">
-                    <h3 className="text-2xl font-bold mb-2">Професионално оборудване</h3>
-                    <p className="text-gray-200">Най-новите фитнес уреди и технологии</p>
+                    <h3 className="text-2xl font-bold mb-2">Управление на клиенти</h3>
+                    <p className="text-gray-200">Всички клиенти на едно място с индивидуален подход</p>
                   </div>
                 </div>
               </div>
@@ -172,20 +175,20 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             {/* Left Content */}
             <div>
-              <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
                 <Dumbbell className="h-4 w-4" />
-                Защо да изберете FitLife Studio
+                Как работи платформата
               </div>
               
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">
-                Най-добрите резултати с професионален подход
+                Всичко необходимо за успешно управление на клиентите
               </h2>
               
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Над 1000 души вече постигнаха своите fitness цели с нашата помощ. Присъединете се към успешната ни общност!
+                Над 100 персонални треньора вече използват нашата платформа за управление на техните клиенти. Присъединете се към тях!
               </p>
               
-              <Button size="lg" className="px-8 py-4 text-lg h-auto bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600" asChild>
+              <Button size="lg" className="px-8 py-4 text-lg h-auto bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600" asChild>
                 <Link href="/sign-up">
                   Започнете днес
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -206,51 +209,51 @@ export default function Home() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 </div>
                 <div className="relative z-10">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-4 text-white">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mb-4 text-white">
                     <Dumbbell className="h-8 w-8" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3">
-                    Сертифицирани треньори
+                    Управление на клиенти
                   </h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Работете с професионални треньори с международни сертификати
+                    Добавяйте клиенти чрез специален код или линк
                   </p>
                 </div>
               </div>
               
               <div className="bg-gray-50 p-6 rounded-2xl hover:shadow-lg transition-all hover:scale-105">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-4 text-white">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mb-4 text-white">
                   <Target className="h-8 w-8" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  Персонализиран подход
+                  Индивидуални програми
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Индивидуални програми, адаптирани точно за вашите цели
+                  Създавайте персонализирани тренировки за всеки клиент
                 </p>
               </div>
               
               <div className="bg-gray-50 p-6 rounded-2xl hover:shadow-lg transition-all hover:scale-105">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-4 text-white">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mb-4 text-white">
                   <Star className="h-8 w-8" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  Гъвкави часове
+                  Хранителни планове
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Тренирайте когато ви е удобно - 24/7 достъп до залата
+                  Създавайте персонализирани хранителни режими
                 </p>
               </div>
               
               <div className="bg-gray-50 p-6 rounded-2xl hover:shadow-lg transition-all hover:scale-105">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-4 text-white">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mb-4 text-white">
                   <Check className="h-8 w-8" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-3">
                   Проследяване на прогреса
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Детайлна статистика и анализ на вашето развитие
+                  Клиентите въвеждат килограми, измервания и цели
                 </p>
               </div>
             </div>
@@ -262,15 +265,15 @@ export default function Home() {
       <section className="px-4 py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
               <Star className="h-4 w-4" />
-              Premium Fitness Services
+              Ключови функционалности
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Всичко необходимо за вашия успех
+              Всичко необходимо за управление на клиентите
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Предлагаме пълна гама от професионални fitness услуги, адаптирани за всички нива и цели
+              Платформата предоставя всички инструменти, които персоналните треньори се нуждаят за ефективно управление
             </p>
           </div>
 
@@ -285,18 +288,18 @@ export default function Home() {
                 />
               </div>
               <div className="relative z-10">
-                <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-6 text-white">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-white">
                   <Dumbbell className="h-12 w-12" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Персонално тренирането
+                  Клиентски профили
                 </h3>
                 <p className="text-gray-600 leading-relaxed mb-6">
-                  Индивидуални тренировки с професионален треньор
+                  Всеки клиент се регистрира с специален код от треньора
                 </p>
                 <Button 
                   variant="outline" 
-                  className="w-full border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white"
+                  className="w-full border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
                 >
                   Научете повече
                 </Button>
@@ -313,18 +316,18 @@ export default function Home() {
                 />
               </div>
               <div className="relative z-10">
-                <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-6 text-white">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-white">
                   <Star className="h-12 w-12" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Групови занятия
+                  Календар с тренировки
                 </h3>
                 <p className="text-gray-600 leading-relaxed mb-6">
-                  Енергични групови тренировки за всички нива
+                  Календар за всеки клиент с тренировки за всеки ден
                 </p>
                 <Button 
                   variant="outline" 
-                  className="w-full border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white"
+                  className="w-full border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
                 >
                   Научете повече
                 </Button>
@@ -332,72 +335,72 @@ export default function Home() {
             </div>
             
             <div className="p-8 hover:shadow-xl transition-all hover:scale-105 border-0 bg-white rounded-xl">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-6 text-white">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-white">
                 <Target className="h-12 w-12" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Хранителни консултации
+                Планер за хранене
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Персонализирани хранителни планове и съвети
+                Интерактивен планер за създаване на хранителни режими
               </p>
               <Button 
                 variant="outline" 
-                className="w-full border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white"
+                className="w-full border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
               >
                 Научете повече
               </Button>
             </div>
             
             <div className="p-8 hover:shadow-xl transition-all hover:scale-105 border-0 bg-white rounded-xl">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-6 text-white">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-white">
                 <Check className="h-12 w-12" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Кардио зона
+                Проследяване на напредък
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Модерни кардио уреди за ефективно горене на калории
+                Клиентите виждат своя напредък спрямо поставените цели
               </p>
               <Button 
                 variant="outline" 
-                className="w-full border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white"
+                className="w-full border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
               >
                 Научете повече
               </Button>
             </div>
             
             <div className="p-8 hover:shadow-xl transition-all hover:scale-105 border-0 bg-white rounded-xl">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-6 text-white">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-white">
                 <Dumbbell className="h-12 w-12" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Силова зона
+                Управление на абонамент
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Професионални уреди за силови тренировки
+                Free, Pro и Beast планове с различен брой клиенти
               </p>
               <Button 
                 variant="outline" 
-                className="w-full border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white"
+                className="w-full border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
               >
                 Научете повече
               </Button>
             </div>
             
             <div className="p-8 hover:shadow-xl transition-all hover:scale-105 border-0 bg-white rounded-xl">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-6 text-white">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 text-white">
                 <Star className="h-12 w-12" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Възстановяване
+                Известия за клиенти
               </h3>
               <p className="text-gray-600 leading-relaxed mb-6">
-                Сауна, масажи и рехабилитационни услуги
+                Клиентите получават известия при нови програми
               </p>
               <Button 
                 variant="outline" 
-                className="w-full border-orange-500 text-orange-600 hover:bg-orange-500 hover:text-white"
+                className="w-full border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
               >
                 Научете повече
               </Button>
@@ -474,13 +477,13 @@ export default function Home() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
               <Star className="h-4 w-4" />
-              Real Videos, Real Transformations
+              Отзиви от треньори и клиенти
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Какво казват нашите клиенти
+              Какво казват потребителите на платформата
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Историите на успех от нашата общност говорят сами за себе си
+              Вижте как нашата платформа помага на треньорите да управляват клиентите си по-ефективно
             </p>
           </div>
 
@@ -521,21 +524,21 @@ export default function Home() {
       <section className="px-4 py-24 bg-gradient-to-r from-blue-500 to-purple-500">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Take the First Step Towards a Better You
+            Започнете да управлявате клиентите си професионално
           </h2>
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-            Присъединете се към хиляди хора, които вече постигат своите цели с FitLife Studio
+            Присъединете се към стотици треньори, които вече използват нашата платформа за управление на клиентите си
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="px-10 py-4 text-lg h-auto bg-white text-blue-600 hover:bg-gray-100" asChild>
               <Link href="/sign-up">
-                ЗАПОЧНЕТЕ БЕЗПЛАТНО
+                ЗАПОЧНЕТЕ БЕЗПЛАТНО - ДО 3 КЛИЕНТА
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" className="px-10 py-4 text-lg h-auto border-white text-white hover:bg-white hover:text-blue-600" asChild>
-              <Link href="/sign-in">Вход в акаунта</Link>
+              <Link href="/sign-in">Вход за треньори</Link>
             </Button>
           </div>
         </div>
