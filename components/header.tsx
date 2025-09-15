@@ -125,54 +125,67 @@ export default function Header() {
     <header className="bg-background/95 backdrop-blur-sm border-b border-border h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-40">
       {/* Left section - Logo */}
       <div className="flex items-center">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-lg">F</span>
-          </div>
-          <div className="hidden sm:block">
-            <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              FitLife Studio
-            </span>
-          </div>
-        </Link>
-        
-        {/* Desktop Navigation Menu - only for non-authenticated users */}
-        {!user && (
-          <nav className="hidden lg:flex ml-10 space-x-8">
-            {navigationItems.map((item) => (
-              <Link 
-                key={item.href}
-                href={item.href} 
-                className="text-sm font-medium text-foreground hover:text-blue-600 transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+        {/* Logo and navigation for non-authenticated users */}
+        {!loading && !user && (
+          <>
+            <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">F</span>
+              </div>
+              <div className="hidden sm:block">
+                <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  FitLife Studio
+                </span>
+              </div>
+            </Link>
+
+            {/* Desktop Navigation Menu */}
+            <nav className="hidden lg:flex ml-10 space-x-8">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-sm font-medium text-foreground hover:text-blue-600 transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="lg:hidden ml-4 p-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              {showMobileMenu ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
+          </>
         )}
-        
-        {/* Mobile Menu Button - only for non-authenticated users */}
-        {!user && (
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="lg:hidden ml-4 p-2 rounded-lg hover:bg-muted transition-colors"
-          >
-            {showMobileMenu ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </button>
-        )}
-        
-        {/* For protected pages, show platform name */}
-        {user && (
+
+        {/* Logo for authenticated users */}
+        {!loading && user && (
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-lg">F</span>
             </div>
             <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              FitnessPlatform
+              FitLife Studio
+            </span>
+          </div>
+        )}
+
+        {/* Loading state */}
+        {loading && (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg">F</span>
+            </div>
+            <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              FitLife Studio
             </span>
           </div>
         )}
@@ -296,7 +309,7 @@ export default function Header() {
     </header>
     
     {/* Mobile Navigation Menu */}
-    {!user && showMobileMenu && (
+    {!loading && !user && showMobileMenu && (
       <div 
         ref={mobileMenuRef}
         className="fixed inset-x-0 top-16 bg-background/95 backdrop-blur-sm border-b border-border z-30 lg:hidden"

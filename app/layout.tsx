@@ -12,7 +12,7 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "FitnessPlatform - Тренировъчна платформа",
+  title: "FitLife Studio - Тренировъчна платформа",
   description: "Най-бързият начин за изграждане на fitness приложения с Next.js и Update",
 };
 

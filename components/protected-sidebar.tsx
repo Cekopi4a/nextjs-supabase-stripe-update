@@ -145,7 +145,7 @@ export default function ProtectedSidebar() {
             <Dumbbell className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 className="font-semibold text-gray-900">FitnessPlatform</h2>
+            <h2 className="font-semibold text-gray-900">FitLife Studio</h2>
             <p className="text-xs text-gray-500 capitalize">{userRole}</p>
           </div>
         </div>
