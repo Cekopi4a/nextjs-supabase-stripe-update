@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { 
-  Home, 
-  Users, 
-  Dumbbell, 
-  Calendar, 
-  BarChart3, 
-  Settings, 
+import { cn } from "@/utils/styles";
+import {
+  Home,
+  Users,
+  Dumbbell,
+  Calendar,
+  BarChart3,
+  Settings,
   User,
   Target,
   Apple,
@@ -19,6 +19,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -38,6 +39,7 @@ interface LeftSidebarProps {
   userProfile?: {
     full_name?: string;
     email?: string;
+    avatar_url?: string;
   };
   clientsCount?: number;
   planType?: "free" | "pro" | "beast";
@@ -342,9 +344,12 @@ export default function LeftSidebar({
       )}>
         {(!isCollapsed || isMobile) ? (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-              <User className="h-4 w-4 text-muted-foreground" />
-            </div>
+            <Avatar
+              src={userProfile?.avatar_url}
+              alt={userProfile?.full_name || "Потребител"}
+              size="sm"
+              className="flex-shrink-0"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
                 {userProfile?.full_name || (userRole === "trainer" ? "Треньор" : "Клиент")}
@@ -356,9 +361,11 @@ export default function LeftSidebar({
           </div>
         ) : (
           <div className="flex justify-center">
-            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-muted-foreground" />
-            </div>
+            <Avatar
+              src={userProfile?.avatar_url}
+              alt={userProfile?.full_name || "Потребител"}
+              size="sm"
+            />
           </div>
         )}
       </div>

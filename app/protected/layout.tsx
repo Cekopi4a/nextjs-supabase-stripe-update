@@ -57,7 +57,8 @@ export default async function ProtectedLayout({
         hasPremiumAccess={hasPremiumAccess}
         userProfile={{
           full_name: profile?.full_name,
-          email: profile?.email || user?.email
+          email: profile?.email || user?.email,
+          avatar_url: profile?.avatar_url
         }}
         clientsCount={clientsCount}
         planType={planType as "free" | "pro" | "beast"}

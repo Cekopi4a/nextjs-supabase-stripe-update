@@ -45,6 +45,48 @@ export const signUpAction = async (formData: FormData) => {
   return redirect("/protected");
 };
 
+export const forgotPasswordAction = async (formData: FormData) => {
+  const email = formData.get("email") as string;
+  const client = await createSupabaseClient();
+
+  const { error } = await client.auth.resetPasswordForEmail(email, {
+    redirectTo: process.env.VERCEL_URL
+      ? `${process.env.VERCEL_URL}/reset-password`
+      : "http://localhost:3000/reset-password",
+  });
+
+  if (error) {
+    return encodedRedirect("error", "/forgot-password", error.message);
+  }
+
+  return encodedRedirect(
+    "success",
+    "/forgot-password",
+    "Линкът за смяна на парола е изпратен на вашия имейл."
+  );
+};
+
+export const resetPasswordAction = async (formData: FormData) => {
+  const password = formData.get("password") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (password !== confirmPassword) {
+    return encodedRedirect("error", "/reset-password", "Паролите не съвпадат.");
+  }
+
+  const client = await createSupabaseClient();
+
+  const { error } = await client.auth.updateUser({
+    password: password,
+  });
+
+  if (error) {
+    return encodedRedirect("error", "/reset-password", error.message);
+  }
+
+  return redirect("/protected");
+};
+
 export const signOutAction = async () => {
   const client = await createSupabaseClient();
   await client.auth.signOut();

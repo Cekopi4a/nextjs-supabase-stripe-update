@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar } from '@/components/ui/avatar';
 import { 
   Plus, 
   Users, 
@@ -444,11 +444,19 @@ export default function ClientsPage() {
             <Card key={client.id} className="p-5 hover:shadow-lg transition-all duration-200 border-0 shadow-md">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
-                      {client.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'К'}
-                    </span>
-                  </div>
+                  <Avatar
+                    src={client.avatar_url}
+                    alt={client.full_name || "Клиент"}
+                    size="lg"
+                    className="flex-shrink-0"
+                    fallback={
+                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 w-full h-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">
+                          {client.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'К'}
+                        </span>
+                      </div>
+                    }
+                  />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-base text-foreground truncate">{client.full_name}</h3>
                     <p className="text-gray-500 truncate text-sm">{client.email}</p>

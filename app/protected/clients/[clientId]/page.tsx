@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { 
   ChevronLeft, 
   Calendar as CalendarIcon,
@@ -217,11 +217,18 @@ export default function ClientProfilePage() {
       <Card className="p-6 bg-gradient-to-r from-blue-50 to-purple-50">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-          <Avatar className="w-16 h-16">
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xl font-semibold">
-              {client.full_name.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <Avatar
+            src={client.avatar_url}
+            alt={client.full_name}
+            size="xl"
+            fallback={
+              <div className="bg-gradient-to-br from-blue-500 to-purple-600 w-full h-full flex items-center justify-center">
+                <span className="text-white text-xl font-semibold">
+                  {client.full_name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            }
+          />
           <div>
             <h1 className="text-2xl font-bold text-foreground mb-1">
               {client.full_name}

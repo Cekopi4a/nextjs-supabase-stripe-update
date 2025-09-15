@@ -1,8 +1,11 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dumbbell, Star, ArrowRight, Check, Target } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function Home() {
 
@@ -30,11 +33,14 @@ export default function Home() {
     }
   ];
 
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+
   const pricingPlans = [
     {
       name: "Free",
-      price: "0",
-      period: "лв/месечно",
+      monthlyPrice: "0",
+      yearlyPrice: "0",
+      period: billingInterval === "monthly" ? "лв/месечно" : "лв/годишно",
       description: "Перфектно за започващи треньори",
       features: [
         "До 3 клиента",
@@ -47,8 +53,10 @@ export default function Home() {
     },
     {
       name: "Pro",
-      price: "49",
-      period: "лв/месечно",
+      monthlyPrice: "49",
+      yearlyPrice: "490",
+      period: billingInterval === "monthly" ? "лв/месечно" : "лв/годишно",
+      originalYearlyPrice: "588",
       description: "За професионални треньори",
       features: [
         "До 6 клиента",
@@ -62,8 +70,10 @@ export default function Home() {
     },
     {
       name: "Beast",
-      price: "99",
-      period: "лв/месечно",
+      monthlyPrice: "99",
+      yearlyPrice: "990",
+      period: billingInterval === "monthly" ? "лв/месечно" : "лв/годишно",
+      originalYearlyPrice: "1188",
       description: "За фитнес студия и експерти",
       features: [
         "Неограничени клиенти",
@@ -420,9 +430,34 @@ export default function Home() {
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Достъпни планове за всеки
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
               Изберете най-подходящия план за вашите нужди и започнете трансформацията си още днес
             </p>
+
+            {/* Billing Toggle */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-gray-100 p-1 rounded-lg flex gap-1">
+                <Button
+                  variant={billingInterval === "monthly" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setBillingInterval("monthly")}
+                  className="px-6"
+                >
+                  Месечно
+                </Button>
+                <Button
+                  variant={billingInterval === "yearly" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setBillingInterval("yearly")}
+                  className="px-6"
+                >
+                  Годишно
+                  <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                    -17%
+                  </span>
+                </Button>
+              </div>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -441,8 +476,22 @@ export default function Home() {
                   <p className="text-gray-600 mb-6">{plan.description}</p>
                   
                   <div className="mb-8">
-                    <span className="text-5xl font-bold text-gray-900">{plan.price}</span>
-                    <span className="text-gray-600 ml-2">{plan.period}</span>
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <span className="text-5xl font-bold text-gray-900">
+                        {billingInterval === "monthly" ? plan.monthlyPrice : plan.yearlyPrice}
+                      </span>
+                      <span className="text-gray-600">{plan.period}</span>
+                    </div>
+                    {billingInterval === "yearly" && plan.originalYearlyPrice && (
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-lg text-gray-400 line-through">
+                          {plan.originalYearlyPrice} лв/годишно
+                        </span>
+                        <span className="bg-green-100 text-green-600 text-sm px-2 py-1 rounded-full">
+                          Спестете {parseInt(plan.originalYearlyPrice) - parseInt(plan.yearlyPrice)} лв
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
                   <Button 

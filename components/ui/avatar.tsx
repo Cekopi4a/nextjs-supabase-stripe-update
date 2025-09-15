@@ -1,33 +1,61 @@
-import React from 'react';
+"use client";
 
-export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
+import { User } from "lucide-react";
+import { cn } from "@/utils/styles";
+
+interface AvatarProps {
+  src?: string | null;
+  alt?: string;
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
-  children?: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
-export function Avatar({ className = '', children, ...props }: AvatarProps) {
+export function Avatar({
+  src,
+  alt = "Профилна снимка",
+  size = "md",
+  className,
+  fallback,
+}: AvatarProps) {
+  const sizeClasses = {
+    xs: "w-6 h-6",
+    sm: "w-8 h-8",
+    md: "w-10 h-10",
+    lg: "w-12 h-12",
+    xl: "w-16 h-16",
+  };
+
+  const iconSizes = {
+    xs: 12,
+    sm: 16,
+    md: 20,
+    lg: 24,
+    xl: 32,
+  };
+
   return (
     <div
-      className={`relative flex items-center justify-center rounded-full overflow-hidden ${className}`}
-      {...props}
+      className={cn(
+        "relative rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center",
+        sizeClasses[size],
+        className
+      )}
     >
-      {children}
-    </div>
-  );
-}
-
-export interface AvatarFallbackProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string;
-  children?: React.ReactNode;
-}
-
-export function AvatarFallback({ className = '', children, ...props }: AvatarFallbackProps) {
-  return (
-    <div
-      className={`flex items-center justify-center w-full h-full bg-gray-300 text-gray-700 font-bold ${className}`}
-      {...props}
-    >
-      {children}
+      {src ? (
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      ) : fallback ? (
+        fallback
+      ) : (
+        <User size={iconSizes[size]} className="text-gray-400" />
+      )}
     </div>
   );
 }
