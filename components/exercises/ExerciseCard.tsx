@@ -20,6 +20,17 @@ export function ExerciseCard({
   
   const firstImage = exercise.images?.[0];
   const primaryMuscles = exercise.primary_muscles?.slice(0, 2) || [];
+
+  // Validate image URL
+  const isValidImageUrl = (url: string | undefined): boolean => {
+    if (!url) return false;
+    try {
+      const urlObj = new URL(url);
+      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
   
   const getLevelColor = (level: string) => {
     switch (level) {
@@ -86,7 +97,7 @@ export function ExerciseCard({
       <CardContent className="pb-3">
         {/* Exercise Image */}
         <div className="relative w-full h-32 mb-3 bg-gray-100 rounded-md overflow-hidden">
-          {firstImage && !imageError ? (
+          {firstImage && isValidImageUrl(firstImage) && !imageError ? (
             <Image
               src={firstImage}
               alt={exercise.name}

@@ -66,12 +66,6 @@ export default function JoinPage() {
 
   const supabase = createSupabaseClient();
 
-  useEffect(() => {
-    if (token) {
-      validateInvitation();
-    }
-  }, [token, validateInvitation]);
-
   const validateInvitation = useCallback(async () => {
     try {
       setLoading(true);
@@ -112,6 +106,12 @@ export default function JoinPage() {
       setLoading(false);
     }
   }, [token]);
+
+  useEffect(() => {
+    if (token) {
+      validateInvitation();
+    }
+  }, [token, validateInvitation]);
 
   const handleRegistration = async () => {
     if (!invitation) return;

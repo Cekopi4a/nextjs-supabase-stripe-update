@@ -13,21 +13,21 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: exercise, error } = await client
-      .from("exercises")
+    const { data: food, error } = await client
+      .from("foods")
       .select("*")
       .eq("id", params.id)
-      .eq("trainer_id", user.id)
+      .eq("created_by", user.id)
       .single();
 
     if (error) {
-      console.error("Error fetching exercise:", error);
-      return NextResponse.json({ error: "Exercise not found" }, { status: 404 });
+      console.error("Error fetching food:", error);
+      return NextResponse.json({ error: "Food not found" }, { status: 404 });
     }
 
-    return NextResponse.json(exercise);
+    return NextResponse.json(food);
   } catch (error) {
-    console.error("Error in GET /api/exercises/[id]:", error);
+    console.error("Error in GET /api/foods/[id]:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -52,58 +52,64 @@ export async function PUT(
       .single();
 
     if (profile?.role !== "trainer") {
-      return NextResponse.json({ error: "Only trainers can update exercises" }, { status: 403 });
+      return NextResponse.json({ error: "Only trainers can update foods" }, { status: 403 });
     }
 
     const body = await request.json();
     const {
       name,
-      instructions,
-      primary_muscles,
-      secondary_muscles,
-      level,
+      brand,
+      barcode,
+      calories_per_100g,
+      protein_per_100g,
+      carbs_per_100g,
+      fat_per_100g,
+      fiber_per_100g,
+      sugar_per_100g,
+      sodium_per_100g,
       category,
-      equipment,
-      video_urls,
-      custom_images,
+      allergens,
     } = body;
 
     // Validate required fields
-    if (!name || !primary_muscles || primary_muscles.length === 0) {
+    if (!name || !calories_per_100g || !category) {
       return NextResponse.json(
-        { error: "Name and primary muscles are required" },
+        { error: "Name, calories per 100g, and category are required" },
         { status: 400 }
       );
     }
 
-    // Update exercise
-    const { data: exercise, error } = await client
-      .from("exercises")
+    // Update food
+    const { data: food, error } = await client
+      .from("foods")
       .update({
         name,
-        instructions: instructions || [],
-        primary_muscles: primary_muscles || [],
-        secondary_muscles: secondary_muscles || [],
-        level: level || "beginner",
-        category: category || "strength",
-        equipment: equipment || "body only",
-        video_urls: video_urls || [],
-        custom_images: custom_images || [],
+        brand: brand || null,
+        barcode: barcode || null,
+        calories_per_100g,
+        protein_per_100g: protein_per_100g || 0,
+        carbs_per_100g: carbs_per_100g || 0,
+        fat_per_100g: fat_per_100g || 0,
+        fiber_per_100g: fiber_per_100g || 0,
+        sugar_per_100g: sugar_per_100g || 0,
+        sodium_per_100g: sodium_per_100g || 0,
+        category,
+        allergens: allergens || [],
         updated_at: new Date().toISOString(),
       })
       .eq("id", params.id)
-      .eq("trainer_id", user.id)
+      .eq("created_by", user.id)
       .select()
       .single();
 
     if (error) {
-      console.error("Error updating exercise:", error);
-      return NextResponse.json({ error: "Failed to update exercise" }, { status: 500 });
+      console.error("Error updating food:", error);
+      return NextResponse.json({ error: "Failed to update food" }, { status: 500 });
     }
 
-    return NextResponse.json(exercise);
+    return NextResponse.json(food);
   } catch (error) {
-    console.error("Error in PUT /api/exercises/[id]:", error);
+    console.error("Error in PUT /api/foods/[id]:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -128,24 +134,24 @@ export async function DELETE(
       .single();
 
     if (profile?.role !== "trainer") {
-      return NextResponse.json({ error: "Only trainers can delete exercises" }, { status: 403 });
+      return NextResponse.json({ error: "Only trainers can delete foods" }, { status: 403 });
     }
 
-    // Delete exercise
+    // Delete food
     const { error } = await client
-      .from("exercises")
+      .from("foods")
       .delete()
       .eq("id", params.id)
-      .eq("trainer_id", user.id);
+      .eq("created_by", user.id);
 
     if (error) {
-      console.error("Error deleting exercise:", error);
-      return NextResponse.json({ error: "Failed to delete exercise" }, { status: 500 });
+      console.error("Error deleting food:", error);
+      return NextResponse.json({ error: "Failed to delete food" }, { status: 500 });
     }
 
-    return NextResponse.json({ message: "Exercise deleted successfully" });
+    return NextResponse.json({ message: "Food deleted successfully" });
   } catch (error) {
-    console.error("Error in DELETE /api/exercises/[id]:", error);
+    console.error("Error in DELETE /api/foods/[id]:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

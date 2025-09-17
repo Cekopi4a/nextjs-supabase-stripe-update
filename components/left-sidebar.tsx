@@ -18,6 +18,7 @@ import {
   BookOpen,
   Menu,
   X,
+  ChefHat,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -95,9 +96,14 @@ export default function LeftSidebar({
           icon: Dumbbell,
         },
         {
+          label: "Храни",
+          href: "/foods",
+          icon: Apple,
+        },
+        {
           label: "Хранене",
           href: "/nutrition",
-          icon: Apple,
+          icon: ChefHat,
         },
         {
           label: "Календар",

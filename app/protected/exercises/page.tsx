@@ -15,12 +15,29 @@ export default async function ExercisesPage() {
     .eq("id", user?.id || "")
     .single();
 
-  // Fetch existing exercises for this trainer
-  const { data: exercises, error } = await client
-    .from("exercises")
-    .select("*")
-    .eq("trainer_id", user?.id || "")
-    .order("created_at", { ascending: false });
+  // Fetch exercises based on user role
+  let exercisesQuery = client.from("exercises").select("*");
+
+  if (profile?.role === "trainer") {
+    // Trainers see global exercises (trainer_id is null) and their own exercises
+    exercisesQuery = exercisesQuery.or(`trainer_id.is.null,trainer_id.eq.${user?.id}`);
+  } else {
+    // Clients see global exercises and exercises from their trainer
+    const { data: trainerClient } = await client
+      .from("trainer_clients")
+      .select("trainer_id")
+      .eq("client_id", user?.id || "")
+      .eq("status", "active")
+      .single();
+
+    if (trainerClient?.trainer_id) {
+      exercisesQuery = exercisesQuery.or(`trainer_id.is.null,trainer_id.eq.${trainerClient.trainer_id}`);
+    } else {
+      exercisesQuery = exercisesQuery.is("trainer_id", null);
+    }
+  }
+
+  const { data: exercises, error } = await exercisesQuery.order("name", { ascending: true });
 
   if (error) {
     console.error("Error fetching exercises:", error);

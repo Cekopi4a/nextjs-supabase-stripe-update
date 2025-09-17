@@ -2,26 +2,32 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Dumbbell, Edit, Trash2, Play, Image } from "lucide-react";
+import { Plus, Dumbbell, Edit, Trash2, Play, Image, X, Search } from "lucide-react";
 
 interface Exercise {
   id: string;
   name: string;
-  description?: string;
-  muscle_groups: string[];
-  difficulty: string;
-  exercise_type: string;
-  equipment?: string[];
-  video_url?: string;
-  image_url?: string;
+  force?: string;
+  level: string;
+  mechanic?: string;
+  equipment: string;
+  primary_muscles: string[];
+  secondary_muscles: string[];
+  instructions: string[];
+  category: string;
+  images: string[];
+  video_urls?: string[];
+  custom_images?: string[];
+  trainer_id?: string;
   created_at: string;
+  updated_at: string;
 }
 
 interface ExercisesPageClientProps {
@@ -31,45 +37,54 @@ interface ExercisesPageClientProps {
 }
 
 const MUSCLE_GROUPS = [
-  "Гърди", "Гръб", "Раменете", "Ръце", "Корем", "Крака", "Глутеуси", "Икри"
+  "abdominals", "hamstrings", "adductors", "quadriceps", "biceps", "shoulders", "chest", "middle back", "calves", "glutes",
+  "lower back", "lats", "triceps", "traps", "forearms", "neck", "abductors"
 ];
 
 const EQUIPMENT_OPTIONS = [
-  "Щанга", "Дъмбели", "Кабел", "Тренажор", "Собствено тегло", "Еластици", "Топка"
+  "body only", "machine", "other", "foam roll", "kettlebells", "dumbbell", "cable", "barbell", "bands", "medicine ball", "exercise ball", "e-z curl bar"
 ];
 
 const DIFFICULTY_LEVELS = [
   { value: "beginner", label: "Начинаещ" },
   { value: "intermediate", label: "Средно" },
-  { value: "advanced", label: "Напреднал" }
+  { value: "expert", label: "Експерт" }
 ];
 
-const EXERCISE_TYPES = [
+const CATEGORIES = [
   { value: "strength", label: "Силови" },
+  { value: "stretching", label: "Стречинг" },
+  { value: "plyometrics", label: "Плиометрия" },
+  { value: "strongman", label: "Стронгмен" },
+  { value: "powerlifting", label: "Пауърлифтинг" },
   { value: "cardio", label: "Кардио" },
-  { value: "flexibility", label: "Гъвкавост" },
-  { value: "balance", label: "Баланс" }
+  { value: "olympic weightlifting", label: "Олимпийско вдигане" }
 ];
 
-export default function ExercisesPageClient({ 
-  initialExercises, 
-  userRole, 
-  userId 
+export default function ExercisesPageClient({
+  initialExercises,
+  userRole,
+  userId
 }: ExercisesPageClientProps) {
   const [exercises, setExercises] = useState<Exercise[]>(initialExercises);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
-    muscle_groups: [] as string[],
-    difficulty: "beginner",
-    exercise_type: "strength",
-    equipment: [] as string[],
-    video_url: "",
-    image_url: ""
+    instructions: [] as string[],
+    primary_muscles: [] as string[],
+    secondary_muscles: [] as string[],
+    level: "beginner",
+    category: "strength",
+    equipment: "body only",
+    video_urls: [] as string[],
+    custom_images: [] as string[],
+    instruction_text: ""
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,8 +102,15 @@ export default function ExercisesPageClient({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ...formData,
-          trainer_id: userId,
+          name: formData.name,
+          instructions: formData.instruction_text.split('\n').filter(i => i.trim()),
+          primary_muscles: formData.primary_muscles,
+          secondary_muscles: formData.secondary_muscles,
+          level: formData.level,
+          category: formData.category,
+          equipment: formData.equipment,
+          video_urls: formData.video_urls.filter(v => v.trim()),
+          custom_images: formData.custom_images.filter(i => i.trim()),
         }),
       });
 
@@ -97,7 +119,7 @@ export default function ExercisesPageClient({
       }
 
       const updatedExercise = await response.json();
-      
+
       if (isEditing) {
         setExercises(exercises.map(ex => ex.id === editingExercise.id ? updatedExercise : ex));
         setIsEditDialogOpen(false);
@@ -106,18 +128,9 @@ export default function ExercisesPageClient({
         setExercises([updatedExercise, ...exercises]);
         setIsCreateDialogOpen(false);
       }
-      
+
       // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        muscle_groups: [],
-        difficulty: "beginner",
-        exercise_type: "strength",
-        equipment: [],
-        video_url: "",
-        image_url: ""
-      });
+      resetForm();
     } catch (error) {
       console.error("Error saving exercise:", error);
       alert(editingExercise ? "Грешка при редактиране на упражнението" : "Грешка при създаване на упражнението");
@@ -126,21 +139,78 @@ export default function ExercisesPageClient({
     }
   };
 
-  const handleMuscleGroupToggle = (muscleGroup: string) => {
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      instructions: [],
+      primary_muscles: [],
+      secondary_muscles: [],
+      level: "beginner",
+      category: "strength",
+      equipment: "body only",
+      video_urls: [],
+      custom_images: [],
+      instruction_text: ""
+    });
+  };
+
+  const handlePrimaryMuscleToggle = (muscle: string) => {
     setFormData(prev => ({
       ...prev,
-      muscle_groups: prev.muscle_groups.includes(muscleGroup)
-        ? prev.muscle_groups.filter(mg => mg !== muscleGroup)
-        : [...prev.muscle_groups, muscleGroup]
+      primary_muscles: prev.primary_muscles.includes(muscle)
+        ? prev.primary_muscles.filter(m => m !== muscle)
+        : [...prev.primary_muscles, muscle]
     }));
   };
 
-  const handleEquipmentToggle = (equipment: string) => {
+  const handleSecondaryMuscleToggle = (muscle: string) => {
     setFormData(prev => ({
       ...prev,
-      equipment: prev.equipment.includes(equipment)
-        ? prev.equipment.filter(eq => eq !== equipment)
-        : [...prev.equipment, equipment]
+      secondary_muscles: prev.secondary_muscles.includes(muscle)
+        ? prev.secondary_muscles.filter(m => m !== muscle)
+        : [...prev.secondary_muscles, muscle]
+    }));
+  };
+
+  const handleVideoUrlAdd = () => {
+    setFormData(prev => ({
+      ...prev,
+      video_urls: [...prev.video_urls, ""]
+    }));
+  };
+
+  const handleVideoUrlChange = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      video_urls: prev.video_urls.map((url, i) => i === index ? value : url)
+    }));
+  };
+
+  const handleVideoUrlRemove = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      video_urls: prev.video_urls.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleImageUrlAdd = () => {
+    setFormData(prev => ({
+      ...prev,
+      custom_images: [...prev.custom_images, ""]
+    }));
+  };
+
+  const handleImageUrlChange = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      custom_images: prev.custom_images.map((url, i) => i === index ? value : url)
+    }));
+  };
+
+  const handleImageUrlRemove = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      custom_images: prev.custom_images.filter((_, i) => i !== index)
     }));
   };
 
@@ -148,13 +218,15 @@ export default function ExercisesPageClient({
     setEditingExercise(exercise);
     setFormData({
       name: exercise.name,
-      description: exercise.description || "",
-      muscle_groups: exercise.muscle_groups,
-      difficulty: exercise.difficulty,
-      exercise_type: exercise.exercise_type,
-      equipment: exercise.equipment || [],
-      video_url: exercise.video_url || "",
-      image_url: exercise.image_url || ""
+      instructions: exercise.instructions || [],
+      primary_muscles: exercise.primary_muscles || [],
+      secondary_muscles: exercise.secondary_muscles || [],
+      level: exercise.level,
+      category: exercise.category,
+      equipment: exercise.equipment || "body only",
+      video_urls: exercise.video_urls || [],
+      custom_images: exercise.custom_images || [],
+      instruction_text: (exercise.instructions || []).join('\n')
     });
     setIsEditDialogOpen(true);
   };
@@ -180,17 +252,406 @@ export default function ExercisesPageClient({
     }
   };
 
+  const canEdit = (exercise: Exercise) => {
+    return userRole === "trainer" && exercise.trainer_id === userId;
+  };
+
+  const handleExerciseClick = (exercise: Exercise) => {
+    setSelectedExercise(exercise);
+    setIsDetailDialogOpen(true);
+  };
+
+  // Filter and sort exercises
+  const filteredAndSortedExercises = () => {
+    let filtered = exercises;
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filtered = exercises.filter(exercise =>
+        exercise.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Sort: own exercises first (for trainers), then alphabetically
+    if (userRole === "trainer") {
+      return filtered.sort((a, b) => {
+        // First, sort by ownership (own exercises first)
+        if (a.trainer_id === userId && b.trainer_id !== userId) return -1;
+        if (a.trainer_id !== userId && b.trainer_id === userId) return 1;
+
+        // Then sort alphabetically
+        return a.name.localeCompare(b.name);
+      });
+    }
+
+    // For clients, just sort alphabetically
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const renderForm = () => (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Name */}
+      <div>
+        <Label htmlFor="name">Име на упражнението *</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="Например: Лицнци на лежанка"
+          required
+        />
+      </div>
+
+      {/* Instructions */}
+      <div>
+        <Label htmlFor="instructions">Инструкции за изпълнение</Label>
+        <Textarea
+          id="instructions"
+          value={formData.instruction_text}
+          onChange={(e) => setFormData(prev => ({ ...prev, instruction_text: e.target.value }))}
+          placeholder="Напишете инструкциите, всяка на нов ред..."
+          rows={4}
+        />
+      </div>
+
+      {/* Primary Muscles */}
+      <div>
+        <Label>Основни мускулни групи *</Label>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {MUSCLE_GROUPS.map((muscle) => (
+            <button
+              key={muscle}
+              type="button"
+              onClick={() => handlePrimaryMuscleToggle(muscle)}
+              className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                formData.primary_muscles.includes(muscle)
+                  ? "bg-blue-100 text-blue-800 border border-blue-200"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {muscle}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Secondary Muscles */}
+      <div>
+        <Label>Второстепенни мускулни групи</Label>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {MUSCLE_GROUPS.map((muscle) => (
+            <button
+              key={muscle}
+              type="button"
+              onClick={() => handleSecondaryMuscleToggle(muscle)}
+              className={`px-3 py-1 rounded-md text-sm transition-colors ${
+                formData.secondary_muscles.includes(muscle)
+                  ? "bg-green-100 text-green-800 border border-green-200"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {muscle}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Equipment */}
+      <div>
+        <Label htmlFor="equipment">Оборудване</Label>
+        <Select
+          value={formData.equipment}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, equipment: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {EQUIPMENT_OPTIONS.map((equipment) => (
+              <SelectItem key={equipment} value={equipment}>
+                {equipment}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Level and Category */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="level">Ниво на трудност</Label>
+          <Select
+            value={formData.level}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DIFFICULTY_LEVELS.map((level) => (
+                <SelectItem key={level.value} value={level.value}>
+                  {level.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="category">Категория</Label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Video URLs */}
+      <div>
+        <Label>Видео линкове</Label>
+        <div className="space-y-2 mt-2">
+          {formData.video_urls.map((url, index) => (
+            <div key={index} className="flex gap-2">
+              <Input
+                value={url}
+                onChange={(e) => handleVideoUrlChange(index, e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleVideoUrlRemove(index)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleVideoUrlAdd}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Добави видео
+          </Button>
+        </div>
+      </div>
+
+      {/* Image URLs */}
+      <div>
+        <Label>Снимки</Label>
+        <div className="space-y-2 mt-2">
+          {formData.custom_images.map((url, index) => (
+            <div key={index} className="flex gap-2">
+              <Input
+                value={url}
+                onChange={(e) => handleImageUrlChange(index, e.target.value)}
+                placeholder="https://example.com/image.jpg"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleImageUrlRemove(index)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleImageUrlAdd}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Добави снимка
+          </Button>
+        </div>
+      </div>
+
+      {/* Submit buttons */}
+      <div className="flex gap-2 pt-4">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setIsCreateDialogOpen(false);
+            setIsEditDialogOpen(false);
+            setEditingExercise(null);
+            resetForm();
+          }}
+        >
+          Отказ
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading
+            ? (editingExercise ? "Запазване..." : "Създаване...")
+            : (editingExercise ? "Запази промените" : "Създай упражнение")
+          }
+        </Button>
+      </div>
+    </form>
+  );
+
   if (userRole !== "trainer") {
     return (
-      <div className="max-w-4xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Достъп отказан</CardTitle>
-            <CardDescription>
-              Само треньори имат достъп до създаване на упражнения.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      <div className="max-w-6xl mx-auto">
+        {/* Exercises List for clients */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Упражнения</h1>
+          <p className="text-gray-600">Упражнения от вашия треньор</p>
+        </div>
+
+        {/* Search Field for clients */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Търсене по име на упражнение..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredAndSortedExercises().length === 0 ? (
+            <div className="col-span-full">
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <Dumbbell className="h-12 w-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Няма упражнения</h3>
+                  <p className="text-gray-600 text-center">
+                    Вашият треньор още не е добавил упражнения.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            filteredAndSortedExercises().map((exercise) => (
+              <Card
+                key={exercise.id}
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => handleExerciseClick(exercise)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg">{exercise.name}</CardTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="capitalize">
+                          {DIFFICULTY_LEVELS.find(d => d.value === exercise.level)?.label}
+                        </Badge>
+                        <Badge variant="outline" className="capitalize">
+                          {CATEGORIES.find(t => t.value === exercise.category)?.label}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent>
+                  {exercise.instructions && exercise.instructions.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-sm font-medium text-gray-700 mb-1">Инструкции:</p>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        {exercise.instructions.slice(0, 2).map((instruction, index) => (
+                          <p key={index} className="line-clamp-1">{instruction}</p>
+                        ))}
+                        {exercise.instructions.length > 2 && (
+                          <p className="text-gray-400">+ още {exercise.instructions.length - 2} инструкции</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Primary Muscles */}
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 mb-1">Основни мускули:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {exercise.primary_muscles.map((muscle, index) => (
+                        <Badge key={index} variant="default" className="text-xs">
+                          {muscle}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Secondary Muscles */}
+                  {exercise.secondary_muscles && exercise.secondary_muscles.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-500 mb-1">Второстепенни мускули:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {exercise.secondary_muscles.map((muscle, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {muscle}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Equipment */}
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 mb-1">Оборудване:</p>
+                    <Badge variant="secondary" className="text-xs">
+                      {exercise.equipment}
+                    </Badge>
+                  </div>
+
+                  {/* Media Links */}
+                  <div className="flex gap-2 mt-3">
+                    {exercise.video_urls && exercise.video_urls.map((url, index) => (
+                      url && (
+                        <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                          <a href={url} target="_blank" rel="noopener noreferrer">
+                            <Play className="h-3 w-3 mr-1" />
+                            Видео {exercise.video_urls!.length > 1 ? index + 1 : ''}
+                          </a>
+                        </Button>
+                      )
+                    ))}
+                    {exercise.custom_images && exercise.custom_images.map((url, index) => (
+                      url && (
+                        <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                          <a href={url} target="_blank" rel="noopener noreferrer">
+                            <Image className="h-3 w-3 mr-1" />
+                            Снимка {exercise.custom_images!.length > 1 ? index + 1 : ''}
+                          </a>
+                        </Button>
+                      )
+                    ))}
+                    {exercise.images && exercise.images.map((url, index) => (
+                      url && (
+                        <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                          <a href={url} target="_blank" rel="noopener noreferrer">
+                            <Image className="h-3 w-3 mr-1" />
+                            Снимка {exercise.images.length > 1 ? index + 1 : ''}
+                          </a>
+                        </Button>
+                      )
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
     );
   }
@@ -203,7 +664,7 @@ export default function ExercisesPageClient({
           <h1 className="text-2xl font-bold text-foreground">Упражнения</h1>
           <p className="text-gray-600">Създавайте и управлявайте вашите упражнения</p>
         </div>
-        
+
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700">
@@ -211,156 +672,13 @@ export default function ExercisesPageClient({
               Ново упражнение
             </Button>
           </DialogTrigger>
-          
+
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Създаване на ново упражнение</DialogTitle>
             </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Име */}
-              <div>
-                <Label htmlFor="name">Име на упражнението *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Например: Лицнци на лежанка"
-                  required
-                />
-              </div>
 
-              {/* Описание */}
-              <div>
-                <Label htmlFor="description">Описание</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Опишете как се изпълнява упражнението..."
-                  rows={3}
-                />
-              </div>
-
-              {/* Мускулни групи */}
-              <div>
-                <Label>Мускулни групи *</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {MUSCLE_GROUPS.map((group) => (
-                    <button
-                      key={group}
-                      type="button"
-                      onClick={() => handleMuscleGroupToggle(group)}
-                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                        formData.muscle_groups.includes(group)
-                          ? "bg-blue-100 text-blue-800 border border-blue-200"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      {group}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Оборудване */}
-              <div>
-                <Label>Необходимо оборудване</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {EQUIPMENT_OPTIONS.map((equipment) => (
-                    <button
-                      key={equipment}
-                      type="button"
-                      onClick={() => handleEquipmentToggle(equipment)}
-                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                        formData.equipment.includes(equipment)
-                          ? "bg-green-100 text-green-800 border border-green-200"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      {equipment}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Трудност и Тип */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="difficulty">Трудност</Label>
-                  <Select 
-                    value={formData.difficulty} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DIFFICULTY_LEVELS.map((level) => (
-                        <SelectItem key={level.value} value={level.value}>
-                          {level.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="exercise_type">Тип упражнение</Label>
-                  <Select 
-                    value={formData.exercise_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, exercise_type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXERCISE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Видео URL */}
-              <div>
-                <Label htmlFor="video_url">Видео URL</Label>
-                <Input
-                  id="video_url"
-                  value={formData.video_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                />
-              </div>
-
-              {/* Снимка URL */}
-              <div>
-                <Label htmlFor="image_url">Снимка URL</Label>
-                <Input
-                  id="image_url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-
-              {/* Submit buttons */}
-              <div className="flex gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsCreateDialogOpen(false)}
-                >
-                  Отказ
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Създаване..." : "Създай упражнение"}
-                </Button>
-              </div>
-            </form>
+            {renderForm()}
           </DialogContent>
         </Dialog>
 
@@ -370,276 +688,540 @@ export default function ExercisesPageClient({
             <DialogHeader>
               <DialogTitle>Редактиране на упражнение</DialogTitle>
             </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Име */}
-              <div>
-                <Label htmlFor="edit-name">Име на упражнението *</Label>
-                <Input
-                  id="edit-name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Например: Лицнци на лежанка"
-                  required
-                />
-              </div>
 
-              {/* Описание */}
-              <div>
-                <Label htmlFor="edit-description">Описание</Label>
-                <Textarea
-                  id="edit-description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Опишете как се изпълнява упражнението..."
-                  rows={3}
-                />
-              </div>
+            {renderForm()}
+          </DialogContent>
+        </Dialog>
 
-              {/* Мускулни групи */}
-              <div>
-                <Label>Мускулни групи *</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {MUSCLE_GROUPS.map((group) => (
-                    <button
-                      key={group}
-                      type="button"
-                      onClick={() => handleMuscleGroupToggle(group)}
-                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                        formData.muscle_groups.includes(group)
-                          ? "bg-blue-100 text-blue-800 border border-blue-200"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
+        {/* Exercise Details Dialog */}
+        <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Dumbbell className="h-5 w-5" />
+                {selectedExercise?.name}
+              </DialogTitle>
+            </DialogHeader>
+
+            {selectedExercise && (
+              <div className="space-y-6">
+                {/* Exercise Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Информация</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Ниво:</span>
+                        <Badge variant="secondary">
+                          {DIFFICULTY_LEVELS.find(d => d.value === selectedExercise.level)?.label}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Категория:</span>
+                        <Badge variant="outline">
+                          {CATEGORIES.find(c => c.value === selectedExercise.category)?.label}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Оборудване:</span>
+                        <Badge variant="secondary">{selectedExercise.equipment}</Badge>
+                      </div>
+                      {selectedExercise.trainer_id && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">Тип:</span>
+                          <Badge variant="default">Собствено упражнение</Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Muscle Groups */}
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Мускулни групи</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Основни мускули:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedExercise.primary_muscles.map((muscle, index) => (
+                            <Badge key={index} variant="default" className="text-xs">
+                              {muscle}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      {selectedExercise.secondary_muscles && selectedExercise.secondary_muscles.length > 0 && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Второстепенни мускули:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedExercise.secondary_muscles.map((muscle, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {muscle}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                {selectedExercise.instructions && selectedExercise.instructions.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Инструкции за изпълнение</h4>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <ol className="list-decimal list-inside space-y-2">
+                        {selectedExercise.instructions.map((instruction, index) => (
+                          <li key={index} className="text-sm text-gray-700">
+                            {instruction}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+                )}
+
+                {/* Media */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Videos */}
+                  {selectedExercise.video_urls && selectedExercise.video_urls.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-3">Видео материали</h4>
+                      <div className="space-y-2">
+                        {selectedExercise.video_urls.map((url, index) => (
+                          url && (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-start"
+                              asChild
+                            >
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                <Play className="h-4 w-4 mr-2" />
+                                Видео {selectedExercise.video_urls!.length > 1 ? index + 1 : ''}
+                              </a>
+                            </Button>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Images */}
+                  {((selectedExercise.custom_images && selectedExercise.custom_images.length > 0) ||
+                    (selectedExercise.images && selectedExercise.images.length > 0)) && (
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-3">Снимки</h4>
+                      <div className="space-y-2">
+                        {selectedExercise.custom_images?.map((url, index) => (
+                          url && (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-start"
+                              asChild
+                            >
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                <Image className="h-4 w-4 mr-2" />
+                                Снимка {selectedExercise.custom_images!.length > 1 ? index + 1 : ''}
+                              </a>
+                            </Button>
+                          )
+                        ))}
+                        {selectedExercise.images?.map((url, index) => (
+                          url && (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-start"
+                              asChild
+                            >
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                <Image className="h-4 w-4 mr-2" />
+                                Снимка {selectedExercise.images!.length > 1 ? index + 1 : ''}
+                              </a>
+                            </Button>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions for trainers */}
+                {canEdit(selectedExercise) && (
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button
+                      variant="default"
+                      onClick={() => {
+                        handleEdit(selectedExercise);
+                        setIsDetailDialogOpen(false);
+                      }}
                     >
-                      {group}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Оборудване */}
-              <div>
-                <Label>Необходимо оборудване</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {EQUIPMENT_OPTIONS.map((equipment) => (
-                    <button
-                      key={equipment}
-                      type="button"
-                      onClick={() => handleEquipmentToggle(equipment)}
-                      className={`px-3 py-1 rounded-md text-sm transition-colors ${
-                        formData.equipment.includes(equipment)
-                          ? "bg-green-100 text-green-800 border border-green-200"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
+                      <Edit className="h-4 w-4 mr-2" />
+                      Редактирай
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        handleDelete(selectedExercise.id);
+                        setIsDetailDialogOpen(false);
+                      }}
                     >
-                      {equipment}
-                    </button>
-                  ))}
-                </div>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Изтрий
+                    </Button>
+                  </div>
+                )}
               </div>
-
-              {/* Трудност и Тип */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-difficulty">Трудност</Label>
-                  <Select 
-                    value={formData.difficulty} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, difficulty: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DIFFICULTY_LEVELS.map((level) => (
-                        <SelectItem key={level.value} value={level.value}>
-                          {level.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="edit-exercise_type">Тип упражнение</Label>
-                  <Select 
-                    value={formData.exercise_type} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, exercise_type: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXERCISE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Видео URL */}
-              <div>
-                <Label htmlFor="edit-video_url">Видео URL</Label>
-                <Input
-                  id="edit-video_url"
-                  value={formData.video_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, video_url: e.target.value }))}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                />
-              </div>
-
-              {/* Снимка URL */}
-              <div>
-                <Label htmlFor="edit-image_url">Снимка URL</Label>
-                <Input
-                  id="edit-image_url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-
-              {/* Submit buttons */}
-              <div className="flex gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsEditDialogOpen(false);
-                    setEditingExercise(null);
-                    setFormData({
-                      name: "",
-                      description: "",
-                      muscle_groups: [],
-                      difficulty: "beginner",
-                      exercise_type: "strength",
-                      equipment: [],
-                      video_url: "",
-                      image_url: ""
-                    });
-                  }}
-                >
-                  Отказ
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Запазване..." : "Запази промените"}
-                </Button>
-              </div>
-            </form>
+            )}
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Exercises List */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {exercises.length === 0 ? (
-          <div className="col-span-full">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Dumbbell className="h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">Няма упражнения</h3>
-                <p className="text-gray-600 text-center">
-                  Създайте първото си упражнение, за да започнете да изграждате библиотека.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          exercises.map((exercise) => (
-            <Card key={exercise.id} className="hover:shadow-md transition-shadow">
+      {/* Search Field for trainers */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input
+            placeholder="Търсене по име на упражнение..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      {/* Exercises Sections */}
+      {filteredAndSortedExercises().length === 0 ? (
+        <div className="col-span-full">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Dumbbell className="h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                {searchTerm ? "Няма намерени упражнения" : "Няма упражнения"}
+              </h3>
+              <p className="text-gray-600 text-center">
+                {searchTerm
+                  ? "Опитайте с друго търсене."
+                  : "Създайте първото си упражнение, за да започнете да изграждате библиотека."
+                }
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <>
+          {/* Own Exercises Section */}
+          {filteredAndSortedExercises().some(ex => ex.trainer_id === userId) && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
+                <Dumbbell className="h-5 w-5 mr-2" />
+                Моите упражнения
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredAndSortedExercises()
+                  .filter(exercise => exercise.trainer_id === userId)
+                  .map((exercise) => (
+            <Card
+              key={exercise.id}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => handleExerciseClick(exercise)}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <CardTitle className="text-lg">{exercise.name}</CardTitle>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant="secondary" className="capitalize">
-                        {DIFFICULTY_LEVELS.find(d => d.value === exercise.difficulty)?.label}
+                        {DIFFICULTY_LEVELS.find(d => d.value === exercise.level)?.label}
                       </Badge>
                       <Badge variant="outline" className="capitalize">
-                        {EXERCISE_TYPES.find(t => t.value === exercise.exercise_type)?.label}
+                        {CATEGORIES.find(t => t.value === exercise.category)?.label}
                       </Badge>
+                      {exercise.trainer_id && (
+                        <Badge variant="default" className="text-xs">
+                          Собствено
+                        </Badge>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="flex gap-1">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleEdit(exercise)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                      onClick={() => handleDelete(exercise.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+
+                  {canEdit(exercise) && (
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(exercise);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(exercise.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardHeader>
-              
+
               <CardContent>
-                {exercise.description && (
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                    {exercise.description}
-                  </p>
+                {exercise.instructions && exercise.instructions.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-sm font-medium text-gray-700 mb-1">Инструкции:</p>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      {exercise.instructions.slice(0, 2).map((instruction, index) => (
+                        <p key={index} className="line-clamp-1">{instruction}</p>
+                      ))}
+                      {exercise.instructions.length > 2 && (
+                        <p className="text-gray-400">+ още {exercise.instructions.length - 2} инструкции</p>
+                      )}
+                    </div>
+                  </div>
                 )}
-                
-                {/* Muscle Groups */}
+
+                {/* Primary Muscles */}
                 <div className="mb-3">
+                  <p className="text-xs text-gray-500 mb-1">Основни мускули:</p>
                   <div className="flex flex-wrap gap-1">
-                    {exercise.muscle_groups.map((group, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {group}
+                    {exercise.primary_muscles.map((muscle, index) => (
+                      <Badge key={index} variant="default" className="text-xs">
+                        {muscle}
                       </Badge>
                     ))}
                   </div>
                 </div>
 
-                {/* Equipment */}
-                {exercise.equipment && exercise.equipment.length > 0 && (
+                {/* Secondary Muscles */}
+                {exercise.secondary_muscles && exercise.secondary_muscles.length > 0 && (
                   <div className="mb-3">
-                    <p className="text-xs text-gray-500 mb-1">Оборудване:</p>
+                    <p className="text-xs text-gray-500 mb-1">Второстепенни мускули:</p>
                     <div className="flex flex-wrap gap-1">
-                      {exercise.equipment.map((eq, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {eq}
+                      {exercise.secondary_muscles.map((muscle, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {muscle}
                         </Badge>
                       ))}
                     </div>
                   </div>
                 )}
 
+                {/* Equipment */}
+                <div className="mb-3">
+                  <p className="text-xs text-gray-500 mb-1">Оборудване:</p>
+                  <Badge variant="secondary" className="text-xs">
+                    {exercise.equipment}
+                  </Badge>
+                </div>
+
                 {/* Media Links */}
-                <div className="flex gap-2 mt-3">
-                  {exercise.video_url && (
-                    <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
-                      <a href={exercise.video_url} target="_blank" rel="noopener noreferrer">
-                        <Play className="h-3 w-3 mr-1" />
-                        Видео
-                      </a>
-                    </Button>
-                  )}
-                  {exercise.image_url && (
-                    <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
-                      <a href={exercise.image_url} target="_blank" rel="noopener noreferrer">
-                        <Image className="h-3 w-3 mr-1" />
-                        Снимка
-                      </a>
-                    </Button>
-                  )}
+                <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                  {exercise.video_urls && exercise.video_urls.map((url, index) => (
+                    url && (
+                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <Play className="h-3 w-3 mr-1" />
+                          Видео {exercise.video_urls!.length > 1 ? index + 1 : ''}
+                        </a>
+                      </Button>
+                    )
+                  ))}
+                  {exercise.custom_images && exercise.custom_images.map((url, index) => (
+                    url && (
+                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <Image className="h-3 w-3 mr-1" />
+                          Снимка {exercise.custom_images!.length > 1 ? index + 1 : ''}
+                        </a>
+                      </Button>
+                    )
+                  ))}
+                  {exercise.images && exercise.images.map((url, index) => (
+                    url && (
+                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <Image className="h-3 w-3 mr-1" />
+                          Снимка {exercise.images.length > 1 ? index + 1 : ''}
+                        </a>
+                      </Button>
+                    )
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Global Exercises Section */}
+          {filteredAndSortedExercises().some(ex => !ex.trainer_id) && (
+            <div>
+              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
+                <Dumbbell className="h-5 w-5 mr-2" />
+                Общи упражнения
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredAndSortedExercises()
+                  .filter(exercise => !exercise.trainer_id)
+                  .map((exercise) => (
+            <Card
+              key={exercise.id}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => handleExerciseClick(exercise)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg">{exercise.name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="secondary" className="capitalize">
+                        {DIFFICULTY_LEVELS.find(d => d.value === exercise.level)?.label}
+                      </Badge>
+                      <Badge variant="outline" className="capitalize">
+                        {CATEGORIES.find(t => t.value === exercise.category)?.label}
+                      </Badge>
+                      {exercise.trainer_id && (
+                        <Badge variant="default" className="text-xs">
+                          Собствено
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {canEdit(exercise) && (
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(exercise);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(exercise.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                {exercise.instructions && exercise.instructions.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-sm font-medium text-gray-700 mb-1">Инструкции:</p>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      {exercise.instructions.slice(0, 2).map((instruction, index) => (
+                        <p key={index} className="line-clamp-1">{instruction}</p>
+                      ))}
+                      {exercise.instructions.length > 2 && (
+                        <p className="text-gray-400">+ още {exercise.instructions.length - 2} инструкции</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Primary Muscles */}
+                <div className="mb-3">
+                  <p className="text-xs text-gray-500 mb-1">Основни мускули:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {exercise.primary_muscles.map((muscle, index) => (
+                      <Badge key={index} variant="default" className="text-xs">
+                        {muscle}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Secondary Muscles */}
+                {exercise.secondary_muscles && exercise.secondary_muscles.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 mb-1">Второстепенни мускули:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {exercise.secondary_muscles.map((muscle, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {muscle}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Equipment */}
+                <div className="mb-3">
+                  <p className="text-xs text-gray-500 mb-1">Оборудване:</p>
+                  <Badge variant="secondary" className="text-xs">
+                    {exercise.equipment}
+                  </Badge>
+                </div>
+
+                {/* Media Links */}
+                <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                  {exercise.video_urls && exercise.video_urls.map((url, index) => (
+                    url && (
+                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <Play className="h-3 w-3 mr-1" />
+                          Видео {exercise.video_urls!.length > 1 ? index + 1 : ''}
+                        </a>
+                      </Button>
+                    )
+                  ))}
+                  {exercise.custom_images && exercise.custom_images.map((url, index) => (
+                    url && (
+                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <Image className="h-3 w-3 mr-1" />
+                          Снимка {exercise.custom_images!.length > 1 ? index + 1 : ''}
+                        </a>
+                      </Button>
+                    )
+                  ))}
+                  {exercise.images && exercise.images.map((url, index) => (
+                    url && (
+                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <Image className="h-3 w-3 mr-1" />
+                          Снимка {exercise.images.length > 1 ? index + 1 : ''}
+                        </a>
+                      </Button>
+                    )
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+                  ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

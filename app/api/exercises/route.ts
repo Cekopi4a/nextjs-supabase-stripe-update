@@ -10,19 +10,42 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get exercises for this trainer
-    const { data: exercises, error } = await client
-      .from("exercises")
-      .select("*")
-      .eq("trainer_id", user.id)
-      .order("created_at", { ascending: false });
+    // Get user profile to check role
+    const { data: profile } = await client
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    let exercisesQuery = client.from("exercises").select("*");
+
+    if (profile?.role === "trainer") {
+      // Trainers see global exercises (trainer_id is null) and their own exercises
+      exercisesQuery = exercisesQuery.or(`trainer_id.is.null,trainer_id.eq.${user.id}`);
+    } else {
+      // Clients see global exercises and exercises from their trainer
+      const { data: trainerClient } = await client
+        .from("trainer_clients")
+        .select("trainer_id")
+        .eq("client_id", user.id)
+        .eq("status", "active")
+        .single();
+
+      if (trainerClient?.trainer_id) {
+        exercisesQuery = exercisesQuery.or(`trainer_id.is.null,trainer_id.eq.${trainerClient.trainer_id}`);
+      } else {
+        exercisesQuery = exercisesQuery.is("trainer_id", null);
+      }
+    }
+
+    const { data: exercises, error } = await exercisesQuery.order("name", { ascending: true });
 
     if (error) {
       console.error("Error fetching exercises:", error);
       return NextResponse.json({ error: "Failed to fetch exercises" }, { status: 500 });
     }
 
-    return NextResponse.json(exercises);
+    return NextResponse.json(exercises || []);
   } catch (error) {
     console.error("Error in GET /api/exercises:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -52,36 +75,45 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       name,
-      description,
-      muscle_groups,
-      difficulty,
-      exercise_type,
+      instructions,
+      primary_muscles,
+      secondary_muscles,
+      level,
+      category,
       equipment,
-      video_url,
-      image_url,
+      video_urls,
+      custom_images,
     } = body;
 
     // Validate required fields
-    if (!name || !muscle_groups || muscle_groups.length === 0) {
+    if (!name || !primary_muscles || primary_muscles.length === 0) {
       return NextResponse.json(
-        { error: "Name and muscle groups are required" },
+        { error: "Name and primary muscles are required" },
         { status: 400 }
       );
     }
+
+    // Generate a unique ID for the exercise
+    const exerciseId = `${user.id}_${Date.now()}`;
 
     // Create exercise
     const { data: exercise, error } = await client
       .from("exercises")
       .insert({
-        trainer_id: user.id,
+        id: exerciseId,
         name,
-        description,
-        muscle_groups,
-        difficulty: difficulty || "beginner",
-        exercise_type: exercise_type || "strength",
-        equipment,
-        video_url,
-        image_url,
+        instructions: instructions || [],
+        primary_muscles: primary_muscles || [],
+        secondary_muscles: secondary_muscles || [],
+        level: level || "beginner",
+        category: category || "strength",
+        equipment: equipment || "body only",
+        video_urls: video_urls || [],
+        custom_images: custom_images || [],
+        images: [], // Keep empty for custom exercises
+        trainer_id: user.id,
+        force: null,
+        mechanic: null,
       })
       .select()
       .single();

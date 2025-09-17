@@ -19,7 +19,9 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(node:*)",
       "Bash(supabase:*)",
-      "Read(//c/Users/ICT platforms/Desktop/**)"
+      "Read(//c/Users/ICT platforms/Desktop/**)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }
