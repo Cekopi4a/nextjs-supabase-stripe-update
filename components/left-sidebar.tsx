@@ -101,9 +101,14 @@ export default function LeftSidebar({
           icon: Apple,
         },
         {
+          label: "Рецепти",
+          href: "/recipes",
+          icon: ChefHat,
+        },
+        {
           label: "Хранене",
           href: "/nutrition",
-          icon: ChefHat,
+          icon: Apple,
         },
         {
           label: "Календар",

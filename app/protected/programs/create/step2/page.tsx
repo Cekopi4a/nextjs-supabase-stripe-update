@@ -170,6 +170,67 @@ export default function CreateProgramStep2() {
 
   const [selectedDateForExercise, setSelectedDateForExercise] = useState<Date | null>(null);
 
+  // Create global function for adding exercises
+  useEffect(() => {
+    (window as any).addExerciseToWorkout = (exercise: any) => {
+      if (!selectedDateForExercise) {
+        alert("Моля изберете ден от календара преди да добавяте упражнения!");
+        return;
+      }
+
+      const dateKey = selectedDateForExercise.toISOString().split('T')[0];
+
+      // If day is not a workout day, make it one
+      if (dayTypes[dateKey] !== 'workout') {
+        setDayTypes(prev => ({ ...prev, [dateKey]: 'workout' }));
+      }
+
+      // Create new exercise
+      const newExercise = {
+        exercise_id: exercise.id,
+        exercise: exercise,
+        sets: 3,
+        reps: "8-12",
+        rest_time: 60,
+        weight: "",
+        notes: ""
+      };
+
+      setWorkoutsByDate(prev => {
+        const existingWorkout = prev[dateKey];
+        if (existingWorkout) {
+          return {
+            ...prev,
+            [dateKey]: {
+              ...existingWorkout,
+              exercises: [...existingWorkout.exercises, newExercise]
+            }
+          };
+        } else {
+          return {
+            ...prev,
+            [dateKey]: {
+              day_of_week: selectedDateForExercise.getDay(),
+              name: `Тренировка за ${selectedDateForExercise.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long' })}`,
+              exercises: [newExercise],
+              estimated_duration: 60,
+              workout_type: 'strength',
+              status: 'assigned'
+            }
+          };
+        }
+      });
+      setHasUnsavedChanges(true);
+
+      alert(`Упражнението "${exercise.name}" е добавено към ${selectedDateForExercise.toLocaleDateString('bg-BG')}!`);
+    };
+
+    // Cleanup
+    return () => {
+      delete (window as any).addExerciseToWorkout;
+    };
+  }, [selectedDateForExercise, dayTypes, setDayTypes, setWorkoutsByDate, setHasUnsavedChanges]);
+
   const handleAddExerciseFromLibrary = (exercise: any) => {
     // First check if we have a selected date from the editor
     const dateToUse = selectedDateForExercise;
@@ -343,68 +404,6 @@ export default function CreateProgramStep2() {
   };
 
   if (!programData) return <div>Зарежда...</div>;
-
-
-  // Create global function for adding exercises
-  useEffect(() => {
-    (window as any).addExerciseToWorkout = (exercise: any) => {
-      if (!selectedDateForExercise) {
-        alert("Моля изберете ден от календара преди да добавяте упражнения!");
-        return;
-      }
-
-      const dateKey = selectedDateForExercise.toISOString().split('T')[0];
-      
-      // If day is not a workout day, make it one
-      if (dayTypes[dateKey] !== 'workout') {
-        setDayTypes(prev => ({ ...prev, [dateKey]: 'workout' }));
-      }
-
-      // Create new exercise
-      const newExercise = {
-        exercise_id: exercise.id,
-        exercise: exercise,
-        sets: 3,
-        reps: "8-12",
-        rest_time: 60,
-        weight: "",
-        notes: ""
-      };
-
-      setWorkoutsByDate(prev => {
-        const existingWorkout = prev[dateKey];
-        if (existingWorkout) {
-          return {
-            ...prev,
-            [dateKey]: {
-              ...existingWorkout,
-              exercises: [...existingWorkout.exercises, newExercise]
-            }
-          };
-        } else {
-          return {
-            ...prev,
-            [dateKey]: {
-              day_of_week: selectedDateForExercise.getDay(),
-              name: `Тренировка за ${selectedDateForExercise.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long' })}`,
-              exercises: [newExercise],
-              estimated_duration: 60,
-              workout_type: 'strength',
-              status: 'assigned'
-            }
-          };
-        }
-      });
-      setHasUnsavedChanges(true);
-      
-      alert(`Упражнението "${exercise.name}" е добавено към ${selectedDateForExercise.toLocaleDateString('bg-BG')}!`);
-    };
-
-    // Cleanup
-    return () => {
-      delete (window as any).addExerciseToWorkout;
-    };
-  }, [selectedDateForExercise, dayTypes, setDayTypes, setWorkoutsByDate, setHasUnsavedChanges]);
 
   return (
     <div className="min-h-screen bg-background">
