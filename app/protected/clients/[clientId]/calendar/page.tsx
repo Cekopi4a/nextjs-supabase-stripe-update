@@ -8,31 +8,37 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  ChevronLeft,
+  ChevronRight,
   Calendar as CalendarIcon,
-  Clock,
   Dumbbell,
   Plus,
   Edit,
   Trash2,
   Save,
   X,
-  User,
   Target,
   CheckCircle2,
-  AlertCircle
+  Bed,
+  Copy
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
-import { getTodayDateString, dateToLocalDateString } from "@/utils/date-utils";
+import { dateToLocalDateString } from "@/utils/date-utils";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { WorkoutEditModal } from "@/components/calendar/WorkoutEditModal";
@@ -44,7 +50,7 @@ interface WorkoutSession {
   status: 'planned' | 'completed' | 'skipped';
   program_id?: string;
   client_id: string;
-  exercises?: any[];
+  exercises?: unknown[];
   workout_programs?: {
     name: string;
   };
@@ -89,7 +95,7 @@ const BULGARIAN_MONTHS = [
   "Юли", "Август", "Септември", "Октомври", "Ноември", "Декември"
 ];
 
-const BULGARIAN_DAYS = ["Нед", "Пон", "Вто", "Сря", "Чет", "Пет", "Съб"];
+const BULGARIAN_DAYS = ["Пон", "Вто", "Сря", "Чет", "Пет", "Съб", "Нед"];
 
 export default function ClientCalendarPage() {
   const params = useParams();
@@ -106,6 +112,7 @@ export default function ClientCalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutSession | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [copySourceDate, setCopySourceDate] = useState<Date | null>(null);
 
   // Form states
   const [workoutForm, setWorkoutForm] = useState({
@@ -230,10 +237,16 @@ export default function ClientCalendarPage() {
     const lastDay = new Date(year, month + 1, 0);
     
     const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    // Adjust for Monday start (0 = Sunday, 1 = Monday, etc.)
+    const dayOfWeek = firstDay.getDay();
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    startDate.setDate(startDate.getDate() - daysToSubtract);
     
     const endDate = new Date(lastDay);
-    endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+    // Adjust end date for Monday start
+    const lastDayOfWeek = lastDay.getDay();
+    const daysToAdd = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek;
+    endDate.setDate(endDate.getDate() + daysToAdd);
     
     const days: CalendarDay[] = [];
     const currentDateLoop = new Date(startDate);
@@ -266,13 +279,13 @@ export default function ClientCalendarPage() {
     setCurrentDate(newDate);
   };
 
-  const openCreateModal = (date: Date) => {
+  const openCreateModal = (date: Date, workoutType: string = 'strength', name: string = '') => {
     setSelectedDate(date);
     setWorkoutForm({
-      name: '',
-      workout_type: 'strength',
+      name: name,
+      workout_type: workoutType,
       difficulty_level: 'intermediate',
-      estimated_duration_minutes: 60,
+      estimated_duration_minutes: workoutType === 'cardio' ? 30 : workoutType === 'rest' ? 0 : 60,
       instructions: '',
       program_id: programs[0]?.id || ''
     });
@@ -342,6 +355,75 @@ export default function ClientCalendarPage() {
     } catch (error) {
       console.error("Error deleting workout:", error);
       alert("Грешка при изтриване на тренировката");
+    }
+  };
+
+
+  const copyDay = async (targetDate: Date) => {
+    if (!copySourceDate) {
+      alert("Първо изберете ден за копиране");
+      return;
+    }
+
+    const sourceDateStr = dateToLocalDateString(copySourceDate);
+    const targetDateStr = dateToLocalDateString(targetDate);
+
+    const sourceWorkouts = workouts.filter(w => w.scheduled_date === sourceDateStr);
+
+    if (sourceWorkouts.length === 0) {
+      alert("Няма тренировки за копиране от избрания ден");
+      setCopySourceDate(null);
+      return;
+    }
+
+    try {
+      const workoutsToCreate = sourceWorkouts.map(workout => ({
+        client_id: clientId,
+        name: workout.name,
+        scheduled_date: targetDateStr,
+        program_id: workout.program_id,
+        status: 'planned',
+        exercises: workout.exercises || []
+      }));
+
+      const { error } = await supabase
+        .from("workout_sessions")
+        .insert(workoutsToCreate);
+
+      if (error) throw error;
+
+      setCopySourceDate(null);
+      fetchWorkouts();
+      alert(`Копирани ${sourceWorkouts.length} тренировки`);
+    } catch (error) {
+      console.error("Error copying workouts:", error);
+      alert("Грешка при копиране на тренировките");
+    }
+  };
+
+  const handleQuickAction = (date: Date, action: string) => {
+    switch (action) {
+      case 'add_rest':
+        openCreateModal(date, 'rest', 'Ден за почивка');
+        break;
+      case 'copy_day':
+        if (copySourceDate) {
+          copyDay(date);
+        } else {
+          const sourceDateStr = dateToLocalDateString(date);
+          const sourceWorkouts = workouts.filter(w => w.scheduled_date === sourceDateStr);
+
+          if (sourceWorkouts.length === 0) {
+            alert('Не можете да копирате празен ден. Моля, изберете ден със съществуващи тренировки.');
+            return;
+          }
+
+          setCopySourceDate(date);
+          alert('Ден избран за копиране. Сега кликнете на друг ден за да поставите копието.');
+        }
+        break;
+      default:
+        openCreateModal(date);
     }
   };
 
@@ -440,12 +522,13 @@ export default function ClientCalendarPage() {
           
           {/* Calendar days */}
           {calendarDays.map((day, index) => (
-            <CalendarDayCell 
-              key={index} 
+            <CalendarDayCell
+              key={index}
               day={day}
-              onCreateWorkout={openCreateModal}
               onEditWorkout={openEditModal}
               onDeleteWorkout={deleteWorkout}
+              onQuickAction={handleQuickAction}
+              copySourceDate={copySourceDate}
             />
           ))}
         </div>
@@ -486,37 +569,62 @@ export default function ClientCalendarPage() {
   );
 }
 
-function CalendarDayCell({ 
-  day, 
-  onCreateWorkout, 
-  onEditWorkout, 
-  onDeleteWorkout 
-}: { 
-  day: CalendarDay; 
-  onCreateWorkout: (date: Date) => void;
+function CalendarDayCell({
+  day,
+  onEditWorkout,
+  onDeleteWorkout,
+  onQuickAction,
+  copySourceDate
+}: {
+  day: CalendarDay;
   onEditWorkout: (workout: WorkoutSession) => void;
   onDeleteWorkout: (workoutId: string) => void;
+  onQuickAction: (date: Date, action: string) => void;
+  copySourceDate: Date | null;
 }) {
   const dayNumber = day.date.getDate();
   
   return (
     <div className={`
-      min-h-[120px] p-2 border border-border transition-colors hover:bg-muted/30
+      min-h-[120px] p-2 border border-border transition-colors hover:bg-muted/30 group
       ${!day.isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : ''}
       ${day.isToday ? 'bg-blue-50 border-blue-300' : ''}
+      ${copySourceDate && dateToLocalDateString(day.date) === dateToLocalDateString(copySourceDate) ? 'bg-yellow-50 border-yellow-300' : ''}
     `}>
       <div className="flex items-center justify-between mb-2">
         <span className={`text-sm font-medium ${day.isToday ? 'text-blue-600' : ''}`}>
           {dayNumber}
         </span>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
-          onClick={() => onCreateWorkout(day.date)}
-        >
-          <Plus className="h-3 w-3" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_rest')}>
+              <Bed className="h-4 w-4 mr-2" />
+              Add Rest
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onQuickAction(day.date, 'copy_day')}>
+              <Copy className="h-4 w-4 mr-2" />
+              {copySourceDate ? 'Paste Day' : 'Copy Day'}
+            </DropdownMenuItem>
+            {day.workouts.length === 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onQuickAction(day.date, 'default')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Workout
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
       <div className="space-y-1">
@@ -536,15 +644,37 @@ function CalendarDayCell({
         )}
         
         {day.workouts.length === 0 && day.isCurrentMonth && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full h-8 text-xs text-muted-foreground border-dashed border"
-            onClick={() => onCreateWorkout(day.date)}
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Добави
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full h-8 text-xs text-muted-foreground border-dashed border"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Добави
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuItem onClick={() => onQuickAction(day.date, 'default')}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Workout
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_rest')}>
+                <Bed className="h-4 w-4 mr-2" />
+                Add Rest
+              </DropdownMenuItem>
+              {copySourceDate && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onQuickAction(day.date, 'copy_day')}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Paste Day
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
     </div>
@@ -635,8 +765,22 @@ function WorkoutModal({
   isOpen: boolean;
   isEditing: boolean;
   selectedDate: Date | null;
-  workoutForm: any;
-  setWorkoutForm: (form: any) => void;
+  workoutForm: {
+    name: string;
+    workout_type: string;
+    difficulty_level: string;
+    estimated_duration_minutes: number;
+    instructions: string;
+    program_id: string;
+  };
+  setWorkoutForm: (form: {
+    name: string;
+    workout_type: string;
+    difficulty_level: string;
+    estimated_duration_minutes: number;
+    instructions: string;
+    program_id: string;
+  }) => void;
   programs: WorkoutProgram[];
   onSave: () => void;
   onClose: () => void;
