@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, ChefHat, Edit, Trash2, Search, Clock, Users, Star } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
 
 interface Recipe {
   id: string;
@@ -690,6 +691,31 @@ export default function RecipesPageClient({
         </div>
       </div>
 
+      {/* Media Upload */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Снимки и видео</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FileUpload
+            label="Снимки"
+            description="Качете снимки на рецептата (максимум 10MB на файл)"
+            accept="image/jpeg,image/jpg,image/png,image/webp"
+            multiple={true}
+            currentFiles={formData.images}
+            onFileChange={(files) => setFormData(prev => ({ ...prev, images: files }))}
+          />
+
+          <FileUpload
+            label="Видео"
+            description="Качете видео с приготвянето (максимум 50MB на файл)"
+            accept="video/mp4,video/webm,video/quicktime"
+            multiple={true}
+            currentFiles={formData.videos}
+            onFileChange={(files) => setFormData(prev => ({ ...prev, videos: files }))}
+          />
+        </div>
+      </div>
+
       {/* Allergens */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Алергени</h3>
@@ -910,6 +936,35 @@ export default function RecipesPageClient({
 
             {selectedRecipe && (
               <div className="space-y-6">
+                {/* Media Gallery */}
+                {(selectedRecipe.images?.length > 0 || selectedRecipe.videos?.length > 0) && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-700 mb-3">Снимки и видео</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {selectedRecipe.images?.map((imageUrl, index) => (
+                        <div key={`image-${index}`} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                          <img
+                            src={imageUrl}
+                            alt={`${selectedRecipe.name} - снимка ${index + 1}`}
+                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                            onClick={() => window.open(imageUrl, '_blank')}
+                          />
+                        </div>
+                      ))}
+                      {selectedRecipe.videos?.map((videoUrl, index) => (
+                        <div key={`video-${index}`} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                          <video
+                            src={videoUrl}
+                            className="w-full h-full object-cover"
+                            controls
+                            preload="metadata"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Recipe Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
