@@ -9,8 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+<<<<<<< HEAD
 import { Plus, ChefHat, Edit, Trash2, Search, Clock, Users, Star } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
+=======
+import { Plus, ChefHat, Edit, Trash2, Search, Clock, Users, X, Camera } from "lucide-react";
+import { createSupabaseClient } from "@/utils/supabase/client";
+>>>>>>> 1a193cbdf407f1b3416073f734d3ae34997fbcad
 
 interface Recipe {
   id: string;
@@ -65,6 +70,18 @@ const RECIPE_CATEGORIES = [
   { value: "other", label: "Други" }
 ];
 
+const FILTER_CATEGORIES = [
+  { value: "all", label: "Всички", icon: "🍽️" },
+  { value: "appetizer", label: "Предястия", icon: "🥗" },
+  { value: "main_course", label: "Основни", icon: "🍖" },
+  { value: "dessert", label: "Десерти", icon: "🍰" },
+  { value: "snack", label: "Закуски", icon: "🥨" },
+  { value: "drink", label: "Напитки", icon: "🥤" },
+  { value: "salad", label: "Салати", icon: "🥬" },
+  { value: "soup", label: "Супи", icon: "🍲" },
+  { value: "other", label: "Други", icon: "🍴" }
+];
+
 const DIFFICULTY_LEVELS = [
   { value: "easy", label: "Лесно" },
   { value: "medium", label: "Средно" },
@@ -94,6 +111,7 @@ export default function RecipesPageClient({
 }: RecipesPageClientProps) {
   const [recipes, setRecipes] = useState<Recipe[]>(initialRecipes);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -131,6 +149,47 @@ export default function RecipesPageClient({
     is_public: true
   });
 
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  const handleImageUpload = async (file: File) => {
+    try {
+      setIsUploadingImage(true);
+      const supabase = createSupabaseClient();
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error("Не сте влезли в системата");
+      }
+
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `recipes/${user.id}/${Date.now()}.${fileExt}`;
+
+      // Upload file to storage
+      const { data, error } = await supabase.storage
+        .from('progress-photos')
+        .upload(fileName, file);
+
+      if (error) {
+        throw error;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('progress-photos')
+        .getPublicUrl(data.path);
+
+      setSelectedImage(urlData.publicUrl);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Грешка при качване на снимката');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -140,12 +199,18 @@ export default function RecipesPageClient({
       const url = isEditing ? `/api/recipes/${editingRecipe.id}` : "/api/recipes";
       const method = isEditing ? "PUT" : "POST";
 
+      // Prepare form data with selected image
+      const submitData = {
+        ...formData,
+        images: selectedImage ? [selectedImage] : []
+      };
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
@@ -202,6 +267,7 @@ export default function RecipesPageClient({
       dietary_preferences: [],
       is_public: true
     });
+    setSelectedImage(null);
   };
 
   const addIngredient = () => {
@@ -270,6 +336,7 @@ export default function RecipesPageClient({
 
   const handleEdit = (recipe: Recipe) => {
     setEditingRecipe(recipe);
+    setSelectedImage(recipe.images?.[0] || null);
     setFormData({
       name: recipe.name,
       description: recipe.description || "",
@@ -336,10 +403,14 @@ export default function RecipesPageClient({
     let filtered = recipes;
 
     if (searchTerm.trim()) {
-      filtered = recipes.filter(recipe =>
+      filtered = filtered.filter(recipe =>
         recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (recipe.description && recipe.description.toLowerCase().includes(searchTerm.toLowerCase()))
       );
+    }
+
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(recipe => recipe.category === selectedCategory);
     }
 
     if (userRole === "trainer") {
@@ -358,6 +429,68 @@ export default function RecipesPageClient({
       {/* Basic Info */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Основна информация</h3>
+
+        {/* Image Upload */}
+        <div>
+          <Label>Снимка на рецептата</Label>
+          <div className="mt-2">
+            {selectedImage ? (
+              <div className="relative">
+                <img
+                  src={selectedImage}
+                  alt="Рецепта"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSelectedImage(null)}
+                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                <div className="text-center">
+                  <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4">
+                    <label htmlFor="recipe-image" className="cursor-pointer">
+                      <span className="mt-2 block text-sm font-medium text-gray-900">
+                        Качете снимка
+                      </span>
+                      <span className="mt-1 block text-sm text-gray-500">
+                        PNG, JPG до 10MB
+                      </span>
+                    </label>
+                    <input
+                      id="recipe-image"
+                      name="recipe-image"
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 10 * 1024 * 1024) {
+                            alert('Файлът е твърде голям. Максимум 10MB.');
+                            return;
+                          }
+                          handleImageUpload(file);
+                        }
+                      }}
+                      disabled={isUploadingImage}
+                    />
+                  </div>
+                  {isUploadingImage && (
+                    <div className="mt-2">
+                      <div className="text-sm text-gray-600">Качване...</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div>
           <Label htmlFor="name">Име на рецептата *</Label>
@@ -791,8 +924,25 @@ export default function RecipesPageClient({
           <p className="text-gray-600">Рецепти от вашия треньор</p>
         </div>
 
-        {/* Search Field for clients */}
+        {/* Category Filters for clients */}
         <div className="mb-6">
+          <div className="flex gap-2 flex-wrap mb-4">
+            {FILTER_CATEGORIES.map((category) => (
+              <button
+                key={category.value}
+                onClick={() => setSelectedCategory(category.value)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  selectedCategory === category.value
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <span className="text-base">{category.icon}</span>
+                <span>{category.label}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
@@ -936,6 +1086,7 @@ export default function RecipesPageClient({
 
             {selectedRecipe && (
               <div className="space-y-6">
+<<<<<<< HEAD
                 {/* Media Gallery */}
                 {(selectedRecipe.images?.length > 0 || selectedRecipe.videos?.length > 0) && (
                   <div>
@@ -965,11 +1116,44 @@ export default function RecipesPageClient({
                   </div>
                 )}
 
+=======
+                {/* Recipe Image */}
+                {selectedRecipe.images && selectedRecipe.images.length > 0 && (
+                  <div className="relative">
+                    <img
+                      src={selectedRecipe.images[0]}
+                      alt={selectedRecipe.name}
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+
+                {/* Nutrition cards */}
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-gray-900">{selectedRecipe.calories_per_serving}</div>
+                    <div className="text-sm text-gray-600">Calories</div>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-700">{selectedRecipe.protein_per_serving}g</div>
+                    <div className="text-sm text-blue-600">Protein</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-700">{selectedRecipe.carbs_per_serving}g</div>
+                    <div className="text-sm text-green-600">Carbs</div>
+                  </div>
+                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-700">{selectedRecipe.fat_per_serving}g</div>
+                    <div className="text-sm text-yellow-600">Fat</div>
+                  </div>
+                </div>
+
+>>>>>>> 1a193cbdf407f1b3416073f734d3ae34997fbcad
                 {/* Recipe Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Информация</h4>
-                    <div className="space-y-2">
+                    <h4 className="font-semibold text-lg text-gray-800 mb-3">Основна информация</h4>
+                    <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">Категория:</span>
                         <Badge variant="secondary">
@@ -985,39 +1169,64 @@ export default function RecipesPageClient({
                         </div>
                       )}
                       <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-gray-400" />
                         <span className="text-sm text-gray-600">Порции:</span>
                         <span className="text-sm font-medium">{selectedRecipe.servings}</span>
                       </div>
                       {selectedRecipe.total_time_minutes && (
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">Време:</span>
+                          <span className="text-sm text-gray-600">Общо време:</span>
                           <span className="text-sm font-medium">{selectedRecipe.total_time_minutes} мин</span>
+                        </div>
+                      )}
+                      {selectedRecipe.prep_time_minutes && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600 ml-6">Подготовка:</span>
+                          <span className="text-sm font-medium">{selectedRecipe.prep_time_minutes} мин</span>
+                        </div>
+                      )}
+                      {selectedRecipe.cook_time_minutes && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600 ml-6">Готвене:</span>
+                          <span className="text-sm font-medium">{selectedRecipe.cook_time_minutes} мин</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Nutrition */}
+                  {/* Nutrition details */}
                   <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Хранителни стойности (на порция)</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Калории:</span>
-                        <span className="text-sm font-medium">{selectedRecipe.calories_per_serving} kcal</span>
+                    <h4 className="font-semibold text-lg text-gray-800 mb-3">Детайлна хранителна стойност</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-700">Калории:</span>
+                        <span className="font-semibold">{selectedRecipe.calories_per_serving} kcal</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Протеини:</span>
-                        <span className="text-sm font-medium">{selectedRecipe.protein_per_serving}г</span>
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-700">Протеини:</span>
+                        <span className="font-semibold text-blue-700">{selectedRecipe.protein_per_serving}г</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Въглехидрати:</span>
-                        <span className="text-sm font-medium">{selectedRecipe.carbs_per_serving}г</span>
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-700">Въглехидрати:</span>
+                        <span className="font-semibold text-green-700">{selectedRecipe.carbs_per_serving}г</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Мазнини:</span>
-                        <span className="text-sm font-medium">{selectedRecipe.fat_per_serving}г</span>
+                      <div className="flex justify-between py-2 border-b border-gray-100">
+                        <span className="text-gray-700">Мазнини:</span>
+                        <span className="font-semibold text-yellow-700">{selectedRecipe.fat_per_serving}г</span>
                       </div>
+                      {selectedRecipe.fiber_per_serving && selectedRecipe.fiber_per_serving > 0 && (
+                        <div className="flex justify-between py-2 border-b border-gray-100">
+                          <span className="text-gray-700">Фибри:</span>
+                          <span className="font-semibold">{selectedRecipe.fiber_per_serving}г</span>
+                        </div>
+                      )}
+                      {selectedRecipe.sodium_per_serving && selectedRecipe.sodium_per_serving > 0 && (
+                        <div className="flex justify-between py-2 border-b border-gray-100">
+                          <span className="text-gray-700">Натрий:</span>
+                          <span className="font-semibold">{selectedRecipe.sodium_per_serving}мг</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1025,42 +1234,45 @@ export default function RecipesPageClient({
                 {/* Description */}
                 {selectedRecipe.description && (
                   <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Описание</h4>
-                    <p className="text-sm text-gray-600">{selectedRecipe.description}</p>
+                    <h4 className="font-semibold text-lg text-gray-800 mb-3">Описание</h4>
+                    <p className="text-gray-700 leading-relaxed">{selectedRecipe.description}</p>
                   </div>
                 )}
 
                 {/* Ingredients */}
                 <div>
-                  <h4 className="font-semibold text-sm text-gray-700 mb-2">Съставки</h4>
-                  <ul className="space-y-1">
+                  <h4 className="font-semibold text-lg text-gray-800 mb-3">Съставки</h4>
+                  <div className="grid gap-3">
                     {selectedRecipe.ingredients.map((ingredient, index) => (
-                      <li key={index} className="text-sm text-gray-600">
-                        • {ingredient.amount} {ingredient.unit} {ingredient.name}
-                      </li>
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-gray-800 font-medium">{ingredient.name}</span>
+                        <span className="text-gray-600 font-semibold">{ingredient.amount} {ingredient.unit}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
 
                 {/* Instructions */}
                 <div>
-                  <h4 className="font-semibold text-sm text-gray-700 mb-2">Стъпки за приготвяне</h4>
-                  <ol className="space-y-2">
+                  <h4 className="font-semibold text-lg text-gray-800 mb-3">Стъпки за приготвяне</h4>
+                  <div className="space-y-4">
                     {selectedRecipe.instructions.map((instruction, index) => (
-                      <li key={index} className="text-sm text-gray-600 flex gap-2">
-                        <span className="font-medium text-blue-600 min-w-[1.5rem]">{index + 1}.</span>
-                        <span>{instruction}</span>
-                      </li>
+                      <div key={index} className="flex gap-4">
+                        <div className="flex-shrink-0 w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                          {index + 1}
+                        </div>
+                        <p className="text-gray-700 leading-relaxed flex-1 pt-1">{instruction}</p>
+                      </div>
                     ))}
-                  </ol>
+                  </div>
                 </div>
 
                 {/* Allergens & Dietary Preferences */}
                 {(selectedRecipe.allergens?.length || selectedRecipe.dietary_preferences?.length) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {selectedRecipe.allergens && selectedRecipe.allergens.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-sm text-gray-700 mb-2">Алергени</h4>
+                        <h4 className="font-semibold text-lg text-gray-800 mb-3">Алергени</h4>
                         <div className="flex flex-wrap gap-2">
                           {selectedRecipe.allergens.map((allergen, index) => (
                             <Badge key={index} variant="destructive" className="text-xs">
@@ -1073,7 +1285,7 @@ export default function RecipesPageClient({
 
                     {selectedRecipe.dietary_preferences && selectedRecipe.dietary_preferences.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-sm text-gray-700 mb-2">Диетични предпочитания</h4>
+                        <h4 className="font-semibold text-lg text-gray-800 mb-3">Диетични предпочитания</h4>
                         <div className="flex flex-wrap gap-2">
                           {selectedRecipe.dietary_preferences.map((preference, index) => (
                             <Badge key={index} variant="default" className="text-xs bg-green-100 text-green-800">
@@ -1117,8 +1329,25 @@ export default function RecipesPageClient({
         </Dialog>
       </div>
 
-      {/* Search Field */}
+      {/* Category Filters */}
       <div className="mb-6">
+        <div className="flex gap-2 flex-wrap mb-4">
+          {FILTER_CATEGORIES.map((category) => (
+            <button
+              key={category.value}
+              onClick={() => setSelectedCategory(category.value)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                selectedCategory === category.value
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <span className="text-base">{category.icon}</span>
+              <span>{category.label}</span>
+            </button>
+          ))}
+        </div>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
