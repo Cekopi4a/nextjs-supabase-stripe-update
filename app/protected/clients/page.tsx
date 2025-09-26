@@ -316,16 +316,16 @@ export default function ClientsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <div className="max-w-none mx-auto p-4 lg:p-6 lg:pr-2 space-y-8">
+      <div className="max-w-none mx-auto p-3 sm:p-4 lg:p-6 lg:pr-2 space-y-6 lg:space-y-8">
         {/* Header Section */}
-        <div className="bg-card rounded-xl shadow-sm border border-border p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-4 sm:p-6">
+          <div className="flex flex-col gap-4">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Управление на клиенти</h1>
-              <p className="text-muted-foreground">Преглед и управление на вашите клиенти и тяхните програми</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Управление на клиенти</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">Преглед и управление на вашите клиенти и тяхните програми</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 lg:ml-auto">
-              <Button size="lg" disabled={!canAddMore} className="shadow-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800" asChild>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button size="lg" disabled={!canAddMore} className="shadow-sm bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 w-full sm:w-auto" asChild>
                 <Link href="/protected/clients/invite">
                   <Plus className="h-4 w-4 mr-2" />
                   Покани клиент
@@ -336,60 +336,60 @@ export default function ClientsPage() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm font-medium">Общо клиенти</p>
-                  <p className="text-3xl font-bold mt-1">{clients.length}</p>
+                  <p className="text-2xl sm:text-3xl font-bold mt-1">{clients.length}</p>
                 </div>
-                <div className="p-3 bg-background/20 rounded-lg">
-                  <Users className="h-8 w-8" />
+                <div className="p-2 sm:p-3 bg-background/20 rounded-lg">
+                  <Users className="h-6 w-6 sm:h-8 sm:w-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm font-medium">Активни клиенти</p>
-                  <p className="text-3xl font-bold mt-1">{activeClients.length}</p>
+                  <p className="text-2xl sm:text-3xl font-bold mt-1">{activeClients.length}</p>
                 </div>
-                <div className="p-3 bg-background/20 rounded-lg">
-                  <CheckCircle className="h-8 w-8" />
+                <div className="p-2 sm:p-3 bg-background/20 rounded-lg">
+                  <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100 text-sm font-medium">Текущ план</p>
-                  <p className="text-xl font-bold mt-1">{planInfo.name}</p>
+                  <p className="text-lg sm:text-xl font-bold mt-1">{planInfo.name}</p>
                 </div>
-                <div className="p-3 bg-background/20 rounded-lg">
-                  <Award className="h-8 w-8" />
+                <div className="p-2 sm:p-3 bg-background/20 rounded-lg">
+                  <Award className="h-6 w-6 sm:h-8 sm:w-8" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-orange-100 text-sm font-medium">Капацитет</p>
-                  <p className="text-3xl font-bold mt-1">
-                    {activeClients.length}<span className="text-xl">/{currentLimit >= 999999 ? '∞' : planInfo.limit}</span>
+                  <p className="text-2xl sm:text-3xl font-bold mt-1">
+                    {activeClients.length}<span className="text-lg sm:text-xl">/{currentLimit >= 999999 ? '∞' : planInfo.limit}</span>
                   </p>
                 </div>
-                <div className="p-3 bg-background/20 rounded-lg">
-                  <TrendingUp className="h-8 w-8" />
+                <div className="p-2 sm:p-3 bg-background/20 rounded-lg">
+                  <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8" />
                 </div>
               </div>
             </CardContent>
@@ -398,8 +398,8 @@ export default function ClientsPage() {
 
         {/* Search and Filters */}
         <Card className="shadow-sm border border-border">
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row gap-4">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col gap-4">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -411,25 +411,28 @@ export default function ClientsPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-2 lg:ml-auto">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant={selectedStatus === 'all' ? 'default' : 'outline'}
                   onClick={() => setSelectedStatus('all')}
-                  className="shadow-sm"
+                  className="shadow-sm flex-1 sm:flex-none text-xs sm:text-sm"
+                  size="sm"
                 >
                   Всички ({clients.length})
                 </Button>
                 <Button
                   variant={selectedStatus === 'active' ? 'default' : 'outline'}
                   onClick={() => setSelectedStatus('active')}
-                  className="shadow-sm"
+                  className="shadow-sm flex-1 sm:flex-none text-xs sm:text-sm"
+                  size="sm"
                 >
                   Активни ({activeClients.length})
                 </Button>
                 <Button
                   variant={selectedStatus === 'inactive' ? 'default' : 'outline'}
                   onClick={() => setSelectedStatus('inactive')}
-                  className="shadow-sm"
+                  className="shadow-sm flex-1 sm:flex-none text-xs sm:text-sm"
+                  size="sm"
                 >
                   Неактивни ({clients.length - activeClients.length})
                 </Button>
@@ -439,7 +442,7 @@ export default function ClientsPage() {
         </Card>
 
         {/* Clients Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredClients.map(client => (
             <Card key={client.id} className="p-5 hover:shadow-lg transition-all duration-200 border-0 shadow-md">
               <div className="flex items-start justify-between mb-4">

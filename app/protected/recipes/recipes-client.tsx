@@ -9,13 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-<<<<<<< HEAD
-import { Plus, ChefHat, Edit, Trash2, Search, Clock, Users, Star } from "lucide-react";
+import { Plus, ChefHat, Edit, Trash2, Search, Clock, Users, Star, X, Camera } from "lucide-react";
 import { FileUpload } from "@/components/ui/file-upload";
-=======
-import { Plus, ChefHat, Edit, Trash2, Search, Clock, Users, X, Camera } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
->>>>>>> 1a193cbdf407f1b3416073f734d3ae34997fbcad
 
 interface Recipe {
   id: string;
@@ -1086,7 +1082,6 @@ export default function RecipesPageClient({
 
             {selectedRecipe && (
               <div className="space-y-6">
-<<<<<<< HEAD
                 {/* Media Gallery */}
                 {(selectedRecipe.images?.length > 0 || selectedRecipe.videos?.length > 0) && (
                   <div>
@@ -1116,18 +1111,6 @@ export default function RecipesPageClient({
                   </div>
                 )}
 
-=======
-                {/* Recipe Image */}
-                {selectedRecipe.images && selectedRecipe.images.length > 0 && (
-                  <div className="relative">
-                    <img
-                      src={selectedRecipe.images[0]}
-                      alt={selectedRecipe.name}
-                      className="w-full h-64 object-cover rounded-lg"
-                    />
-                  </div>
-                )}
-
                 {/* Nutrition cards */}
                 <div className="grid grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
@@ -1148,7 +1131,6 @@ export default function RecipesPageClient({
                   </div>
                 </div>
 
->>>>>>> 1a193cbdf407f1b3416073f734d3ae34997fbcad
                 {/* Recipe Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>

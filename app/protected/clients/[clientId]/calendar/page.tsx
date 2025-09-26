@@ -436,75 +436,75 @@ export default function ClientCalendarPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Button variant="outline" size="sm" asChild>
             <Link href="/protected/clients">
               <ChevronLeft className="h-4 w-4 mr-1" />
-              Назад
+              <span className="hidden sm:inline">Назад</span>
             </Link>
           </Button>
-          
+
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm sm:text-base">
               {client.full_name.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold flex items-center">
-                <CalendarIcon className="h-6 w-6 mr-2" />
-                Календар - {client.full_name}
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold flex items-center">
+                <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                <span className="hidden sm:inline">Календар - </span>{client.full_name}
               </h1>
-              <p className="text-muted-foreground">{client.email}</p>
+              <p className="text-muted-foreground text-sm truncate">{client.email}</p>
             </div>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
+
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/protected/clients/${clientId}/programs`}>
-              <Dumbbell className="h-4 w-4 mr-2" />
-              Програми
+              <Dumbbell className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Програми</span>
             </Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/protected/clients/${clientId}/progress`}>
-              <Target className="h-4 w-4 mr-2" />
-              Прогрес
+              <Target className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Прогрес</span>
             </Link>
           </Button>
         </div>
       </div>
 
       {/* Calendar */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="outline" 
-              size="sm" 
+      <Card className="p-3 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => navigateMonth('prev')}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            
-            <h2 className="text-xl font-semibold">
+
+            <h2 className="text-lg sm:text-xl font-semibold">
               {BULGARIAN_MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h2>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
+
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => navigateMonth('next')}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
             {WORKOUT_TYPES.slice(0, 3).map((type) => (
-              <Badge key={type.value} className={type.color}>
+              <Badge key={type.value} className={`${type.color} text-xs whitespace-nowrap`}>
                 {type.label}
               </Badge>
             ))}
@@ -512,10 +512,10 @@ export default function ClientCalendarPage() {
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {/* Week headers */}
           {BULGARIAN_DAYS.map((day) => (
-            <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+            <div key={day} className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-muted-foreground">
               {day}
             </div>
           ))}
@@ -586,13 +586,13 @@ function CalendarDayCell({
   
   return (
     <div className={`
-      min-h-[120px] p-2 border border-border transition-colors hover:bg-muted/30 group
+      min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-border transition-colors hover:bg-muted/30 group
       ${!day.isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : ''}
       ${day.isToday ? 'bg-blue-50 border-blue-300' : ''}
       ${copySourceDate && dateToLocalDateString(day.date) === dateToLocalDateString(copySourceDate) ? 'bg-yellow-50 border-yellow-300' : ''}
     `}>
-      <div className="flex items-center justify-between mb-2">
-        <span className={`text-sm font-medium ${day.isToday ? 'text-blue-600' : ''}`}>
+      <div className="flex items-center justify-between mb-1 sm:mb-2">
+        <span className={`text-xs sm:text-sm font-medium ${day.isToday ? 'text-blue-600' : ''}`}>
           {dayNumber}
         </span>
         <DropdownMenu>
@@ -600,9 +600,9 @@ function CalendarDayCell({
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+              className="h-5 w-5 sm:h-6 sm:w-6 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-2 w-2 sm:h-3 sm:w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
@@ -649,10 +649,11 @@ function CalendarDayCell({
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full h-8 text-xs text-muted-foreground border-dashed border"
+                className="w-full h-6 sm:h-8 text-[10px] sm:text-xs text-muted-foreground border-dashed border"
               >
-                <Plus className="h-3 w-3 mr-1" />
-                Добави
+                <Plus className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
+                <span className="hidden sm:inline">Добави</span>
+                <span className="sm:hidden">+</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-48">
@@ -694,57 +695,57 @@ function WorkoutItem({
   const isPlanned = workout.status === 'planned';
   
   return (
-    <div 
+    <div
       className={`
-        text-xs p-2 rounded border cursor-pointer transition-all hover:shadow-sm group
-        ${isCompleted ? 'bg-green-50 border-green-200 text-green-800' : 
+        text-[10px] sm:text-xs p-1 sm:p-2 rounded border cursor-pointer transition-all hover:shadow-sm group
+        ${isCompleted ? 'bg-green-50 border-green-200 text-green-800' :
           isPlanned ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-muted text-muted-foreground'}
       `}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 min-w-0 flex-1">
+        <div className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-1">
           {isCompleted ? (
-            <CheckCircle2 className="h-3 w-3 text-green-600 flex-shrink-0" />
+            <CheckCircle2 className="h-2 w-2 sm:h-3 sm:w-3 text-green-600 flex-shrink-0" />
           ) : (
-            <Dumbbell className="h-3 w-3 flex-shrink-0" />
+            <Dumbbell className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
           )}
           <span className="font-medium truncate">{workout.name}</span>
         </div>
-        
+
         {workout.exercises && workout.exercises.length > 0 && (
-          <span className="text-xs text-muted-foreground ml-1">
+          <span className="text-[8px] sm:text-xs text-muted-foreground ml-1 hidden sm:inline">
             ({workout.exercises.length} упр.)
           </span>
         )}
-        
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+
+        <div className="flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100">
           <Button
             size="sm"
             variant="ghost"
-            className="h-4 w-4 p-0"
+            className="h-3 w-3 sm:h-4 sm:w-4 p-0"
             onClick={(e) => {
               e.stopPropagation();
               onEdit();
             }}
           >
-            <Edit className="h-3 w-3" />
+            <Edit className="h-2 w-2 sm:h-3 sm:w-3" />
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            className="h-4 w-4 p-0 text-red-600 hover:text-red-700"
+            className="h-3 w-3 sm:h-4 sm:w-4 p-0 text-red-600 hover:text-red-700"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-2 w-2 sm:h-3 sm:w-3" />
           </Button>
         </div>
       </div>
       
-      <div className="flex items-center gap-2 mt-1">
-        <span className="text-[10px] opacity-75">
+      <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
+        <span className="text-[8px] sm:text-[10px] opacity-75 truncate">
           {workout.workout_programs?.name || 'Тренировка'}
         </span>
       </div>
@@ -788,9 +789,9 @@ function WorkoutModal({
   if (!isOpen || !selectedDate) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <Card className="w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">
               {isEditing ? 'Редактирай тренировка' : 'Създай тренировка'}

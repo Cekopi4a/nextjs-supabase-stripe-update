@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/utils/styles";
+import { Logo } from "@/components/ui/logo";
 import {
   Home,
   Users,
@@ -23,7 +24,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type MenuItem = {
   label: string;
@@ -57,6 +58,33 @@ export default function LeftSidebar({
   const basePath = "/protected";
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Load collapsed state from localStorage
+  useEffect(() => {
+    const savedState = localStorage.getItem('sidebar-collapsed');
+    if (savedState !== null) {
+      setIsCollapsed(JSON.parse(savedState));
+    }
+  }, []);
+
+  // Save collapsed state to localStorage
+  const toggleCollapsed = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(newState));
+  };
+
+  // Listen for mobile menu toggle from header
+  useEffect(() => {
+    const handleToggleMobileMenu = () => {
+      setIsMobileMenuOpen(true);
+    };
+
+    window.addEventListener('toggleMobileMenu', handleToggleMobileMenu);
+    return () => {
+      window.removeEventListener('toggleMobileMenu', handleToggleMobileMenu);
+    };
+  }, []);
 
   const getMenuItems = (): MenuItem[] => {
     if (userRole === "admin") {
@@ -94,6 +122,11 @@ export default function LeftSidebar({
           label: "Упражнения",
           href: "/exercises",
           icon: Dumbbell,
+        },
+        {
+          label: "Създаване на тренировки",
+          href: "/workout-builder",
+          icon: Target,
         },
         {
           label: "Храни",
@@ -185,46 +218,58 @@ export default function LeftSidebar({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className={cn(
-        "border-b border-border bg-background",
-        isCollapsed && !isMobile ? "p-2" : "p-4"
+        "border-b border-border bg-background relative",
+        isCollapsed && !isMobile ? "p-2" : "p-4",
+        isMobile && "bg-gradient-to-br from-primary/5 via-background to-secondary/5 border-b-primary/10"
       )}>
         {(!isCollapsed || isMobile) ? (
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground capitalize truncate">{userRole}</p>
+          <div className="flex flex-col gap-2">
+            {/* Header row with logo and close button */}
+            <div className="flex items-center justify-between">
+              {/* Logo - само за mobile */}
+              {isMobile && (
+                <div className="flex-1">
+                  <Logo showText={true} href="/protected" />
+                </div>
+              )}
+
+              {/* Desktop collapse toggle */}
+              {!isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleCollapsed}
+                  className="h-8 w-8 p-0 hover:bg-muted flex-shrink-0"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              )}
+
+              {/* Mobile close button */}
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="h-9 w-9 p-0 hover:bg-destructive/10 lg:hidden rounded-lg hover:scale-105 transition-all duration-200 active:scale-95 group flex-shrink-0"
+                >
+                  <X className="h-4 w-4 text-muted-foreground group-hover:text-destructive transition-colors duration-200" />
+                </Button>
+              )}
             </div>
-            
-            {/* Desktop collapse toggle */}
-            {!isMobile && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="h-8 w-8 p-0 hover:bg-muted"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {/* Mobile close button */}
-            {isMobile && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="h-8 w-8 p-0 hover:bg-muted lg:hidden"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+
+            {/* Role */}
+            <div className="flex justify-start">
+              <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
+            </div>
           </div>
         ) : (
-          /* Collapsed state - centered toggle button */
-          <div className="flex justify-center">
+          /* Collapsed state - само toggle бутон */
+          <div className="flex flex-col items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={toggleCollapsed}
               className="h-8 w-8 p-0 hover:bg-muted"
             >
               <Menu className="h-4 w-4" />
@@ -263,11 +308,12 @@ export default function LeftSidebar({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative",
                   isActive
-                    ? "bg-primary/10 text-primary font-medium border border-primary/20"
+                    ? "bg-gradient-to-r from-primary/15 to-primary/5 text-primary font-medium border border-primary/20 shadow-sm"
                     : disabled
                     ? "text-muted-foreground cursor-not-allowed"
-                    : "text-foreground hover:bg-muted hover:text-foreground",
-                  isCollapsed && !isMobile && "justify-center px-2 py-3"
+                    : "text-foreground hover:bg-gradient-to-r hover:from-muted/80 hover:to-muted/40 hover:text-foreground hover:scale-[1.02]",
+                  isCollapsed && !isMobile && "justify-center px-2 py-3",
+                  isMobile && "mx-1 hover:shadow-sm"
                 )}
                 title={isCollapsed && !isMobile ? label : undefined}
               >
@@ -319,12 +365,16 @@ export default function LeftSidebar({
 
       {/* Upgrade prompt */}
       {userRole === "trainer" && planType !== "beast" && (!isCollapsed || isMobile) && (
-        <div className="p-3 border-t border-border">
+        <div className={cn(
+          "p-3 border-t border-border",
+          isMobile && "border-t-primary/10"
+        )}>
           <div className={cn(
-            "rounded-lg p-3 text-white",
-            planType === "free" 
-              ? "bg-gradient-to-r from-purple-500 to-blue-600"
-              : "bg-gradient-to-r from-orange-500 to-red-600"
+            "rounded-xl p-3 text-white shadow-lg relative overflow-hidden",
+            planType === "free"
+              ? "bg-gradient-to-br from-purple-500 via-blue-500 to-blue-600"
+              : "bg-gradient-to-br from-orange-500 via-red-500 to-red-600",
+            isMobile && "hover:scale-[1.02] transition-transform duration-200"
           )}>
             <div className="flex items-center gap-2 mb-2">
               <Crown className="h-4 w-4 flex-shrink-0" />
@@ -337,21 +387,27 @@ export default function LeftSidebar({
                 ? "Получете достъп до аналитика и премиум функции"
                 : "Неограничен брой клиенти и всички функции"}
             </p>
-            <Link 
+            <Link
               href="/protected/subscription"
-              className="block w-full bg-white/20 hover:bg-white/30 rounded-md px-3 py-2 text-center text-xs font-medium transition-colors"
+              className={cn(
+                "block w-full bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 text-center text-xs font-medium transition-all duration-200",
+                isMobile && "hover:bg-white/40 active:scale-95"
+              )}
               onClick={() => isMobile && setIsMobileMenuOpen(false)}
             >
               Надстройте сега
             </Link>
+            {/* Shimmer effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse" />
           </div>
         </div>
       )}
 
       {/* User info */}
       <div className={cn(
-        "border-t border-border bg-muted/30",
-        isCollapsed && !isMobile ? "p-2" : "p-3"
+        "border-t border-border bg-muted/30 relative",
+        isCollapsed && !isMobile ? "p-2" : "p-3",
+        isMobile && "bg-gradient-to-r from-muted/20 to-muted/40 border-t-primary/10"
       )}>
         {(!isCollapsed || isMobile) ? (
           <div className="flex items-center gap-3">
@@ -393,29 +449,20 @@ export default function LeftSidebar({
         <SidebarContent />
       </div>
 
-      {/* Mobile Menu Toggle */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="bg-background shadow-md border border-border"
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-      </div>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile Sidebar Overlay - подобрен дизайн */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-40">
           {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          <div
+            className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/60 to-black/40 backdrop-blur-md transition-all duration-500"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          
+
           {/* Sidebar */}
-          <div className="absolute left-0 top-0 h-full w-80 max-w-[85vw] bg-background shadow-xl transform transition-transform duration-300">
+          <div className="absolute left-0 top-0 h-full w-80 max-w-[88vw] bg-gradient-to-b from-background via-background to-background/95 shadow-2xl border-r border-border/50 transform transition-all duration-500 ease-out animate-in slide-in-from-left">
+            {/* Glass effect overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/5 pointer-events-none" />
             <SidebarContent isMobile />
           </div>
         </div>

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 import { createSupabaseClient } from "@/utils/supabase/client";
-import { Bell, Search, User, LogOut, Settings, UserCircle, ChevronDown, Menu, X } from "lucide-react";
+import { Bell, User, LogOut, Settings, UserCircle, ChevronDown, Menu, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -128,16 +129,8 @@ export default function Header() {
         {/* Logo and navigation for non-authenticated users */}
         {!loading && !user && (
           <>
-            <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">F</span>
-              </div>
-              <div className="hidden sm:block">
-                <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  FitLife Studio
-                </span>
-              </div>
-            </Link>
+            <Logo showText={true} href="/" className="hidden md:flex" />
+            <Logo showText={false} href="/" className="md:hidden" />
 
             {/* Desktop Navigation Menu */}
             <nav className="hidden lg:flex ml-10 space-x-8">
@@ -166,28 +159,17 @@ export default function Header() {
           </>
         )}
 
-        {/* Logo for authenticated users */}
+        {/* Logo за автентифицирани потребители */}
         {!loading && user && (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">F</span>
-            </div>
-            <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              FitLife Studio
-            </span>
-          </div>
+          <>
+            <Logo showText={true} href="/protected" className="hidden md:flex" />
+            <Logo showText={false} href="/protected" className="md:hidden" />
+          </>
         )}
 
-        {/* Loading state */}
+        {/* Loading state - скрито лого */}
         {loading && (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">F</span>
-            </div>
-            <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              FitLife Studio
-            </span>
-          </div>
+          <div></div>
         )}
       </div>
 
@@ -204,6 +186,19 @@ export default function Header() {
         ) : user ? (
           /* Authenticated user header */
           <>
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden h-9 w-9 p-0 hover:bg-muted"
+              onClick={() => {
+                // Тригериране на mobile menu чрез event
+                window.dispatchEvent(new CustomEvent('toggleMobileMenu'));
+              }}
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+
             {/* Notifications */}
             <Button variant="ghost" size="sm" className="relative hover:bg-blue-50/50">
               <Bell className="h-4 w-4" />

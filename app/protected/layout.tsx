@@ -50,7 +50,7 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-background">
+    <div className="flex h-screen bg-background">
       {/* Left Sidebar */}
       <LeftSidebar
         userRole={profile?.role as "trainer" | "client" | "admin" || "client"}
@@ -63,11 +63,11 @@ export default async function ProtectedLayout({
         clientsCount={clientsCount}
         planType={planType as "free" | "pro" | "beast"}
       />
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         <div className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6 max-w-full">
+          <div className="p-3 sm:p-4 lg:p-6 max-w-full">
             {children}
           </div>
         </div>
