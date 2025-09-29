@@ -14,7 +14,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2, Loader2 } from "lucide-react";
-import { createSupabaseClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -34,22 +33,13 @@ export function DeleteProgramButton({
     setIsDeleting(true);
 
     try {
-      const client = await createSupabaseClient();
+      const response = await fetch(`/api/programs/${programId}/delete`, {
+        method: "DELETE",
+      });
 
-      // First delete related workout sessions
-      await client
-        .from("workout_sessions")
-        .delete()
-        .eq("program_id", programId);
-
-      // Then delete the program
-      const { error } = await client
-        .from("workout_programs")
-        .delete()
-        .eq("id", programId);
-
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete program");
       }
 
       toast.success("Program deleted successfully");
