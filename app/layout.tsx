@@ -3,6 +3,7 @@ import "./globals.css";
 import Header from "@/components/header";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,9 +25,9 @@ export default function RootLayout({
   return (
     <html lang="bg" suppressHydrationWarning>
       <body className={`${inter.className} bg-background text-foreground`}>
-        <ThemeProvider 
-          attribute="class" 
-          defaultTheme="light" 
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
           enableSystem={false}
           disableTransitionOnChange
         >
@@ -36,6 +37,7 @@ export default function RootLayout({
               {children}
             </main>
           </div>
+          <Toaster richColors />
         </ThemeProvider>
       </body>
     </html>

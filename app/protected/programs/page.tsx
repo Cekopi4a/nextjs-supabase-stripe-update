@@ -2,8 +2,9 @@
 import { createSupabaseClient } from "@/utils/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Calendar, Target } from "lucide-react";
+import { Plus, Users, Calendar, Target, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { DeleteProgramButton } from "@/components/delete-program-button";
 
 export default async function ProgramsPage() {
   const client = await createSupabaseClient();
@@ -35,12 +36,11 @@ export default async function ProgramsPage() {
       .from("workout_programs")
       .select(`
         *,
-        profiles!workout_programs_client_id_fkey(full_name, email),
-        workouts(count)
+        profiles!workout_programs_client_id_fkey(full_name, email)
       `)
       .eq("trainer_id", user.id)
       .order("created_at", { ascending: false });
-    
+
     programs = data || [];
   } else {
     // Clients see programs assigned to them
@@ -48,12 +48,11 @@ export default async function ProgramsPage() {
       .from("workout_programs")
       .select(`
         *,
-        profiles!workout_programs_trainer_id_fkey(full_name, email),
-        workouts(count)
+        profiles!workout_programs_trainer_id_fkey(full_name, email)
       `)
       .eq("client_id", user.id)
       .order("created_at", { ascending: false });
-    
+
     programs = data || [];
   }
 
@@ -127,9 +126,8 @@ export default async function ProgramsPage() {
 }
 
 function ProgramCard({ program, userRole }: { program: any; userRole: string }) {
-  const relatedUser = userRole === "trainer" 
-    ? program.profiles // client info for trainer
-    : program.profiles; // trainer info for client
+  // For trainer: show client info, for client: show trainer info
+  const relatedUser = program.profiles;
 
   return (
     <Card className="p-6 hover:shadow-md transition-shadow">
@@ -191,9 +189,9 @@ function ProgramCard({ program, userRole }: { program: any; userRole: string }) 
 
         {/* Actions */}
         <div className="flex gap-2 pt-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="flex-1"
             asChild
           >
@@ -201,10 +199,25 @@ function ProgramCard({ program, userRole }: { program: any; userRole: string }) 
               View Details
             </Link>
           </Button>
-          
+
+          {userRole === "trainer" && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <Link href={`/protected/programs/${program.id}/edit`}>
+                  Edit
+                </Link>
+              </Button>
+              <DeleteProgramButton programId={program.id} programName={program.name} />
+            </>
+          )}
+
           {userRole === "client" && program.is_active && (
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="flex-1"
               asChild
             >

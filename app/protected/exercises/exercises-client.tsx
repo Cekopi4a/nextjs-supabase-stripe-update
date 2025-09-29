@@ -566,6 +566,55 @@ export default function ExercisesPageClient({
                 </CardHeader>
 
                 <CardContent>
+                  {/* Exercise Images */}
+                  {(
+                    (exercise.images && exercise.images.length > 0) ||
+                    (exercise.custom_images && exercise.custom_images.length > 0)
+                  ) && (
+                    <div className="mb-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        {exercise.custom_images?.slice(0, 2).map((url, index) => (
+                          url && (
+                            <div key={`custom-${index}`} className="aspect-video relative overflow-hidden rounded-md bg-gray-100">
+                              <img
+                                src={url}
+                                alt={`${exercise.name} - снимка ${index + 1}`}
+                                className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(url, '_blank');
+                                }}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )
+                        ))}
+                        {exercise.images?.slice(0, 2 - (exercise.custom_images?.filter(Boolean).length || 0)).map((url, index) => (
+                          url && (
+                            <div key={`default-${index}`} className="aspect-video relative overflow-hidden rounded-md bg-gray-100">
+                              <img
+                                src={url}
+                                alt={`${exercise.name} - снимка ${index + 1}`}
+                                className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(url, '_blank');
+                                }}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {exercise.instructions && exercise.instructions.length > 0 && (
                     <div className="mb-3">
                       <p className="text-sm font-medium text-gray-700 mb-1">Инструкции:</p>
@@ -626,26 +675,17 @@ export default function ExercisesPageClient({
                         </Button>
                       )
                     ))}
-                    {exercise.custom_images && exercise.custom_images.map((url, index) => (
-                      url && (
-                        <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
-                          <a href={url} target="_blank" rel="noopener noreferrer">
-                            <Image className="h-3 w-3 mr-1" />
-                            Снимка {exercise.custom_images!.length > 1 ? index + 1 : ''}
-                          </a>
-                        </Button>
-                      )
-                    ))}
-                    {exercise.images && exercise.images.map((url, index) => (
-                      url && (
-                        <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
-                          <a href={url} target="_blank" rel="noopener noreferrer">
-                            <Image className="h-3 w-3 mr-1" />
-                            Снимка {exercise.images.length > 1 ? index + 1 : ''}
-                          </a>
-                        </Button>
-                      )
-                    ))}
+                    {((exercise.custom_images && exercise.custom_images.filter(Boolean).length > 2) ||
+                      (exercise.images && exercise.images.filter(Boolean).length > 2) ||
+                      ((exercise.custom_images?.filter(Boolean).length || 0) + (exercise.images?.filter(Boolean).length || 0) > 2)) && (
+                      <Button variant="outline" size="sm" className="h-8 text-xs" onClick={(e) => {
+                        e.stopPropagation();
+                        handleExerciseClick(exercise);
+                      }}>
+                        <Image className="h-3 w-3 mr-1" />
+                        Още снимки
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -765,6 +805,48 @@ export default function ExercisesPageClient({
                   </div>
                 </div>
 
+                {/* Exercise Images */}
+                {((selectedExercise.custom_images && selectedExercise.custom_images.length > 0) ||
+                  (selectedExercise.images && selectedExercise.images.length > 0)) && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-700 mb-3">Снимки на упражнението</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {selectedExercise.custom_images?.map((url, index) => (
+                        url && (
+                          <div key={`custom-${index}`} className="aspect-video relative overflow-hidden rounded-lg bg-gray-100 shadow-sm border">
+                            <img
+                              src={url}
+                              alt={`${selectedExercise.name} - снимка ${index + 1}`}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                              onClick={() => window.open(url, '_blank')}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )
+                      ))}
+                      {selectedExercise.images?.map((url, index) => (
+                        url && (
+                          <div key={`default-${index}`} className="aspect-video relative overflow-hidden rounded-lg bg-gray-100 shadow-sm border">
+                            <img
+                              src={url}
+                              alt={`${selectedExercise.name} - снимка ${index + 1 + (selectedExercise.custom_images?.filter(Boolean).length || 0)}`}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                              onClick={() => window.open(url, '_blank')}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Instructions */}
                 {selectedExercise.instructions && selectedExercise.instructions.length > 0 && (
                   <div>
@@ -782,74 +864,29 @@ export default function ExercisesPageClient({
                 )}
 
                 {/* Media */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Videos */}
-                  {selectedExercise.video_urls && selectedExercise.video_urls.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-sm text-gray-700 mb-3">Видео материали</h4>
-                      <div className="space-y-2">
-                        {selectedExercise.video_urls.map((url, index) => (
-                          url && (
-                            <Button
-                              key={index}
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start"
-                              asChild
-                            >
-                              <a href={url} target="_blank" rel="noopener noreferrer">
-                                <Play className="h-4 w-4 mr-2" />
-                                Видео {selectedExercise.video_urls!.length > 1 ? index + 1 : ''}
-                              </a>
-                            </Button>
-                          )
-                        ))}
-                      </div>
+                {selectedExercise.video_urls && selectedExercise.video_urls.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-700 mb-3">Видео материали</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {selectedExercise.video_urls.map((url, index) => (
+                        url && (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start"
+                            asChild
+                          >
+                            <a href={url} target="_blank" rel="noopener noreferrer">
+                              <Play className="h-4 w-4 mr-2" />
+                              Видео {selectedExercise.video_urls!.length > 1 ? index + 1 : ''}
+                            </a>
+                          </Button>
+                        )
+                      ))}
                     </div>
-                  )}
-
-                  {/* Images */}
-                  {((selectedExercise.custom_images && selectedExercise.custom_images.length > 0) ||
-                    (selectedExercise.images && selectedExercise.images.length > 0)) && (
-                    <div>
-                      <h4 className="font-semibold text-sm text-gray-700 mb-3">Снимки</h4>
-                      <div className="space-y-2">
-                        {selectedExercise.custom_images?.map((url, index) => (
-                          url && (
-                            <Button
-                              key={index}
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start"
-                              asChild
-                            >
-                              <a href={url} target="_blank" rel="noopener noreferrer">
-                                <Image className="h-4 w-4 mr-2" />
-                                Снимка {selectedExercise.custom_images!.length > 1 ? index + 1 : ''}
-                              </a>
-                            </Button>
-                          )
-                        ))}
-                        {selectedExercise.images?.map((url, index) => (
-                          url && (
-                            <Button
-                              key={index}
-                              variant="outline"
-                              size="sm"
-                              className="w-full justify-start"
-                              asChild
-                            >
-                              <a href={url} target="_blank" rel="noopener noreferrer">
-                                <Image className="h-4 w-4 mr-2" />
-                                Снимка {selectedExercise.images!.length > 1 ? index + 1 : ''}
-                              </a>
-                            </Button>
-                          )
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Actions for trainers */}
                 {canEdit(selectedExercise) && (
@@ -980,6 +1017,55 @@ export default function ExercisesPageClient({
               </CardHeader>
 
               <CardContent>
+                {/* Exercise Images */}
+                {(
+                  (exercise.images && exercise.images.length > 0) ||
+                  (exercise.custom_images && exercise.custom_images.length > 0)
+                ) && (
+                  <div className="mb-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      {exercise.custom_images?.slice(0, 2).map((url, index) => (
+                        url && (
+                          <div key={`custom-${index}`} className="aspect-video relative overflow-hidden rounded-md bg-gray-100">
+                            <img
+                              src={url}
+                              alt={`${exercise.name} - снимка ${index + 1}`}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(url, '_blank');
+                              }}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )
+                      ))}
+                      {exercise.images?.slice(0, 2 - (exercise.custom_images?.filter(Boolean).length || 0)).map((url, index) => (
+                        url && (
+                          <div key={`default-${index}`} className="aspect-video relative overflow-hidden rounded-md bg-gray-100">
+                            <img
+                              src={url}
+                              alt={`${exercise.name} - снимка ${index + 1}`}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(url, '_blank');
+                              }}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {exercise.instructions && exercise.instructions.length > 0 && (
                   <div className="mb-3">
                     <p className="text-sm font-medium text-gray-700 mb-1">Инструкции:</p>
@@ -1040,26 +1126,17 @@ export default function ExercisesPageClient({
                       </Button>
                     )
                   ))}
-                  {exercise.custom_images && exercise.custom_images.map((url, index) => (
-                    url && (
-                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          <Image className="h-3 w-3 mr-1" />
-                          Снимка {exercise.custom_images!.length > 1 ? index + 1 : ''}
-                        </a>
-                      </Button>
-                    )
-                  ))}
-                  {exercise.images && exercise.images.map((url, index) => (
-                    url && (
-                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          <Image className="h-3 w-3 mr-1" />
-                          Снимка {exercise.images.length > 1 ? index + 1 : ''}
-                        </a>
-                      </Button>
-                    )
-                  ))}
+                  {((exercise.custom_images && exercise.custom_images.filter(Boolean).length > 2) ||
+                    (exercise.images && exercise.images.filter(Boolean).length > 2) ||
+                    ((exercise.custom_images?.filter(Boolean).length || 0) + (exercise.images?.filter(Boolean).length || 0) > 2)) && (
+                    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={(e) => {
+                      e.stopPropagation();
+                      handleExerciseClick(exercise);
+                    }}>
+                      <Image className="h-3 w-3 mr-1" />
+                      Още снимки
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1133,6 +1210,55 @@ export default function ExercisesPageClient({
               </CardHeader>
 
               <CardContent>
+                {/* Exercise Images */}
+                {(
+                  (exercise.images && exercise.images.length > 0) ||
+                  (exercise.custom_images && exercise.custom_images.length > 0)
+                ) && (
+                  <div className="mb-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      {exercise.custom_images?.slice(0, 2).map((url, index) => (
+                        url && (
+                          <div key={`custom-${index}`} className="aspect-video relative overflow-hidden rounded-md bg-gray-100">
+                            <img
+                              src={url}
+                              alt={`${exercise.name} - снимка ${index + 1}`}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(url, '_blank');
+                              }}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )
+                      ))}
+                      {exercise.images?.slice(0, 2 - (exercise.custom_images?.filter(Boolean).length || 0)).map((url, index) => (
+                        url && (
+                          <div key={`default-${index}`} className="aspect-video relative overflow-hidden rounded-md bg-gray-100">
+                            <img
+                              src={url}
+                              alt={`${exercise.name} - снимка ${index + 1}`}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(url, '_blank');
+                              }}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {exercise.instructions && exercise.instructions.length > 0 && (
                   <div className="mb-3">
                     <p className="text-sm font-medium text-gray-700 mb-1">Инструкции:</p>
@@ -1193,26 +1319,17 @@ export default function ExercisesPageClient({
                       </Button>
                     )
                   ))}
-                  {exercise.custom_images && exercise.custom_images.map((url, index) => (
-                    url && (
-                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          <Image className="h-3 w-3 mr-1" />
-                          Снимка {exercise.custom_images!.length > 1 ? index + 1 : ''}
-                        </a>
-                      </Button>
-                    )
-                  ))}
-                  {exercise.images && exercise.images.map((url, index) => (
-                    url && (
-                      <Button key={index} variant="outline" size="sm" className="h-8 text-xs" asChild>
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          <Image className="h-3 w-3 mr-1" />
-                          Снимка {exercise.images.length > 1 ? index + 1 : ''}
-                        </a>
-                      </Button>
-                    )
-                  ))}
+                  {((exercise.custom_images && exercise.custom_images.filter(Boolean).length > 2) ||
+                    (exercise.images && exercise.images.filter(Boolean).length > 2) ||
+                    ((exercise.custom_images?.filter(Boolean).length || 0) + (exercise.images?.filter(Boolean).length || 0) > 2)) && (
+                    <Button variant="outline" size="sm" className="h-8 text-xs" onClick={(e) => {
+                      e.stopPropagation();
+                      handleExerciseClick(exercise);
+                    }}>
+                      <Image className="h-3 w-3 mr-1" />
+                      Още снимки
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
