@@ -280,6 +280,22 @@ export function EditProgramForm({ program }: EditProgramFormProps) {
               Отказ
             </Button>
           </div>
+
+          {/* Edit Calendar Link */}
+          <div className="pt-4 border-t">
+            <p className="text-sm text-muted-foreground mb-3">
+              Искаш да редактираш упражненията и календара?
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => router.push(`/protected/programs/${program.id}/edit-calendar`)}
+              disabled={isLoading}
+              className="w-full"
+            >
+              Редактирай календара и упражненията
+            </Button>
+          </div>
         </form>
       </Card>
     </div>

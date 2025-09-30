@@ -233,16 +233,21 @@ export function EnhancedCalendar({
   };
 
   const createCalendarDay = (date: Date): CalendarDay => {
-    const dateKey = date.toISOString().split('T')[0];
+    // Use local date string to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateKey = `${year}-${month}-${day}`;
+
     const isCurrentMonth = view === 'week' || date.getMonth() === currentDate.getMonth();
     const isToday = date.toDateString() === new Date().toDateString();
     const isSelected = selectedDate?.toDateString() === date.toDateString();
-    
+
     // Check if date is within program duration
     const programEndDate = new Date(programStartDate);
     programEndDate.setDate(programStartDate.getDate() + (programDurationWeeks * 7));
     const isInProgramDuration = date >= programStartDate && date <= programEndDate;
-    
+
     return {
       date,
       isCurrentMonth,

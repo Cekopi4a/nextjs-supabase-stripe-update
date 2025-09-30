@@ -9,9 +9,13 @@ export interface ToastProps {
 export function toast({ title, description, variant = "default" }: ToastProps) {
   // Simple console logging for now - could be replaced with a proper toast system
   if (variant === "destructive") {
-    console.error(`${title}: ${description}`);
+    if (title || description) {
+      console.error(`${title || 'Error'}${description ? ': ' + description : ''}`);
+    }
   } else {
-    console.log(`${title}: ${description}`);
+    if (title || description) {
+      console.log(`${title || 'Info'}${description ? ': ' + description : ''}`);
+    }
   }
 }
 

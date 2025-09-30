@@ -1,8 +1,12 @@
-// app/protected/programs/page.tsx
+// app/protected/nutrition-plans/page.tsx
 import { createSupabaseClient } from "@/utils/supabase/server";
-import { ProgramsClient } from "./programs-client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Users, Calendar, Target, Apple } from "lucide-react";
+import Link from "next/link";
+import { NutritionPlansClient } from "./nutrition-plans-client";
 
-export default async function ProgramsPage() {
+export default async function NutritionPlansPage() {
   const client = await createSupabaseClient();
   const {
     data: { user },
@@ -23,54 +27,55 @@ export default async function ProgramsPage() {
     return <div>Profile not found</div>;
   }
 
-  // Get programs based on user role
-  let activePrograms = [];
-  let inactivePrograms = [];
+  // Get nutrition plans based on user role
+  let activePlans = [];
+  let inactivePlans = [];
 
   if (profile.role === "trainer") {
-    // Trainers see programs they created - fetch both active and inactive
+    // Trainers see plans they created - fetch both active and inactive
     const { data: active } = await client
-      .from("workout_programs")
+      .from("nutrition_plans")
       .select(`
         *,
-        profiles!workout_programs_client_id_fkey(full_name, email)
+        profiles!nutrition_plans_client_id_fkey(full_name, email)
       `)
       .eq("trainer_id", user.id)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
     const { data: inactive } = await client
-      .from("workout_programs")
+      .from("nutrition_plans")
       .select(`
         *,
-        profiles!workout_programs_client_id_fkey(full_name, email)
+        profiles!nutrition_plans_client_id_fkey(full_name, email)
       `)
       .eq("trainer_id", user.id)
       .eq("is_active", false)
       .order("created_at", { ascending: false });
 
-    activePrograms = active || [];
-    inactivePrograms = inactive || [];
+    activePlans = active || [];
+    inactivePlans = inactive || [];
   } else {
-    // Clients see only ACTIVE programs assigned to them
+    // Clients see only ACTIVE plans assigned to them
     const { data: active } = await client
-      .from("workout_programs")
+      .from("nutrition_plans")
       .select(`
         *,
-        profiles!workout_programs_trainer_id_fkey(full_name, email)
+        profiles!nutrition_plans_trainer_id_fkey(full_name, email)
       `)
       .eq("client_id", user.id)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
-    activePrograms = active || [];
+    activePlans = active || [];
   }
 
   return (
-    <ProgramsClient
-      activePrograms={activePrograms}
-      inactivePrograms={inactivePrograms}
+    <NutritionPlansClient
+      activePlans={activePlans}
+      inactivePlans={inactivePlans}
       userRole={profile.role}
     />
   );
 }
+

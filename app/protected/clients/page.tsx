@@ -7,18 +7,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
-import { 
-  Plus, 
-  Users, 
-  Search, 
-  Calendar, 
+import {
+  Plus,
+  Users,
+  Search,
+  Calendar,
   TrendingUp,
   Apple,
   Eye,
   Clock,
   CheckCircle,
   AlertCircle,
-  Award
+  Award,
+  Dumbbell,
+  Utensils
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -154,21 +156,32 @@ export default function ClientsPage() {
       // Get active programs for clients
       const { data: activePrograms } = await supabase
         .from('workout_programs')
-        .select('client_id')
+        .select('client_id, name')
         .in('client_id', clientIds)
         .eq('is_active', true);
 
       console.log('Active programs:', activePrograms);
 
+      // Get nutrition plans for clients
+      const { data: nutritionPlans } = await supabase
+        .from('nutrition_plans')
+        .select('client_id, name')
+        .in('client_id', clientIds);
+
+      console.log('Nutrition plans:', nutritionPlans);
+
       // Добавяме статуса от trainer_clients към профилите
       const clientsWithStatus = profiles.map((profile: any) => {
         const tc = trainerClients.find((tc: any) => tc.client_id === profile.id);
-        const hasActiveProgram = activePrograms?.some(ap => ap.client_id === profile.id) || false;
-        
-        return { 
-          ...profile, 
+        const activeProgram = activePrograms?.find(ap => ap.client_id === profile.id);
+        const nutritionPlan = nutritionPlans?.find(np => np.client_id === profile.id);
+
+        return {
+          ...profile,
           trainer_status: tc?.status || 'unknown', // Използваме trainer_status за избягване на объркване
-          has_active_program: hasActiveProgram
+          has_active_program: !!activeProgram,
+          workout_program_name: activeProgram?.name || null,
+          nutrition_plan_name: nutritionPlan?.name || null
         };
       });
 
@@ -473,83 +486,28 @@ export default function ClientsPage() {
                 </Badge>
               </div>
 
-              {/* Progress Bar */}
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-600">Напредък към целта</span>
-                  <span className="font-semibold text-foreground">{client.progress || 0}%</span>
+              {/* Plans info */}
+              <div className="grid grid-cols-1 gap-3 mb-4">
+                <div className="bg-blue-50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Dumbbell className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">Тренировъчен план</span>
+                  </div>
+                  <p className="text-sm text-blue-700">
+                    {client.workout_program_name || 'Няма зададен план'}
+                  </p>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${getProgressColor(client.progress || 0)} transition-all duration-500`}
-                    style={{ width: `${client.progress || 0}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Goal info */}
-              <div className="grid grid-cols-1 gap-3 text-sm mb-4">
-                <div>
-                  <p className="text-gray-500">Цел</p>
-                  <p className="font-semibold text-foreground">{client.goals || 'Не е зadadена'}</p>
-                </div>
-              </div>
-
-              {/* Weekly Progress */}
-              <div className="bg-muted/50 rounded-lg p-3 mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Тази седмица</span>
-                  {client.streak > 0 && (
-                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs px-1.5 py-0.5">
-                      🔥 {client.streak}
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-gray-600">
-                    {client.completedWorkouts || 0}/{client.weeklyGoal || 3} тренировки
-                  </span>
-                  <span className="font-semibold text-foreground">
-                    {Math.round(((client.completedWorkouts || 0) / (client.weeklyGoal || 3)) * 100)}%
-                  </span>
-                </div>
-                <div className="w-full bg-muted rounded-full h-1.5">
-                  <div 
-                    className="h-1.5 rounded-full bg-blue-500 transition-all duration-500"
-                    style={{ width: `${Math.min(((client.completedWorkouts || 0) / (client.weeklyGoal || 3)) * 100, 100)}%` }}
-                  ></div>
+                <div className="bg-green-50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Utensils className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-900">Хранителен план</span>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    {client.nutrition_plan_name || 'Няма зададен план'}
+                  </p>
                 </div>
               </div>
 
-              {/* Nutrition Calendar */}
-              <div className="bg-green-50 rounded-lg p-3 mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-green-700">Хранителен режим</span>
-                  <Apple className="h-4 w-4 text-green-600" />
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {['П', 'В', 'С', 'Ч', 'П', 'С', 'Н'].map((day, index) => {
-                    const dayCompleted = Math.random() > 0.3;
-                    return (
-                      <div key={index} className="text-center">
-                        <div className="text-xs text-gray-600 mb-1">{day}</div>
-                        <div 
-                          className={`h-6 w-6 rounded-full mx-auto flex items-center justify-center text-xs ${
-                            dayCompleted 
-                              ? 'bg-green-500 text-white' 
-                              : 'bg-gray-200 text-gray-500'
-                          }`}
-                        >
-                          {dayCompleted ? '✓' : '○'}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="text-xs text-green-600 text-center mt-2">
-                  5/7 дни спазени
-                </div>
-              </div>
 
               {/* Action Buttons */}
               <div className="grid grid-cols-1 gap-2 mb-3">

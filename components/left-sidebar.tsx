@@ -124,7 +124,7 @@ export default function LeftSidebar({
           icon: Dumbbell,
         },
         {
-          label: "Създаване на тренировки",
+          label: "Тренировки",
           href: "/workout-builder",
           icon: Target,
         },
@@ -137,6 +137,11 @@ export default function LeftSidebar({
           label: "Рецепти",
           href: "/recipes",
           icon: ChefHat,
+        },
+        {
+          label: "Хранителни планове",
+          href: "/nutrition-plans",
+          icon: Apple,
         },
         {
           label: "Хранене",
@@ -187,6 +192,11 @@ export default function LeftSidebar({
           label: "Напредък",
           href: "/progress",
           icon: BarChart3,
+        },
+        {
+          label: "Хранителни планове",
+          href: "/nutrition-plans",
+          icon: Apple,
         },
         {
           label: "Хранене",

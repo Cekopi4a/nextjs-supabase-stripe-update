@@ -213,12 +213,17 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-wrap">
         {profile.role === "trainer" && (
           <>
             <Button asChild>
               <Link href={`/protected/programs/${program.id}/edit`}>
-                Edit Program
+                Edit Details
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/protected/programs/${program.id}/edit-calendar`}>
+                Edit Calendar
               </Link>
             </Button>
             <Button variant="outline" asChild>

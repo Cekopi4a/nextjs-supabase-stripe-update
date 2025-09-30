@@ -321,7 +321,7 @@ export function ExerciseSelector({
           <p>Try adjusting your search terms or filters</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-3">
           {exercises.map((exercise) => (
             <ExerciseCard
               key={exercise.id}
@@ -330,6 +330,7 @@ export function ExerciseSelector({
               onDetails={setSelectedExerciseForDetails}
               isSelected={isExerciseSelected(exercise)}
               showDetails={true}
+              compact={true}
             />
           ))}
         </div>

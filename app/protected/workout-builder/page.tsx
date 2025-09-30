@@ -554,12 +554,15 @@ export default function WorkoutBuilderPage() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="workout-name">Име на тренировката</Label>
+                      <Label htmlFor="workout-name">
+                        Име на тренировката <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="workout-name"
                         value={currentWorkout.name}
                         onChange={(e) => setCurrentWorkout(prev => ({ ...prev, name: e.target.value }))}
                         placeholder="Например: Тренировка за гръб"
+                        required
                       />
                     </div>
                     <div>
@@ -666,7 +669,11 @@ export default function WorkoutBuilderPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button onClick={saveWorkout} disabled={saving} className="flex-1">
+                  <Button
+                    onClick={saveWorkout}
+                    disabled={saving || !currentWorkout.name.trim() || currentWorkout.exercises.length === 0}
+                    className="flex-1"
+                  >
                     <Save className="h-4 w-4 mr-2" />
                     {saving ? "Запазване..." : "Запази тренировката"}
                   </Button>
@@ -713,9 +720,28 @@ export default function WorkoutBuilderPage() {
 }
 
 function ExerciseCard({ exercise, onAdd }: { exercise: Exercise; onAdd: () => void }) {
+  const [imageError, setImageError] = React.useState(false);
+  const firstImage = exercise.images?.[0];
+
   return (
     <Card className="p-3 hover:shadow-md transition-shadow cursor-pointer group">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        {/* Exercise Image */}
+        <div className="relative w-16 h-16 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
+          {firstImage && !imageError ? (
+            <img
+              src={firstImage}
+              alt={exercise.name}
+              className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl">
+              💪
+            </div>
+          )}
+        </div>
+
         <div className="flex-1 min-w-0">
           <h4 className="font-medium truncate">{exercise.name}</h4>
           <div className="flex flex-wrap gap-1 mt-1">
