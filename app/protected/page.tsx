@@ -25,9 +25,9 @@ export default async function ProtectedPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Profile Setup Required</h2>
+          <h2 className="text-xl font-semibold mb-2">Необходима настройка на профил</h2>
           <p className="text-muted-foreground">
-            Please complete your profile setup to continue.
+            Моля, завършете настройката на профила си, за да продължите.
           </p>
         </div>
       </div>

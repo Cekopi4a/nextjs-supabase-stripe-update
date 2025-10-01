@@ -425,7 +425,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
               <Target className="h-4 w-4" />
-              Choose the Perfect Plan for Your Fitness Journey
+              Изберете перфектния план за вашето фитнес пътешествие
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
               Достъпни планове за всеки

@@ -9,7 +9,7 @@ export default async function ProgramsPage() {
   } = await client.auth.getUser();
 
   if (!user) {
-    return <div>Not authenticated</div>;
+    return <div>Не сте влезли в системата</div>;
   }
 
   // Get user profile to determine role
@@ -20,7 +20,7 @@ export default async function ProgramsPage() {
     .single();
 
   if (!profile) {
-    return <div>Profile not found</div>;
+    return <div>Профилът не е намерен</div>;
   }
 
   // Get programs based on user role

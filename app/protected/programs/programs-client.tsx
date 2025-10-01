@@ -45,12 +45,12 @@ export function ProgramsClient({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">
-            {userRole === "trainer" ? "My Programs" : "My Workout Programs"}
+            {userRole === "trainer" ? "Моите Програми" : "Моите Тренировъчни Програми"}
           </h1>
           <p className="text-muted-foreground">
             {userRole === "trainer"
-              ? "Manage workout programs for your clients"
-              : "View and track your assigned workout programs"
+              ? "Управление на тренировъчни програми за вашите клиенти"
+              : "Вижте и следвайте вашите тренировъчни програми"
             }
           </p>
         </div>
@@ -61,14 +61,14 @@ export function ProgramsClient({
               onClick={() => setShowHistory(!showHistory)}
             >
               <History className="h-4 w-4 mr-2" />
-              {showHistory ? "Hide History" : "Show History"}
+              {showHistory ? "Скрий история" : "Покажи история"}
             </Button>
           )}
           {userRole === "trainer" && (
             <Button asChild>
               <Link href="/protected/programs/create">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Program
+                Създай Програма
               </Link>
             </Button>
           )}
@@ -79,8 +79,8 @@ export function ProgramsClient({
       {userRole === "trainer" && (
         <Card className="p-4 bg-blue-50 border-blue-200">
           <p className="text-sm text-blue-900">
-            <strong>💡 Important:</strong> Each client can only have 1 active program.
-            When you create a new program, old ones automatically become inactive.
+            <strong>💡 Важно:</strong> Всеки клиент може да има само 1 активна програма.
+            Когато създадете нова програма, старите автоматично стават неактивни.
           </p>
         </Card>
       )}
@@ -88,7 +88,7 @@ export function ProgramsClient({
       {/* History Info */}
       {showHistory && hasHistory && (
         <div className="text-sm text-muted-foreground">
-          Showing: {activePrograms.length} active + {inactivePrograms.length} inactive programs
+          Показва се: {activePrograms.length} активни + {inactivePrograms.length} неактивни програми
         </div>
       )}
 
@@ -101,21 +101,21 @@ export function ProgramsClient({
             </div>
             <h3 className="text-lg font-semibold mb-2">
               {userRole === "trainer"
-                ? "No programs created yet"
-                : "No programs assigned yet"
+                ? "Все още няма създадени програми"
+                : "Все още няма зададени програми"
               }
             </h3>
             <p className="text-muted-foreground mb-4">
               {userRole === "trainer"
-                ? "Create your first workout program to get started with training clients."
-                : "Your trainer will assign workout programs to you soon."
+                ? "Създайте вашата първа тренировъчна програма, за да започнете с тренирането на клиенти."
+                : "Вашият треньор скоро ще ви зададе тренировъчни програми."
               }
             </p>
             {userRole === "trainer" && (
               <Button asChild>
                 <Link href="/protected/programs/create">
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Program
+                  Създай Първа Програма
                 </Link>
               </Button>
             )}
@@ -151,7 +151,7 @@ function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole:
                 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                 : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
             }`}>
-              {program.is_active ? "Active" : "Inactive"}
+              {program.is_active ? "Активна" : "Неактивна"}
             </span>
           </div>
 
@@ -166,11 +166,11 @@ function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole:
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>{program.estimated_duration_weeks || 8} weeks</span>
+            <span>{program.estimated_duration_weeks || 8} седмици</span>
           </div>
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-muted-foreground" />
-            <span>{program.workouts_per_week || 3}/week</span>
+            <span>{program.workouts_per_week || 3}/седмица</span>
           </div>
         </div>
 
@@ -179,7 +179,7 @@ function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole:
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
             <span>
-              {userRole === "trainer" ? "Client: " : "Trainer: "}
+              {userRole === "trainer" ? "Клиент: " : "Треньор: "}
               {relatedUser.full_name}
             </span>
           </div>
@@ -206,7 +206,7 @@ function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole:
             asChild
           >
             <Link href={`/protected/programs/${program.id}`}>
-              View Details
+              Детайли
             </Link>
           </Button>
 
@@ -219,7 +219,7 @@ function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole:
                   asChild
                 >
                   <Link href={`/protected/programs/${program.id}/edit`}>
-                    Edit
+                    Редактирай
                   </Link>
                 </Button>
               )}
@@ -234,7 +234,7 @@ function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole:
               asChild
             >
               <Link href={`/protected/workouts?program=${program.id}`}>
-                Start Workout
+                Започни Тренировка
               </Link>
             </Button>
           )}
@@ -242,7 +242,7 @@ function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole:
 
         {/* Created/Updated Date */}
         <div className="text-xs text-muted-foreground pt-2 border-t">
-          Created {new Date(program.created_at).toLocaleDateString()}
+          Създадена {new Date(program.created_at).toLocaleDateString('bg-BG')}
         </div>
       </div>
     </Card>

@@ -149,7 +149,7 @@ export default function AccountPage() {
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Зареждане...</p>
+          <p className="text-muted-foreground">Зареждане...</p>
         </div>
       </div>
     );
@@ -160,7 +160,7 @@ export default function AccountPage() {
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p>Не сте влезли в системата.</p>
+          <p className="text-muted-foreground">Не сте влезли в системата.</p>
         </div>
       </div>
     );
