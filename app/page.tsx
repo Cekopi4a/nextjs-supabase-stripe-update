@@ -6,6 +6,7 @@ import { Dumbbell, Star, ArrowRight, Check, Target } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import Footer from "@/components/footer";
 
 export default function Home() {
 
@@ -578,7 +579,7 @@ export default function Home() {
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
             Присъединете се към стотици треньори, които вече използват нашата платформа за управление на клиентите си
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="px-10 py-4 text-lg h-auto bg-white text-blue-600 hover:bg-gray-100" asChild>
               <Link href="/sign-up">
@@ -592,6 +593,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

@@ -25,7 +25,9 @@
       "Bash(psql:*)",
       "Bash(npx supabase db push:*)",
       "Bash(npx supabase db dump:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(if exist .next rmdir /s /q .next)",
+      "Bash(npx supabase db diff:*)"
     ],
     "deny": []
   }

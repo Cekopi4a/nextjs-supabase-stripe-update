@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Target, Users, Award, Heart, Dumbbell, Star, CheckCircle, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import Footer from "@/components/footer";
 
 export default function AboutPage() {
   return (
@@ -269,7 +270,7 @@ export default function AboutPage() {
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
             Започнете своето пътешествие с FitLife Studio днес и открийте защо хиляди треньори ни избират
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="px-10 py-4 text-lg h-auto bg-white text-blue-600 hover:bg-gray-100" asChild>
               <Link href="/sign-up">
@@ -282,6 +283,9 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

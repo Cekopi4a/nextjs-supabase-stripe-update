@@ -91,18 +91,49 @@ export default function CreateProgramStep2() {
   }, []);
 
   const loadClients = React.useCallback(async () => {
-    const user = await supabase.auth.getUser();
-    const { data } = await supabase
-      .from("trainer_clients")
-      .select(`
-        client_id,
-        profiles!trainer_clients_client_id_fkey(id, full_name, email)
-      `)
-      .eq("trainer_id", user.data.user?.id)
-      .eq("status", "active");
-    
-    if (data) {
-      setClients(data.map(tc => tc.profiles).filter(Boolean) as unknown as {id: string; full_name: string; email: string}[]);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.error("No user found");
+        return;
+      }
+
+      // First get client IDs from trainer_clients
+      const { data: trainerClients, error: trainerError } = await supabase
+        .from("trainer_clients")
+        .select("client_id")
+        .eq("trainer_id", user.id)
+        .eq("status", "active");
+
+      if (trainerError) {
+        console.error("Error loading trainer_clients:", trainerError);
+        return;
+      }
+
+      if (!trainerClients || trainerClients.length === 0) {
+        console.log("No active clients found");
+        setClients([]);
+        return;
+      }
+
+      const clientIds = trainerClients.map(tc => tc.client_id);
+
+      // Then get profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", clientIds);
+
+      if (profilesError) {
+        console.error("Error loading profiles:", profilesError);
+        return;
+      }
+
+      console.log("Loaded clients:", profiles);
+      setClients(profiles || []);
+    } catch (error) {
+      console.error("Exception loading clients:", error);
     }
   }, [supabase]);
 
@@ -521,24 +552,28 @@ export default function CreateProgramStep2() {
           {/* Client Selection */}
           <div className="bg-card border rounded-lg p-4 mb-6">
             <h3 className="font-semibold mb-2">Избери клиенти *</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-32 overflow-y-auto">
-              {clients.map((client) => (
-                <label key={client.id} className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={selectedClients.includes(client.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedClients([...selectedClients, client.id]);
-                      } else {
-                        setSelectedClients(selectedClients.filter(id => id !== client.id));
-                      }
-                    }}
-                  />
-                  <span>{client.full_name}</span>
-                </label>
-              ))}
-            </div>
+            {clients.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Няма активни клиенти. Моля, добавете клиент преди да създадете програма.</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                {clients.map((client) => (
+                  <label key={client.id} className="flex items-center space-x-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedClients.includes(client.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedClients([...selectedClients, client.id]);
+                        } else {
+                          setSelectedClients(selectedClients.filter(id => id !== client.id));
+                        }
+                      }}
+                    />
+                    <span>{client.full_name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

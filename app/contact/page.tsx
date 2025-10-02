@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, Phone, MapPin, Clock, MessageSquare, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import Footer from "@/components/footer";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -338,7 +339,7 @@ export default function ContactPage() {
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
             Нашият екип е готов да ви помогне с всякакви въпроси или проблеми
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="px-8 py-3 bg-white text-blue-600 hover:bg-gray-100" asChild>
               <Link href="/sign-up">
@@ -351,6 +352,9 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

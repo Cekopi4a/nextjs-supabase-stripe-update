@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Check, Target, Star, Users, Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import Footer from "@/components/footer";
 
 export default function PricingPage() {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
@@ -270,7 +271,7 @@ export default function PricingPage() {
           <p className="text-xl text-blue-100 mb-8 leading-relaxed">
             Присъединете се към хиляди професионални треньори, които вече използват нашата платформа
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="px-10 py-4 text-lg h-auto bg-white text-blue-600 hover:bg-gray-100" asChild>
               <Link href="/sign-up">
@@ -283,6 +284,9 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

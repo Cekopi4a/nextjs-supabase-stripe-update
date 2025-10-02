@@ -28,7 +28,6 @@ import {
   Calendar as CalendarIcon,
   Dumbbell,
   Plus,
-  Edit,
   Trash2,
   Save,
   X,
@@ -51,6 +50,8 @@ interface WorkoutSession {
   program_id?: string;
   client_id: string;
   exercises?: unknown[];
+  workout_type?: string;
+  instructions?: string;
   workout_programs?: {
     name: string;
   };
@@ -109,6 +110,7 @@ export default function ClientCalendarPage() {
   const [programs, setPrograms] = useState<WorkoutProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showRestModal, setShowRestModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutSession | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -281,13 +283,31 @@ export default function ClientCalendarPage() {
 
   const openCreateModal = (date: Date, workoutType: string = 'strength', name: string = '') => {
     setSelectedDate(date);
+
+    if (workoutType === 'rest') {
+      setWorkoutForm({
+        name: name || 'Ден за почивка',
+        workout_type: 'rest',
+        difficulty_level: 'beginner',
+        estimated_duration_minutes: 0,
+        instructions: '',
+        program_id: ''
+      });
+      setEditingWorkout(null);
+      setShowRestModal(true);
+      return;
+    }
+
+    // Set first active program as default, or empty string if no programs
+    const defaultProgramId = programs.length > 0 ? programs[0].id : '';
+
     setWorkoutForm({
       name: name,
       workout_type: workoutType,
       difficulty_level: 'intermediate',
-      estimated_duration_minutes: workoutType === 'cardio' ? 30 : workoutType === 'rest' ? 0 : 60,
+      estimated_duration_minutes: workoutType === 'cardio' ? 30 : 60,
       instructions: '',
-      program_id: programs[0]?.id || ''
+      program_id: defaultProgramId
     });
     setEditingWorkout(null);
     setShowCreateModal(true);
@@ -295,7 +315,22 @@ export default function ClientCalendarPage() {
 
   const openEditModal = (workout: WorkoutSession) => {
     setEditingWorkout(workout);
-    setShowEditModal(true);
+
+    // Check if it's a rest day
+    if (workout.workout_type === 'rest') {
+      setSelectedDate(new Date(workout.scheduled_date + 'T00:00:00'));
+      setWorkoutForm({
+        name: workout.name,
+        workout_type: workout.workout_type || 'rest',
+        difficulty_level: 'beginner',
+        estimated_duration_minutes: 0,
+        instructions: workout.instructions || '',
+        program_id: ''
+      });
+      setShowRestModal(true);
+    } else {
+      setShowEditModal(true);
+    }
   };
 
   const saveWorkout = async () => {
@@ -310,32 +345,47 @@ export default function ClientCalendarPage() {
         name: workoutForm.name,
         scheduled_date: dateToLocalDateString(selectedDate),
         program_id: workoutForm.program_id || null,
-        status: 'planned',
+        status: 'planned' as const,
+        workout_type: workoutForm.workout_type,
+        instructions: workoutForm.instructions || null,
         exercises: editingWorkout?.exercises || [] // Keep existing exercises or empty array
       };
 
       if (editingWorkout) {
         // Update existing workout session
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("workout_sessions")
           .update(workoutData)
-          .eq("id", editingWorkout.id);
-        
-        if (error) throw error;
+          .eq("id", editingWorkout.id)
+          .select();
+
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
       } else {
         // Create new workout session
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("workout_sessions")
-          .insert(workoutData);
-        
-        if (error) throw error;
+          .insert(workoutData)
+          .select();
+
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
       }
 
       setShowCreateModal(false);
+      setShowRestModal(false);
       fetchWorkouts();
     } catch (error) {
       console.error("Error saving workout:", error);
-      alert("Грешка при запазване на тренировката");
+      // Log full error details
+      if (error && typeof error === 'object') {
+        console.error("Error details:", JSON.stringify(error, null, 2));
+      }
+      alert(`Грешка при запазване на тренировката: ${error instanceof Error ? error.message : 'Неизвестна грешка'}`);
     }
   };
 
@@ -383,6 +433,7 @@ export default function ClientCalendarPage() {
         scheduled_date: targetDateStr,
         program_id: workout.program_id,
         status: 'planned',
+        workout_type: workout.workout_type,
         exercises: workout.exercises || []
       }));
 
@@ -401,7 +452,46 @@ export default function ClientCalendarPage() {
     }
   };
 
+  const copyWorkout = async (workoutId: string, targetDate: Date) => {
+    const workout = workouts.find(w => w.id === workoutId);
+    if (!workout) {
+      alert("Тренировката не е намерена");
+      return;
+    }
+
+    try {
+      const workoutData = {
+        client_id: clientId,
+        name: workout.name,
+        scheduled_date: dateToLocalDateString(targetDate),
+        program_id: workout.program_id,
+        status: 'planned',
+        workout_type: workout.workout_type,
+        exercises: workout.exercises || []
+      };
+
+      const { error } = await supabase
+        .from("workout_sessions")
+        .insert(workoutData);
+
+      if (error) throw error;
+
+      fetchWorkouts();
+      alert("Тренировка успешно копирана!");
+    } catch (error) {
+      console.error("Error copying workout:", error);
+      alert("Грешка при копиране на тренировката");
+    }
+  };
+
   const handleQuickAction = (date: Date, action: string) => {
+    // Check if action is a copy workout action
+    if (action.startsWith('copy_workout_')) {
+      const workoutId = action.replace('copy_workout_', '');
+      copyWorkout(workoutId, date);
+      return;
+    }
+
     switch (action) {
       case 'add_rest':
         openCreateModal(date, 'rest', 'Ден за почивка');
@@ -548,6 +638,23 @@ export default function ClientCalendarPage() {
         />
       )}
 
+      {/* Rest Day Modal */}
+      {showRestModal && (
+        <RestDayModal
+          isOpen={showRestModal}
+          isEditing={!!editingWorkout}
+          selectedDate={selectedDate}
+          workoutForm={workoutForm}
+          setWorkoutForm={setWorkoutForm}
+          onSave={saveWorkout}
+          onClose={() => {
+            setShowRestModal(false);
+            setEditingWorkout(null);
+          }}
+          onDelete={editingWorkout ? () => deleteWorkout(editingWorkout.id) : undefined}
+        />
+      )}
+
       {/* Advanced Edit Modal */}
       <WorkoutEditModal
         isOpen={showEditModal}
@@ -606,34 +713,33 @@ function CalendarDayCell({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_rest')}>
-              <Bed className="h-4 w-4 mr-2" />
-              Add Rest
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onQuickAction(day.date, 'copy_day')}>
-              <Copy className="h-4 w-4 mr-2" />
-              {copySourceDate ? 'Paste Day' : 'Copy Day'}
+            <DropdownMenuItem onClick={() => onQuickAction(day.date, 'default')}>
+              <Plus className="h-4 w-4 mr-2" />
+              Добави тренировка
             </DropdownMenuItem>
             {day.workouts.length === 0 && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onQuickAction(day.date, 'default')}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Workout
-                </DropdownMenuItem>
-              </>
+              <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_rest')}>
+                <Bed className="h-4 w-4 mr-2" />
+                Добави почивка
+              </DropdownMenuItem>
             )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onQuickAction(day.date, 'copy_day')}>
+              <Copy className="h-4 w-4 mr-2" />
+              {copySourceDate ? 'Постави ден' : 'Копирай ден'}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
       
       <div className="space-y-1">
         {day.workouts.slice(0, 2).map((workout) => (
-          <WorkoutItem 
+          <WorkoutItem
             key={workout.id}
             workout={workout}
             onEdit={() => onEditWorkout(workout)}
             onDelete={() => onDeleteWorkout(workout.id)}
+            onCopy={() => onQuickAction(day.date, 'copy_workout_' + workout.id)}
           />
         ))}
         
@@ -659,18 +765,18 @@ function CalendarDayCell({
             <DropdownMenuContent align="center" className="w-48">
               <DropdownMenuItem onClick={() => onQuickAction(day.date, 'default')}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Workout
+                Добави тренировка
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_rest')}>
                 <Bed className="h-4 w-4 mr-2" />
-                Add Rest
+                Добави почивка
               </DropdownMenuItem>
               {copySourceDate && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => onQuickAction(day.date, 'copy_day')}>
                     <Copy className="h-4 w-4 mr-2" />
-                    Paste Day
+                    Постави ден
                   </DropdownMenuItem>
                 </>
               )}
@@ -682,29 +788,36 @@ function CalendarDayCell({
   );
 }
 
-function WorkoutItem({ 
-  workout, 
-  onEdit, 
-  onDelete 
-}: { 
-  workout: WorkoutSession; 
+function WorkoutItem({
+  workout,
+  onEdit,
+  onDelete,
+  onCopy
+}: {
+  workout: WorkoutSession;
   onEdit: () => void;
   onDelete: () => void;
+  onCopy: () => void;
 }) {
   const isCompleted = workout.status === 'completed';
   const isPlanned = workout.status === 'planned';
-  
+  const isRestDay = workout.workout_type === 'rest';
+
   return (
     <div
+      onClick={onEdit}
       className={`
         text-[10px] sm:text-xs p-1 sm:p-2 rounded border cursor-pointer transition-all hover:shadow-sm group
-        ${isCompleted ? 'bg-green-50 border-green-200 text-green-800' :
+        ${isRestDay ? 'bg-gray-50 border-gray-300 text-gray-700' :
+          isCompleted ? 'bg-green-50 border-green-200 text-green-800' :
           isPlanned ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-muted text-muted-foreground'}
       `}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-1">
-          {isCompleted ? (
+          {isRestDay ? (
+            <Bed className="h-2 w-2 sm:h-3 sm:w-3 text-gray-600 flex-shrink-0" />
+          ) : isCompleted ? (
             <CheckCircle2 className="h-2 w-2 sm:h-3 sm:w-3 text-green-600 flex-shrink-0" />
           ) : (
             <Dumbbell className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
@@ -712,7 +825,7 @@ function WorkoutItem({
           <span className="font-medium truncate">{workout.name}</span>
         </div>
 
-        {workout.exercises && workout.exercises.length > 0 && (
+        {!isRestDay && workout.exercises && workout.exercises.length > 0 && (
           <span className="text-[8px] sm:text-xs text-muted-foreground ml-1 hidden sm:inline">
             ({workout.exercises.length} упр.)
           </span>
@@ -725,10 +838,10 @@ function WorkoutItem({
             className="h-3 w-3 sm:h-4 sm:w-4 p-0"
             onClick={(e) => {
               e.stopPropagation();
-              onEdit();
+              onCopy();
             }}
           >
-            <Edit className="h-2 w-2 sm:h-3 sm:w-3" />
+            <Copy className="h-2 w-2 sm:h-3 sm:w-3" />
           </Button>
           <Button
             size="sm"
@@ -743,10 +856,10 @@ function WorkoutItem({
           </Button>
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
         <span className="text-[8px] sm:text-[10px] opacity-75 truncate">
-          {workout.workout_programs?.name || 'Тренировка'}
+          {isRestDay ? 'Почивен ден' : (workout.workout_programs?.name || 'Тренировка')}
         </span>
       </div>
     </div>
@@ -825,22 +938,28 @@ function WorkoutModal({
 
             <div>
               <Label htmlFor="program">Програма</Label>
-              <Select
-                value={workoutForm.program_id}
-                onValueChange={(value) => setWorkoutForm({...workoutForm, program_id: value === 'none' ? '' : value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Избери програма (опционално)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Без програма</SelectItem>
-                  {programs.map((program) => (
-                    <SelectItem key={program.id} value={program.id}>
-                      {program.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {programs.length > 0 ? (
+                <Select
+                  value={workoutForm.program_id}
+                  onValueChange={(value) => setWorkoutForm({...workoutForm, program_id: value === 'none' ? '' : value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Избери програма (опционално)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Без програма</SelectItem>
+                    {programs.map((program) => (
+                      <SelectItem key={program.id} value={program.id}>
+                        {program.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="text-sm text-muted-foreground p-2 border rounded bg-muted/30">
+                  Няма активни програми. Тренировката ще бъде създадена без програма.
+                </div>
+              )}
             </div>
 
             <div>
@@ -912,6 +1031,126 @@ function WorkoutModal({
             <Button onClick={onSave} className="flex-1">
               <Save className="h-4 w-4 mr-2" />
               {isEditing ? 'Запази промените' : 'Създай тренировка'}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function RestDayModal({
+  isOpen,
+  isEditing,
+  selectedDate,
+  workoutForm,
+  setWorkoutForm,
+  onSave,
+  onClose,
+  onDelete
+}: {
+  isOpen: boolean;
+  isEditing?: boolean;
+  selectedDate: Date | null;
+  workoutForm: {
+    name: string;
+    workout_type: string;
+    difficulty_level: string;
+    estimated_duration_minutes: number;
+    instructions: string;
+    program_id: string;
+  };
+  setWorkoutForm: (form: {
+    name: string;
+    workout_type: string;
+    difficulty_level: string;
+    estimated_duration_minutes: number;
+    instructions: string;
+    program_id: string;
+  }) => void;
+  onSave: () => void;
+  onClose: () => void;
+  onDelete?: () => void;
+}) {
+  if (!isOpen || !selectedDate) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <Card className="w-full max-w-md">
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-gray-600" />
+              <h3 className="text-lg font-semibold">
+                {isEditing ? 'Редактирай почивен ден' : 'Добави почивен ден'}
+              </h3>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="date">Дата</Label>
+              <Input
+                id="date"
+                type="date"
+                value={dateToLocalDateString(selectedDate)}
+                readOnly
+                className="bg-muted/30"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="rest-name">Име (опционално)</Label>
+              <Input
+                id="rest-name"
+                value={workoutForm.name}
+                onChange={(e) => setWorkoutForm({...workoutForm, name: e.target.value})}
+                placeholder="Напр: Активна почивка"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="rest-instructions">Бележки (опционално)</Label>
+              <Textarea
+                id="rest-instructions"
+                value={workoutForm.instructions}
+                onChange={(e) => setWorkoutForm({...workoutForm, instructions: e.target.value})}
+                placeholder="Напр: Лека разходка, стречинг..."
+                rows={3}
+              />
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <p className="text-sm text-gray-600">
+                Почивните дни са важна част от тренировъчния процес. Използвайте ги за възстановяване и регенерация.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-6">
+            {isEditing && onDelete && (
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (confirm("Сигурни ли сте, че искате да изтриете този почивен ден?")) {
+                    onDelete();
+                    onClose();
+                  }
+                }}
+                className="flex-shrink-0"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Отказ
+            </Button>
+            <Button onClick={onSave} className="flex-1 bg-gray-600 hover:bg-gray-700">
+              <Save className="h-4 w-4 mr-2" />
+              {isEditing ? 'Запази промените' : 'Добави почивка'}
             </Button>
           </div>
         </div>
