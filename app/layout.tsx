@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/header";
+import Footer from "@/components/footer";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
@@ -36,6 +37,7 @@ export default function RootLayout({
             <main className="flex-1 flex flex-col">
               {children}
             </main>
+            <Footer />
           </div>
           <Toaster richColors />
         </ThemeProvider>

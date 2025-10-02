@@ -4,8 +4,7 @@ import GoogleAuthButton from "@/components/google-auth-button";
 import { FormMessage, Message } from "@/components/form-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Dumbbell, Check } from "lucide-react";
+import { Dumbbell, Zap, Shield, BarChart3 } from "lucide-react";
 import Link from "next/link";
 
 export default async function SignUp(props: {
@@ -14,148 +13,155 @@ export default async function SignUp(props: {
   const searchParams = await props.searchParams;
 
   const features = [
-    "Персонализирани тренировъчни програми",
-    "Проследяване на прогреса",
-    "Професионални треньори",
-    "Мобилно приложение"
+    { icon: Zap, text: "Персонализирани тренировъчни програми" },
+    { icon: BarChart3, text: "Детайлно проследяване на прогрес" },
+    { icon: Shield, text: "Професионални хранителни планове" },
   ];
 
   return (
-    <div className="flex-1 flex items-center justify-center p-4 bg-gray-50">
-      <div className="w-full max-w-4xl">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
-          
-          {/* Left side - Features */}
-          <div className="hidden lg:block">
-            <div className="space-y-6">
-              <div>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mb-4">
-                  <Dumbbell className="h-6 w-6 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Започнете своето fitness пътуване
-                </h2>
-                <p className="text-gray-600 text-lg leading-relaxed">
-                  Присъединете се към хиляди хора, които вече постигат своите цели с нашата платформа.
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                      <Check className="h-3 w-3 text-green-600" />
-                    </div>
-                    <span className="text-gray-700">{feature}</span>
+    <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+      {/* Left side - Visual */}
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" />
+        <div className="relative z-20 flex items-center text-lg font-medium">
+          <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center mr-3">
+            <Dumbbell className="h-5 w-5" />
+          </div>
+          Fitness Training
+        </div>
+        <div className="relative z-20 mt-auto space-y-8">
+          <div>
+            <h2 className="text-3xl font-bold mb-4">
+              Започнете своето fitness пътуване днес
+            </h2>
+            <p className="text-lg opacity-90 leading-relaxed">
+              Присъединете се към хиляди треньори, които вече използват най-модерната платформа
+              за управление на клиенти и програми.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon className="h-4 w-4" />
                   </div>
-                ))}
+                  <span className="text-base leading-relaxed">{feature.text}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
+            <p className="text-sm leading-relaxed mb-3">
+              &ldquo;Невероятна платформа! Сега мога да управлявам всичките си клиенти
+              на едно място и да им давам най-добрите програми.&rdquo;
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center font-semibold">
+                ГП
+              </div>
+              <div>
+                <div className="font-medium">Георги Петров</div>
+                <div className="text-xs opacity-80">Сертифициран треньор</div>
               </div>
             </div>
           </div>
-          
-          {/* Right side - Form */}
-          <div className="w-full max-w-md mx-auto lg:mx-0">
-            <Card className="p-8 bg-white shadow-lg">
-              
-              {/* Mobile header */}
-              <div className="text-center mb-8 lg:hidden">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Dumbbell className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Създайте акаунт</h1>
-                <p className="text-gray-600">
-                  Регистрирайте се безплатно и започнете още днес
-                </p>
-              </div>
+        </div>
+      </div>
 
-              {/* Google Auth */}
-              <div className="mb-6">
-                <GoogleAuthButton mode="sign-up" />
-              </div>
+      {/* Right side - Form */}
+      <div className="lg:p-8">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+          <div className="flex flex-col space-y-2 text-center">
+            <div className="lg:hidden w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Dumbbell className="h-6 w-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Създайте акаунт
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Въведете имейла си за да започнете безплатно
+            </p>
+          </div>
 
-              {/* Divider */}
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 text-gray-500 bg-white">или</span>
-                </div>
-              </div>
+          <div className="grid gap-6">
+            <GoogleAuthButton mode="sign-up" />
 
-              {/* Form */}
-              <form className="space-y-4" action={signUpAction}>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                    Имейл адрес
-                  </Label>
-                  <Input 
-                    id="email"
-                    name="email" 
-                    type="email"
-                    placeholder="name@example.com" 
-                    required 
-                    className="w-full h-11"
-                    autoComplete="email"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                    Парола
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Или продължете с
+                </span>
+              </div>
+            </div>
+
+            <form action={signUpAction}>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">
+                    Имейл
                   </Label>
                   <Input
-                    id="password"
-                    type="password"
-                    name="password"
-                    placeholder="Създайте сигурна парола"
+                    id="email"
+                    name="email"
+                    placeholder="name@example.com"
+                    type="email"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    autoCorrect="off"
                     required
-                    className="w-full h-11"
-                    autoComplete="new-password"
                   />
-                  <p className="text-xs text-gray-500">
-                    Паролата трябва да съдържа поне 8 символа
-                  </p>
                 </div>
-
-                <div className="pt-2">
-                  <AuthSubmitButton />
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Парола</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    placeholder="Минимум 8 символа"
+                  />
                 </div>
-                
                 <FormMessage message={searchParams} />
-              </form>
-
-              {/* Terms */}
-              <div className="mt-6 text-center">
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  С регистрацията вие се съгласявате с нашите{" "}
-                  <Link href="/terms" className="text-blue-600 hover:text-blue-500">
-                    Условия за ползване
-                  </Link>{" "}
-                  и{" "}
-                  <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
-                    Политика за поверителност
-                  </Link>
-                </p>
+                <AuthSubmitButton />
               </div>
+            </form>
 
-              {/* Sign in link */}
-              <div className="mt-8 text-center border-t pt-6">
-                <p className="text-sm text-gray-600">
-                  Вече имате акаунт?{" "}
-                  <Link 
-                    className="text-blue-600 hover:text-blue-500 font-medium" 
-                    href="/sign-in"
-                  >
-                    Влезте тук
-                  </Link>
-                </p>
-              </div>
-            </Card>
+            <p className="px-8 text-center text-xs text-muted-foreground">
+              С регистрацията вие се съгласявате с нашите{" "}
+              <Link
+                href="/terms"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Условия за ползване
+              </Link>{" "}
+              и{" "}
+              <Link
+                href="/privacy"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Политика за поверителност
+              </Link>
+              .
+            </p>
           </div>
+
+          <p className="px-8 text-center text-sm text-muted-foreground">
+            Вече имате акаунт?{" "}
+            <Link
+              href="/sign-in"
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Влезте
+            </Link>
+          </p>
         </div>
       </div>
     </div>

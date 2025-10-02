@@ -24,6 +24,9 @@
 - `lucide-react` - Icons
 - `next-themes` - Theme management
 - `resend` - Email service
+- `sonner` - Toast notifications
+- `lodash` - Utility functions
+- `@react-email/*` - Email templates
 
 ## 📁 Архитектура на проекта
 
@@ -37,18 +40,37 @@ app/
 │   ├── clients/     # Client management
 │   ├── programs/    # Training programs
 │   ├── nutrition/   # Nutrition plans
+│   ├── nutrition-plans/ # Nutrition plan builder
 │   ├── calendar/    # Calendar functionality
-│   └── ...
-└── join/           # Invitation handling
+│   ├── exercises/   # Exercise library
+│   ├── foods/       # Food library
+│   ├── recipes/     # Recipe management
+│   ├── workout-builder/ # Workout builder
+│   ├── workouts/    # Workout management
+│   ├── account/     # Account settings
+│   ├── analytics/   # Analytics dashboard
+│   ├── goals/       # Goal tracking
+│   └── subscription/ # Subscription management
+├── join/           # Invitation handling
+├── pricing/        # Pricing page
+├── about/          # About page
+└── contact/        # Contact page
 ```
 
 ### Основни функционалности
 1. **Client Management** - Управление на клиенти и покани
 2. **Training Programs** - Създаване и управление на тренировъчни програми
-3. **Nutrition Planning** - Хранителни планове и макроси
-4. **Calendar** - Календар за тренировки
-5. **Billing** - Subscription management via Stripe
-6. **Authentication** - Multi-provider auth
+3. **Workout Builder** - Конструктор на тренировки с drag & drop
+4. **Exercise Library** - Библиотека с упражнения
+5. **Nutrition Planning** - Хранителни планове и макроси
+6. **Food Library** - Библиотека с храни и макронутриенти
+7. **Recipe Management** - Управление на рецепти
+8. **Calendar** - Календар за тренировки
+9. **Analytics** - Статистика и анализи
+10. **Goals** - Проследяване на цели
+11. **Billing** - Subscription management via Stripe (Free/Pro/Beast plans)
+12. **Authentication** - Multi-provider auth
+13. **Account Settings** - Управление на профил и настройки
 
 ## 🔧 Development правила
 
@@ -121,13 +143,24 @@ app/
 
 ### Required Environment Variables
 ```bash
-NEXT_PUBLIC_UPDATE_PUBLIC_KEY=...
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+
+# Update.dev
+NEXT_PUBLIC_UPDATE_PUBLISHABLE_KEY=...
+
+# Resend (Email)
+RESEND_API_KEY=...
+RESEND_FROM_EMAIL=...
+
+# Site
+NEXT_PUBLIC_SITE_URL=...
 ```
 
 ### Development
-- Port: 3000
+- Port: 3001 (configured in NEXT_PUBLIC_SITE_URL)
 - Hot reload enabled
 - TypeScript strict mode
 
