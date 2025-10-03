@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validate required fields
-    if (!name || !calories_per_100g || !category) {
+    if (!name || calories_per_100g === undefined || calories_per_100g === null || !category) {
       return NextResponse.json(
         { error: "Name, calories per 100g, and category are required" },
         { status: 400 }
@@ -120,7 +120,11 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("Error creating food:", error);
-      return NextResponse.json({ error: "Failed to create food" }, { status: 500 });
+      return NextResponse.json({
+        error: "Failed to create food",
+        details: error.message,
+        code: error.code
+      }, { status: 500 });
     }
 
     return NextResponse.json(food, { status: 201 });

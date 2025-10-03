@@ -10,17 +10,16 @@ interface NutritionPlanMealItem {
 // POST - Копиране на хранения от един ден в други дни
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: planId } = await params;
     const supabase = await createSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
       return NextResponse.json({ error: 'Не сте оторизиран' }, { status: 401 });
     }
-
-    const planId = params.id;
     const body = await request.json();
     const { source_day, target_days } = body;
 

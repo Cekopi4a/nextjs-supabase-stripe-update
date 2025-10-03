@@ -68,7 +68,18 @@ export async function POST(request: NextRequest) {
 
     const response: {
       valid: boolean,
-      invitation: any,
+      invitation: {
+        id: string;
+        email: string;
+        first_name: string | null;
+        personal_message: string | null;
+        trainer_id: string;
+        trainer_name: string;
+        trainer_email: string;
+        status: string;
+        expires_at: string;
+        is_expired: boolean;
+      },
       userExists: boolean,
       error: string | null
     } = {

@@ -37,15 +37,38 @@ export default async function FoodsPage() {
     }
   }
 
-  const { data: foods, error } = await foodsQuery.order("name", { ascending: true });
+  // Fetch foods
+  const { data: rawFoods, error } = await foodsQuery;
 
   if (error) {
     console.error("Error fetching foods:", error);
   }
 
+  // Sort foods on server the same way as client for hydration consistency
+  let foods = rawFoods || [];
+  // Същият Collator като в клиента
+  const collator = new Intl.Collator("bg", {
+    sensitivity: "base",
+    usage: "sort",
+    numeric: true,
+    ignorePunctuation: true,
+  });
+  if (profile?.role === "trainer" && user?.id) {
+    foods = [...foods].sort((a, b) => {
+      // First, sort by ownership (own foods first)
+      if (a.created_by === user.id && b.created_by !== user.id) return -1;
+      if (a.created_by !== user.id && b.created_by === user.id) return 1;
+      // Then sort alphabetically
+      return collator.compare(a.name, b.name);
+    });
+  } else {
+    // For clients, just sort alphabetically
+    foods = [...foods].sort((a, b) => collator.compare(a.name, b.name));
+  }
+
   return (
     <FoodsPageClient
-      initialFoods={foods || []}
+      initialFoods={foods}
       userRole={profile?.role as "trainer" | "client" || "client"}
       userId={user?.id || ""}
     />

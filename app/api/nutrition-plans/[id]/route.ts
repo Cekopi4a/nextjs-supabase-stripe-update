@@ -4,9 +4,10 @@ import { createSupabaseClient } from '@/utils/supabase/server';
 // GET - Получаване на конкретен хранителен режим
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -32,7 +33,7 @@ export async function GET(
           )
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('trainer_id', user.id)
       .single();
 
@@ -54,9 +55,10 @@ export async function GET(
 // PUT - Обновяване на хранителен режим
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -99,7 +101,7 @@ export async function PUT(
         is_active: is_active !== undefined ? is_active : true,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('trainer_id', user.id)
       .select()
       .single();
@@ -127,9 +129,10 @@ export async function PUT(
 // DELETE - Изтриване на хранителен режим
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const supabase = await createSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -140,7 +143,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('nutrition_plans')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('trainer_id', user.id);
 
     if (error) {

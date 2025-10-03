@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -58,6 +58,13 @@ export default function FoodsPageClient({
   userRole,
   userId
 }: FoodsPageClientProps) {
+  // Използваме един и същ Collator като на сървъра, за да избегнем hydration разминавания
+  const collator = useMemo(() => new Intl.Collator("bg", {
+    sensitivity: "base",
+    usage: "sort",
+    numeric: true,
+    ignorePunctuation: true,
+  }), []);
   const [foods, setFoods] = useState<Food[]>(initialFoods);
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -90,16 +97,32 @@ export default function FoodsPageClient({
       const url = isEditing ? `/api/foods/${editingFood.id}` : "/api/foods";
       const method = isEditing ? "PUT" : "POST";
 
+      // Ensure numeric fields are valid numbers
+      const sanitizedData = {
+        ...formData,
+        calories_per_100g: Number(formData.calories_per_100g) || 0,
+        protein_per_100g: Number(formData.protein_per_100g) || 0,
+        carbs_per_100g: Number(formData.carbs_per_100g) || 0,
+        fat_per_100g: Number(formData.fat_per_100g) || 0,
+        fiber_per_100g: Number(formData.fiber_per_100g) || 0,
+        sugar_per_100g: Number(formData.sugar_per_100g) || 0,
+        sodium_per_100g: Number(formData.sodium_per_100g) || 0,
+      };
+
+      console.log('Sending data:', sanitizedData);
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(sanitizedData),
       });
 
       if (!response.ok) {
-        throw new Error(isEditing ? "Грешка при редактиране на храната" : "Грешка при създаване на храната");
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('API Error:', errorData);
+        throw new Error(errorData.error || (isEditing ? "Грешка при редактиране на храната" : "Грешка при създаване на храната"));
       }
 
       const updatedFood = await response.json();
@@ -198,8 +221,8 @@ export default function FoodsPageClient({
     setIsDetailDialogOpen(true);
   };
 
-  // Filter and sort foods
-  const filteredAndSortedFoods = () => {
+  // Filter and sort foods with useMemo for stable rendering
+  const filteredAndSortedFoods = useMemo(() => {
     let filtered = foods;
 
     // Filter by search term
@@ -212,19 +235,19 @@ export default function FoodsPageClient({
 
     // Sort: own foods first (for trainers), then alphabetically
     if (userRole === "trainer") {
-      return filtered.sort((a, b) => {
+      return [...filtered].sort((a, b) => {
         // First, sort by ownership (own foods first)
         if (a.created_by === userId && b.created_by !== userId) return -1;
         if (a.created_by !== userId && b.created_by === userId) return 1;
 
         // Then sort alphabetically
-        return a.name.localeCompare(b.name);
+        return collator.compare(a.name, b.name);
       });
     }
 
     // For clients, just sort alphabetically
-    return filtered.sort((a, b) => a.name.localeCompare(b.name));
-  };
+    return [...filtered].sort((a, b) => collator.compare(a.name, b.name));
+  }, [foods, searchTerm, userRole, userId, collator]);
 
   const renderForm = () => (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -437,7 +460,7 @@ export default function FoodsPageClient({
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredAndSortedFoods().length === 0 ? (
+          {filteredAndSortedFoods.length === 0 ? (
             <div className="col-span-full">
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
@@ -450,7 +473,7 @@ export default function FoodsPageClient({
               </Card>
             </div>
           ) : (
-            filteredAndSortedFoods().map((food) => (
+            filteredAndSortedFoods.map((food) => (
               <Card
                 key={food.id}
                 className="hover:shadow-md transition-shadow cursor-pointer"
@@ -704,7 +727,7 @@ export default function FoodsPageClient({
       </div>
 
       {/* Foods Sections */}
-      {filteredAndSortedFoods().length === 0 ? (
+      {filteredAndSortedFoods.length === 0 ? (
         <div className="col-span-full">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -724,14 +747,14 @@ export default function FoodsPageClient({
       ) : (
         <>
           {/* Own Foods Section */}
-          {filteredAndSortedFoods().some(food => food.created_by === userId) && (
+          {filteredAndSortedFoods.some(food => food.created_by === userId) && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
                 <Apple className="h-5 w-5 mr-2" />
                 Моите храни
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredAndSortedFoods()
+                {filteredAndSortedFoods
                   .filter(food => food.created_by === userId)
                   .map((food) => (
             <Card
@@ -840,14 +863,14 @@ export default function FoodsPageClient({
           )}
 
           {/* Global Foods Section */}
-          {filteredAndSortedFoods().some(food => !food.created_by) && (
+          {filteredAndSortedFoods.some(food => !food.created_by) && (
             <div>
               <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center">
                 <Apple className="h-5 w-5 mr-2" />
                 Общи храни
               </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredAndSortedFoods()
+                {filteredAndSortedFoods
                   .filter(food => !food.created_by)
                   .map((food) => (
             <Card

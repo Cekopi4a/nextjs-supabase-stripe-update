@@ -9,17 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { sendInvitationAction } from "@/utils/actions/invitation-actions";
-import { 
+import {
   Send,
   Copy,
   Check,
   Mail,
-  Link2,
   Users,
   Clock,
   RefreshCw,
   Trash2,
-  Eye,
   ChevronLeft,
   AlertCircle,
   CheckCircle2,

@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { dateToLocalDateString } from "@/utils/date-utils";
+import FoodSearch from "@/components/ui/food-search";
+import RecipeSearch from "@/components/ui/recipe-search";
 import {
   ArrowLeft,
   Apple,
@@ -20,6 +25,8 @@ import {
   Coffee,
   UtensilsCrossed,
   Sunset,
+  CheckCircle2,
+  ChefHat,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -35,6 +42,28 @@ interface MealPlan {
   fats?: number;
   notes?: string;
   status: "planned" | "completed" | "skipped";
+}
+
+interface Food {
+  id: string;
+  name: string;
+  calories_per_100g: number;
+  protein_per_100g: number;
+  carbs_per_100g: number;
+  fat_per_100g: number;
+  category: string;
+}
+
+interface Recipe {
+  id: string;
+  name: string;
+  description?: string;
+  servings: number;
+  calories_per_serving: number;
+  protein_per_serving: number;
+  carbs_per_serving: number;
+  fat_per_serving: number;
+  category: string;
 }
 
 interface CalendarDay {
@@ -347,7 +376,6 @@ export default function EditNutritionPlanPage({
             setShowDayModal(false);
             fetchMeals();
           }}
-          supabase={supabase}
         />
       )}
     </div>
@@ -425,38 +453,51 @@ function DayMealsModal({
   meals,
   clientId,
   onClose,
-  supabase,
 }: {
   isOpen: boolean;
   selectedDate: Date;
   meals: MealPlan[];
   clientId: string;
   onClose: () => void;
-  supabase: any;
 }) {
   const [editingMeal, setEditingMeal] = useState<MealPlan | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState<string>('breakfast');
 
   const handleSaveMeal = async (meal: MealPlan) => {
     try {
-      if (meal.id) {
-        // Update existing meal
-        const { error } = await supabase
-          .from("daily_meals")
-          .update({
-            meal_name: meal.meal_name,
-            calories: meal.calories,
-            protein: meal.protein,
-            carbs: meal.carbs,
-            fats: meal.fats,
-            notes: meal.notes,
-          })
-          .eq("id", meal.id);
+      // Validate meal data
+      if (!meal.meal_name || !meal.meal_name.trim()) {
+        alert("Моля въведете име на ястието");
+        return;
+      }
 
-        if (error) throw error;
+      if (meal.id) {
+        // Update existing meal using API
+        const response = await fetch('/api/daily-meals', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: meal.id,
+            meal_name: meal.meal_name,
+            calories: meal.calories || 0,
+            protein: meal.protein || 0,
+            carbs: meal.carbs || 0,
+            fats: meal.fats || 0,
+            notes: meal.notes || "",
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to update meal');
+        }
       } else {
-        // Create new meal
-        const { error } = await supabase.from("daily_meals").insert({
+        // Create new meal using API
+        const mealData = {
           client_id: clientId,
           meal_type: meal.meal_type,
           meal_name: meal.meal_name,
@@ -467,17 +508,35 @@ function DayMealsModal({
           fats: meal.fats || 0,
           notes: meal.notes || "",
           status: "planned",
+        };
+
+        console.log("Creating meal with data:", mealData);
+
+        const response = await fetch('/api/daily-meals', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(mealData),
         });
 
-        if (error) throw error;
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("API error response:", error);
+          throw new Error(error.error || 'Failed to create meal');
+        }
+
+        const result = await response.json();
+        console.log("Meal created successfully:", result);
       }
 
       setEditingMeal(null);
       setIsCreating(false);
+      setShowAddMealModal(false);
       onClose(); // This will trigger fetchMeals
     } catch (error) {
       console.error("Error saving meal:", error);
-      alert("Грешка при запазване на ястието");
+      alert(`Грешка при запазване на ястието: ${error instanceof Error ? error.message : 'Неизвестна грешка'}`);
     }
   };
 
@@ -485,17 +544,38 @@ function DayMealsModal({
     if (!confirm("Сигурни ли сте, че искате да изтриете това ястие?")) return;
 
     try {
-      const { error } = await supabase
-        .from("daily_meals")
-        .delete()
-        .eq("id", mealId);
+      const response = await fetch(`/api/daily-meals?id=${mealId}`, {
+        method: 'DELETE',
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete meal');
+      }
+
       onClose();
     } catch (error) {
       console.error("Error deleting meal:", error);
       alert("Грешка при изтриване на ястието");
     }
+  };
+
+  const openAddMealModal = (mealType: string) => {
+    setSelectedMealType(mealType);
+    setEditingMeal({
+      meal_type: mealType as any,
+      meal_name: "",
+      scheduled_date: dateToLocalDateString(selectedDate),
+      client_id: clientId,
+      status: "planned",
+    });
+    setShowAddMealModal(true);
+  };
+
+  const openEditModal = (meal: MealPlan) => {
+    setEditingMeal(meal);
+    setSelectedMealType(meal.meal_type);
+    setShowAddMealModal(true);
   };
 
   const formatDate = (date: Date) => {
@@ -510,258 +590,620 @@ function DayMealsModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold flex items-center">
-              <Apple className="h-6 w-6 mr-2 text-green-600" />
-              Хранене за {formatDate(selectedDate)}
-            </h3>
-            <div className="flex gap-2">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  setIsCreating(true);
-                  setEditingMeal({
-                    meal_type: "breakfast",
-                    meal_name: "",
-                    scheduled_date: dateToLocalDateString(selectedDate),
-                    client_id: clientId,
-                    status: "planned",
-                  });
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Добави ястие
-              </Button>
+    <>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold flex items-center">
+                <Apple className="h-6 w-6 mr-2 text-green-600" />
+                Хранене за {formatDate(selectedDate)}
+              </h3>
               <Button variant="ghost" size="sm" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
-          </div>
 
-          {/* Meal Form */}
-          {(editingMeal || isCreating) && (
-            <Card className="p-4 mb-4 bg-green-50">
-              <MealForm
-                meal={editingMeal!}
-                onSave={handleSaveMeal}
-                onCancel={() => {
-                  setEditingMeal(null);
-                  setIsCreating(false);
-                }}
-              />
-            </Card>
-          )}
+            {/* Meals by type */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {MEAL_TYPES.map((mealType) => {
+                const typeMeals = meals.filter(
+                  (m) => m.meal_type === mealType.value
+                );
+                const totalCalories = typeMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+                const totalProtein = typeMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0);
 
-          {/* Meals by type */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {MEAL_TYPES.map((mealType) => {
-              const typeMeals = meals.filter(
-                (m) => m.meal_type === mealType.value
-              );
-
-              return (
-                <Card key={mealType.value} className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-2 rounded-lg ${mealType.color}`}>
-                        <mealType.icon className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">{mealType.label}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {mealType.time}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {typeMeals.map((meal) => (
-                      <div
-                        key={meal.id}
-                        className="text-sm p-3 rounded border bg-white"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <span className="font-medium">{meal.meal_name}</span>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={() => setEditingMeal(meal)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 text-destructive"
-                              onClick={() => handleDeleteMeal(meal.id!)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
+                return (
+                  <Card key={mealType.value} className="p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`p-2 rounded-lg ${mealType.color}`}>
+                          <mealType.icon className="h-4 w-4" />
                         </div>
-
-                        {(meal.calories || meal.protein) && (
-                          <div className="text-xs text-muted-foreground grid grid-cols-2 gap-1">
-                            {meal.calories && meal.calories > 0 && (
-                              <span>{meal.calories} кал</span>
-                            )}
-                            {meal.protein && meal.protein > 0 && (
-                              <span>{meal.protein}г П</span>
-                            )}
-                          </div>
-                        )}
+                        <div>
+                          <h4 className="font-semibold">{mealType.label}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {mealType.time}
+                          </p>
+                        </div>
                       </div>
-                    ))}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openAddMealModal(mealType.value)}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Добави
+                      </Button>
+                    </div>
 
-                    {typeMeals.length === 0 && (
-                      <div className="text-center text-muted-foreground text-sm py-4 border-2 border-dashed rounded">
-                        Няма планирани храни
+                    {typeMeals.length > 0 && (
+                      <div className="mb-3 p-2 bg-muted/30 rounded text-sm">
+                        <div className="flex justify-between">
+                          <span>Общо: {totalCalories} кал</span>
+                          <span>{totalProtein}г протеин</span>
+                        </div>
                       </div>
                     )}
+
+                    <div className="space-y-2">
+                      {typeMeals.map((meal) => (
+                        <div
+                          key={meal.id}
+                          className="text-sm p-3 rounded border bg-white hover:shadow-sm group transition-all"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              {meal.status === 'completed' ? (
+                                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                              ) : (
+                                <mealType.icon className="h-4 w-4 flex-shrink-0" />
+                              )}
+                              <span className="font-medium truncate">{meal.meal_name}</span>
+                            </div>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => openEditModal(meal)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                                onClick={() => handleDeleteMeal(meal.id!)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {(meal.calories || meal.protein || meal.carbs || meal.fats) && (
+                            <div className="text-xs opacity-75 grid grid-cols-4 gap-2">
+                              {meal.calories && meal.calories > 0 && <span>{meal.calories} кал</span>}
+                              {meal.protein && meal.protein > 0 && <span>{meal.protein}г П</span>}
+                              {meal.carbs && meal.carbs > 0 && <span>{meal.carbs}г В</span>}
+                              {meal.fats && meal.fats > 0 && <span>{meal.fats}г М</span>}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {typeMeals.length === 0 && (
+                        <div className="text-center text-muted-foreground text-sm py-4 border-2 border-dashed rounded">
+                          Няма добавени храни
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* Daily totals */}
+            {meals.length > 0 && (
+              <Card className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50">
+                <h4 className="font-semibold mb-3 text-green-800">Общо за деня</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {meals.reduce((sum, meal) => sum + (meal.calories || 0), 0)}
+                    </div>
+                    <div className="text-muted-foreground">Калории</div>
                   </div>
-                </Card>
-              );
-            })}
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {meals.reduce((sum, meal) => sum + (meal.protein || 0), 0)}г
+                    </div>
+                    <div className="text-muted-foreground">Протеини</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">
+                      {meals.reduce((sum, meal) => sum + (meal.carbs || 0), 0)}г
+                    </div>
+                    <div className="text-muted-foreground">Въглехидрати</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {meals.reduce((sum, meal) => sum + (meal.fats || 0), 0)}г
+                    </div>
+                    <div className="text-muted-foreground">Мазнини</div>
+                  </div>
+                </div>
+              </Card>
+            )}
           </div>
-        </div>
-      </Card>
-    </div>
+        </Card>
+      </div>
+
+      {/* Add/Edit Meal Modal */}
+      {showAddMealModal && editingMeal && (
+        <MealModal
+          isOpen={showAddMealModal}
+          isEditing={!!editingMeal.id}
+          selectedMealType={selectedMealType}
+          meal={editingMeal}
+          onSave={handleSaveMeal}
+          onClose={() => {
+            setShowAddMealModal(false);
+            setEditingMeal(null);
+          }}
+        />
+      )}
+    </>
   );
 }
 
-function MealForm({
+interface SelectedItem {
+  id: string;
+  name: string;
+  quantity: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  type: 'food' | 'recipe';
+}
+
+function MealModal({
+  isOpen,
+  isEditing,
+  selectedMealType,
   meal,
   onSave,
-  onCancel,
+  onClose,
 }: {
+  isOpen: boolean;
+  isEditing: boolean;
+  selectedMealType: string;
   meal: MealPlan;
   onSave: (meal: MealPlan) => void;
-  onCancel: () => void;
+  onClose: () => void;
 }) {
   const [formData, setFormData] = useState(meal);
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [selectedFood, setSelectedFood] = useState<Food | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [quantity, setQuantity] = useState(100);
+  const [recipeServings, setRecipeServings] = useState(1);
+
+  const mealType = MEAL_TYPES.find((t) => t.value === selectedMealType);
+
+  // Calculate totals from selected items
+  const calculateTotals = (items: SelectedItem[]) => {
+    return items.reduce(
+      (acc, item) => ({
+        calories: acc.calories + item.calories,
+        protein: acc.protein + item.protein,
+        carbs: acc.carbs + item.carbs,
+        fats: acc.fats + item.fats,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fats: 0 }
+    );
+  };
+
+  const handleAddFood = () => {
+    if (!selectedFood) return;
+
+    const newItem: SelectedItem = {
+      id: `food-${selectedFood.id}-${Date.now()}`,
+      name: selectedFood.name,
+      quantity: quantity,
+      calories: Math.round((selectedFood.calories_per_100g * quantity) / 100),
+      protein: Math.round((selectedFood.protein_per_100g * quantity) / 100),
+      carbs: Math.round((selectedFood.carbs_per_100g * quantity) / 100),
+      fats: Math.round((selectedFood.fat_per_100g * quantity) / 100),
+      type: 'food',
+    };
+
+    const newItems = [...selectedItems, newItem];
+    setSelectedItems(newItems);
+
+    // Update form data with totals and generate meal name
+    const totals = calculateTotals(newItems);
+    const generatedName = newItems.map(item => item.name).join(', ');
+    setFormData({
+      ...formData,
+      meal_name: generatedName,
+      calories: totals.calories,
+      protein: totals.protein,
+      carbs: totals.carbs,
+      fats: totals.fats,
+    });
+
+    // Reset selection
+    setSelectedFood(null);
+    setQuantity(100);
+  };
+
+  const handleAddRecipe = () => {
+    if (!selectedRecipe) return;
+
+    const newItem: SelectedItem = {
+      id: `recipe-${selectedRecipe.id}-${Date.now()}`,
+      name: selectedRecipe.name,
+      quantity: recipeServings,
+      calories: Math.round(selectedRecipe.calories_per_serving * recipeServings),
+      protein: Math.round(selectedRecipe.protein_per_serving * recipeServings),
+      carbs: Math.round(selectedRecipe.carbs_per_serving * recipeServings),
+      fats: Math.round(selectedRecipe.fat_per_serving * recipeServings),
+      type: 'recipe',
+    };
+
+    const newItems = [...selectedItems, newItem];
+    setSelectedItems(newItems);
+
+    // Update form data with totals and generate meal name
+    const totals = calculateTotals(newItems);
+    const generatedName = newItems.map(item => item.name).join(', ');
+    setFormData({
+      ...formData,
+      meal_name: generatedName,
+      calories: totals.calories,
+      protein: totals.protein,
+      carbs: totals.carbs,
+      fats: totals.fats,
+    });
+
+    // Reset selection
+    setSelectedRecipe(null);
+    setRecipeServings(1);
+  };
+
+  const handleRemoveItem = (itemId: string) => {
+    const newItems = selectedItems.filter(item => item.id !== itemId);
+    setSelectedItems(newItems);
+
+    // Update form data with new totals and regenerate name
+    const totals = calculateTotals(newItems);
+    const generatedName = newItems.length > 0 ? newItems.map(item => item.name).join(', ') : '';
+    setFormData({
+      ...formData,
+      meal_name: generatedName,
+      calories: totals.calories,
+      protein: totals.protein,
+      carbs: totals.carbs,
+      fats: totals.fats,
+    });
+  };
+
+  const handleFoodSelect = (food: Food) => {
+    setSelectedFood(food);
+    setQuantity(100);
+  };
+
+  const handleRecipeSelect = (recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+    setRecipeServings(1);
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium">Тип ястие</label>
-          <select
-            className="w-full mt-1 p-2 border rounded"
-            value={formData.meal_type}
-            onChange={(e) =>
-              setFormData({ ...formData, meal_type: e.target.value as any })
-            }
-          >
-            {MEAL_TYPES.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[60]">
+      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              {mealType && (
+                <div className={`p-2 rounded-lg ${mealType.color}`}>
+                  <mealType.icon className="h-4 w-4" />
+                </div>
+              )}
+              <h3 className="text-lg font-semibold">
+                {isEditing ? "Редактирай ястие" : `Добави ${mealType?.label.toLowerCase()}`}
+              </h3>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
 
-        <div>
-          <label className="text-sm font-medium">Име на ястието</label>
-          <input
-            type="text"
-            className="w-full mt-1 p-2 border rounded"
-            value={formData.meal_name}
-            onChange={(e) =>
-              setFormData({ ...formData, meal_name: e.target.value })
-            }
-            placeholder="напр. Овесена каша с плодове"
-          />
-        </div>
-      </div>
+          <div className="space-y-4">
+            {/* Food Search Section */}
+            <div>
+              <Label htmlFor="food_search">Търсене на храна</Label>
+              <FoodSearch
+                onFoodSelect={handleFoodSelect}
+                placeholder="Търсете храна от базата данни..."
+              />
+              {selectedFood && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Apple className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium">{selectedFood.name}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {selectedFood.calories_per_100g} кал/100г
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 items-end">
+                    <div>
+                      <Label htmlFor="quantity">Количество (г)</Label>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(parseInt(e.target.value) || 100)}
+                        min="1"
+                        max="2000"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">
+                        П: {Math.round((selectedFood.protein_per_100g * quantity) / 100)}г •
+                        В: {Math.round((selectedFood.carbs_per_100g * quantity) / 100)}г •
+                        М: {Math.round((selectedFood.fat_per_100g * quantity) / 100)}г
+                      </div>
+                      <div className="text-sm font-semibold">
+                        {Math.round((selectedFood.calories_per_100g * quantity) / 100)} кал
+                      </div>
+                    </div>
+                    <div>
+                      <Button
+                        size="sm"
+                        onClick={handleAddFood}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Добави
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <div>
-          <label className="text-sm font-medium">Калории</label>
-          <input
-            type="number"
-            className="w-full mt-1 p-2 border rounded"
-            value={formData.calories || ""}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                calories: e.target.value ? parseInt(e.target.value) : undefined,
-              })
-            }
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Протеин (г)</label>
-          <input
-            type="number"
-            className="w-full mt-1 p-2 border rounded"
-            value={formData.protein || ""}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                protein: e.target.value ? parseInt(e.target.value) : undefined,
-              })
-            }
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Въглехидрати (г)</label>
-          <input
-            type="number"
-            className="w-full mt-1 p-2 border rounded"
-            value={formData.carbs || ""}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                carbs: e.target.value ? parseInt(e.target.value) : undefined,
-              })
-            }
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Мазнини (г)</label>
-          <input
-            type="number"
-            className="w-full mt-1 p-2 border rounded"
-            value={formData.fats || ""}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                fats: e.target.value ? parseInt(e.target.value) : undefined,
-              })
-            }
-          />
-        </div>
-      </div>
+            {/* Recipe Search Section */}
+            <div>
+              <Label htmlFor="recipe_search">Търсене на рецепта</Label>
+              <RecipeSearch
+                onRecipeSelect={handleRecipeSelect}
+                placeholder="Търсете рецепта от базата данни..."
+              />
+              {selectedRecipe && (
+                <div className="mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <ChefHat className="h-4 w-4 text-green-600" />
+                      <span className="font-medium">{selectedRecipe.name}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {selectedRecipe.calories_per_serving} кал/порция
+                    </span>
+                  </div>
+                  {selectedRecipe.description && (
+                    <p className="text-xs text-muted-foreground mb-2">{selectedRecipe.description}</p>
+                  )}
+                  <div className="grid grid-cols-3 gap-4 items-end">
+                    <div>
+                      <Label htmlFor="recipe_servings">Брой порции</Label>
+                      <Input
+                        id="recipe_servings"
+                        type="number"
+                        value={recipeServings}
+                        onChange={(e) => setRecipeServings(parseInt(e.target.value) || 1)}
+                        min="1"
+                        max="20"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">
+                        П: {Math.round(selectedRecipe.protein_per_serving * recipeServings)}г •
+                        В: {Math.round(selectedRecipe.carbs_per_serving * recipeServings)}г •
+                        М: {Math.round(selectedRecipe.fat_per_serving * recipeServings)}г
+                      </div>
+                      <div className="text-sm font-semibold">
+                        {Math.round(selectedRecipe.calories_per_serving * recipeServings)} кал
+                      </div>
+                    </div>
+                    <div>
+                      <Button
+                        size="sm"
+                        onClick={handleAddRecipe}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Добави
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-      <div>
-        <label className="text-sm font-medium">Бележки</label>
-        <textarea
-          className="w-full mt-1 p-2 border rounded"
-          rows={2}
-          value={formData.notes || ""}
-          onChange={(e) =>
-            setFormData({ ...formData, notes: e.target.value })
-          }
-          placeholder="Допълнителна информация..."
-        />
-      </div>
+            {/* Selected Items List */}
+            {selectedItems.length > 0 && (
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-purple-900">Избрани храни/рецепти ({selectedItems.length})</h4>
+                  <div className="text-sm font-semibold text-purple-900">
+                    Общо: {calculateTotals(selectedItems).calories} кал
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {selectedItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-2 bg-white rounded border border-purple-100"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        {item.type === 'food' ? (
+                          <Apple className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                        ) : (
+                          <ChefHat className="h-3 w-3 text-green-600 flex-shrink-0" />
+                        )}
+                        <span className="text-sm font-medium truncate">{item.name}</span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                          ({item.quantity}{item.type === 'food' ? 'г' : ' порц'})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-xs text-muted-foreground">
+                          {item.calories} кал
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                          onClick={() => handleRemoveItem(item.id)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-purple-200">
+                  <div className="grid grid-cols-4 gap-2 text-xs">
+                    <div className="text-center">
+                      <div className="font-semibold text-green-600">{calculateTotals(selectedItems).calories}</div>
+                      <div className="text-muted-foreground">Калории</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-blue-600">{calculateTotals(selectedItems).protein}г</div>
+                      <div className="text-muted-foreground">Протеини</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-orange-600">{calculateTotals(selectedItems).carbs}г</div>
+                      <div className="text-muted-foreground">Въглехидр.</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-semibold text-purple-600">{calculateTotals(selectedItems).fats}г</div>
+                      <div className="text-muted-foreground">Мазнини</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-      <div className="flex gap-2">
-        <Button onClick={() => onSave(formData)} className="flex-1">
-          <Save className="h-4 w-4 mr-2" />
-          Запази
-        </Button>
-        <Button variant="outline" onClick={onCancel} className="flex-1">
-          Откажи
-        </Button>
-      </div>
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  или въведете ръчно
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="meal_name">Име на ястието *</Label>
+              <Input
+                id="meal_name"
+                value={formData.meal_name || ""}
+                onChange={(e) => setFormData({ ...formData, meal_name: e.target.value })}
+                placeholder="Напр: Овесена каша с боровинки"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="calories">Калории</Label>
+                <Input
+                  id="calories"
+                  type="number"
+                  value={formData.calories || 0}
+                  onChange={(e) =>
+                    setFormData({ ...formData, calories: parseInt(e.target.value) || 0 })
+                  }
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="protein">Протеини (г)</Label>
+                <Input
+                  id="protein"
+                  type="number"
+                  value={formData.protein || 0}
+                  onChange={(e) =>
+                    setFormData({ ...formData, protein: parseInt(e.target.value) || 0 })
+                  }
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="carbs">Въглехидрати (г)</Label>
+                <Input
+                  id="carbs"
+                  type="number"
+                  value={formData.carbs || 0}
+                  onChange={(e) =>
+                    setFormData({ ...formData, carbs: parseInt(e.target.value) || 0 })
+                  }
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="fats">Мазнини (г)</Label>
+                <Input
+                  id="fats"
+                  type="number"
+                  value={formData.fats || 0}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fats: parseInt(e.target.value) || 0 })
+                  }
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Бележки (опционално)</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes || ""}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Специални инструкции, рецепта..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2 mt-6">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Отказ
+            </Button>
+            <Button onClick={() => onSave(formData)} className="flex-1 bg-green-600 hover:bg-green-700">
+              <Save className="h-4 w-4 mr-2" />
+              {isEditing ? "Запази промените" : "Добави ястие"}
+            </Button>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

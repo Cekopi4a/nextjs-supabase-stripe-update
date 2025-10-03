@@ -4,9 +4,10 @@ import { createSupabaseClient } from '@/utils/supabase/server';
 // GET - Получаване на макроси за конкретен ден от хранителния режим
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: planId } = await params;
     const supabase = await createSupabaseClient();
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
@@ -16,7 +17,6 @@ export async function GET(
 
     const { searchParams } = new URL(request.url);
     const dayOfWeek = searchParams.get('day_of_week');
-    const planId = params.id;
 
     // Проверка за достъп до плана
     const { data: plan, error: planError } = await supabase

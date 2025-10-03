@@ -3,9 +3,10 @@ import { createSupabaseClient } from "@/utils/supabase/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
     const { data: { user } } = await client.auth.getUser();
 
@@ -16,7 +17,7 @@ export async function GET(
     const { data: exercise, error } = await client
       .from("exercises")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("trainer_id", user.id)
       .single();
 
@@ -34,9 +35,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
     const { data: { user } } = await client.auth.getUser();
 
@@ -91,7 +93,7 @@ export async function PUT(
         custom_images: custom_images || [],
         updated_at: new Date().toISOString(),
       })
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("trainer_id", user.id)
       .select()
       .single();
@@ -110,9 +112,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
     const { data: { user } } = await client.auth.getUser();
 
@@ -135,7 +138,7 @@ export async function DELETE(
     const { error } = await client
       .from("exercises")
       .delete()
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("trainer_id", user.id);
 
     if (error) {

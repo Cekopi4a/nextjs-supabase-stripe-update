@@ -3,9 +3,10 @@ import { createSupabaseClient } from "@/utils/supabase/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
     const { data: { user } } = await client.auth.getUser();
 
@@ -16,7 +17,7 @@ export async function GET(
     const { data: food, error } = await client
       .from("foods")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("created_by", user.id)
       .single();
 
@@ -34,9 +35,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
     const { data: { user } } = await client.auth.getUser();
 
@@ -97,7 +99,7 @@ export async function PUT(
         allergens: allergens || [],
         updated_at: new Date().toISOString(),
       })
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("created_by", user.id)
       .select()
       .single();
@@ -116,9 +118,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
     const { data: { user } } = await client.auth.getUser();
 
@@ -141,7 +144,7 @@ export async function DELETE(
     const { error } = await client
       .from("foods")
       .delete()
-      .eq("id", params.id)
+      .eq("id", id)
       .eq("created_by", user.id);
 
     if (error) {

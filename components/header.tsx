@@ -124,13 +124,12 @@ export default function Header() {
   return (
     <>
     <header className="bg-background/95 backdrop-blur-sm border-b border-border h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-40">
-      {/* Left section - Logo */}
+      {/* Left section - Logo/Menu */}
       <div className="flex items-center">
         {/* Logo and navigation for non-authenticated users */}
         {!loading && !user && (
           <>
             <Logo showText={true} href="/" className="hidden md:flex" />
-            <Logo showText={false} href="/" className="md:hidden" />
 
             {/* Desktop Navigation Menu */}
             <nav className="hidden lg:flex ml-10 space-x-8">
@@ -148,7 +147,7 @@ export default function Header() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="lg:hidden ml-4 p-2 rounded-lg hover:bg-muted transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
             >
               {showMobileMenu ? (
                 <X className="h-5 w-5" />
@@ -159,15 +158,27 @@ export default function Header() {
           </>
         )}
 
-        {/* Logo за автентифицирани потребители */}
+        {/* За автентифицирани потребители */}
         {!loading && user && (
           <>
-            <Logo showText={true} href="/protected" className="hidden md:flex" />
-            <Logo showText={false} href="/protected" className="md:hidden" />
+            {/* Mobile Menu Button - вляво */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden h-9 w-9 p-0 hover:bg-muted"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('toggleMobileMenu'));
+              }}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+
+            {/* Desktop Logo */}
+            <Logo showText={true} href="/protected" className="hidden lg:flex" />
           </>
         )}
 
-        {/* Loading state - скрито лого */}
+        {/* Loading state */}
         {loading && (
           <div></div>
         )}
@@ -186,19 +197,6 @@ export default function Header() {
         ) : user ? (
           /* Authenticated user header */
           <>
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden h-9 w-9 p-0 hover:bg-muted"
-              onClick={() => {
-                // Тригериране на mobile menu чрез event
-                window.dispatchEvent(new CustomEvent('toggleMobileMenu'));
-              }}
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-
             {/* Notifications */}
             <Button variant="ghost" size="sm" className="relative hover:bg-blue-50/50">
               <Bell className="h-4 w-4" />

@@ -4,9 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 // GET /api/recipes/[id] - Get a specific recipe
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
 
     const {
@@ -20,7 +21,7 @@ export async function GET(
     const { data: recipe, error } = await client
       .from("recipes")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -38,9 +39,10 @@ export async function GET(
 // PUT /api/recipes/[id] - Update a recipe
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
 
     const {
@@ -55,7 +57,7 @@ export async function PUT(
     const { data: existingRecipe, error: fetchError } = await client
       .from("recipes")
       .select("created_by")
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (fetchError || !existingRecipe) {
@@ -71,7 +73,7 @@ export async function PUT(
     const { data: recipe, error } = await client
       .from("recipes")
       .update(body)
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -90,9 +92,10 @@ export async function PUT(
 // DELETE /api/recipes/[id] - Delete a recipe
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await createSupabaseClient();
 
     const {
@@ -107,7 +110,7 @@ export async function DELETE(
     const { data: existingRecipe, error: fetchError } = await client
       .from("recipes")
       .select("created_by")
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (fetchError || !existingRecipe) {
@@ -121,7 +124,7 @@ export async function DELETE(
     const { error } = await client
       .from("recipes")
       .delete()
-      .eq("id", params.id);
+      .eq("id", id);
 
     if (error) {
       console.error("Error deleting recipe:", error);
