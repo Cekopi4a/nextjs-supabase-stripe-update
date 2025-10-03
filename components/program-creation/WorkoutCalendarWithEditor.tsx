@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { EnhancedCalendar } from "@/components/program-creation/EnhancedCalendar";
 import { DayEditorSection } from "@/components/program-creation/DayEditorSection";
 import { DayType } from "@/components/program-creation/DayOptionsModal";
@@ -62,7 +62,8 @@ export function WorkoutCalendarWithEditor({
   onRefreshExercises
 }: WorkoutCalendarWithEditorProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  
+  const dayEditorRef = useRef<HTMLDivElement>(null);
+
   // Ensure restDaysByDate is always defined
   const safeRestDaysByDate = restDaysByDate || {};
 
@@ -73,6 +74,18 @@ export function WorkoutCalendarWithEditor({
       onSelectedDateChange(date);
     }
   };
+
+  // Auto-scroll to day editor section when a date is selected
+  useEffect(() => {
+    if (selectedDate && dayEditorRef.current) {
+      setTimeout(() => {
+        dayEditorRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
+  }, [selectedDate]);
 
   const handleDayTypeChange = (date: Date, type: DayType) => {
     if (onSetDayType) {
@@ -91,8 +104,10 @@ export function WorkoutCalendarWithEditor({
 
   // Transform workoutsByDate for calendar display
   const workoutsForCalendar: Record<string, unknown[]> = {};
+  const workoutNamesForCalendar: Record<string, string> = {};
   Object.entries(workoutsByDate).forEach(([dateKey, workout]) => {
     workoutsForCalendar[dateKey] = workout.exercises;
+    workoutNamesForCalendar[dateKey] = workout.name;
   });
 
   // Create date key from local date to avoid timezone issues
@@ -123,21 +138,24 @@ export function WorkoutCalendarWithEditor({
         programDurationWeeks={programDurationWeeks}
         dayTypes={dayTypes}
         workoutsByDate={workoutsForCalendar}
+        workoutNames={workoutNamesForCalendar}
       />
 
       {/* Day Editor Section */}
-      <DayEditorSection
-        selectedDate={selectedDate}
-        dayType={selectedDayType}
-        workout={selectedWorkout}
-        restDay={selectedRestDay}
-        isTrainer={isTrainer}
-        availableExercises={availableExercises}
-        onDayTypeChange={handleDayTypeChange}
-        onSaveWorkout={onSaveWorkout}
-        onSaveRestDay={onSaveRestDay}
-        onRefreshExercises={onRefreshExercises}
-      />
+      <div ref={dayEditorRef}>
+        <DayEditorSection
+          selectedDate={selectedDate}
+          dayType={selectedDayType}
+          workout={selectedWorkout}
+          restDay={selectedRestDay}
+          isTrainer={isTrainer}
+          availableExercises={availableExercises}
+          onDayTypeChange={handleDayTypeChange}
+          onSaveWorkout={onSaveWorkout}
+          onSaveRestDay={onSaveRestDay}
+          onRefreshExercises={onRefreshExercises}
+        />
+      </div>
     </div>
   );
 }

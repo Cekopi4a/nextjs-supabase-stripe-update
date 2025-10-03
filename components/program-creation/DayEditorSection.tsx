@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Dumbbell, Moon, Save, CalendarDays } from "lucide-react";
+import { Trash2, Dumbbell, Bed, Save, CalendarDays } from "lucide-react";
 import { DayType } from "@/components/program-creation/DayOptionsModal";
 import { WorkoutExercise, Exercise } from "@/app/protected/programs/create/step2/page";
 
@@ -120,10 +120,18 @@ export function DayEditorSection({
   };
 
   const handleSaveRestDay = () => {
-    if (editingRestDay) {
-      onSaveRestDay(selectedDate, editingRestDay);
-      setEditingRestDay(null);
-    }
+    if (!selectedDate) return;
+
+    // Create rest day object with default values if empty
+    const restDayToSave: RestDay = {
+      name: editingRestDay?.name || 'Почивен ден',
+      description: editingRestDay?.description || ''
+    };
+
+    onSaveRestDay(selectedDate, restDayToSave);
+
+    // Update local state
+    setEditingRestDay(restDayToSave);
   };
 
 
@@ -155,7 +163,7 @@ export function DayEditorSection({
     {
       value: 'rest',
       label: 'Почивен ден',
-      icon: Moon,
+      icon: Bed,
       color: 'text-purple-600'
     }
   ];
@@ -376,19 +384,25 @@ export function DayEditorSection({
       {localDayType === 'rest' && (
         <div className="space-y-4">
           <div>
-            <Label>Име на почивката</Label>
+            <Label>Име на почивката (опционално)</Label>
             <Input
               value={editingRestDay?.name || ''}
-              onChange={(e) => setEditingRestDay(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
-              placeholder="Име на почивката"
+              onChange={(e) => setEditingRestDay(prev => ({
+                name: e.target.value,
+                description: prev?.description || ''
+              }))}
+              placeholder="Напр: Активна почивка, Възстановяване..."
             />
           </div>
-          
+
           <div>
-            <Label>Описание</Label>
+            <Label>Описание (опционално)</Label>
             <Textarea
               value={editingRestDay?.description || ''}
-              onChange={(e) => setEditingRestDay(prev => prev ? ({ ...prev, description: e.target.value }) : null)}
+              onChange={(e) => setEditingRestDay(prev => ({
+                name: prev?.name || '',
+                description: e.target.value
+              }))}
               placeholder="Описание за почивния ден - напр. активна почивка, разходка, стречинг..."
               rows={4}
             />

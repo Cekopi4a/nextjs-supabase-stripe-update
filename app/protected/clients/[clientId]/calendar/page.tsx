@@ -77,6 +77,16 @@ interface WorkoutProgram {
   description?: string;
 }
 
+interface WorkoutTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  exercises: unknown[];
+  workout_type: string;
+  difficulty_level: string;
+  estimated_duration_minutes: number;
+}
+
 const WORKOUT_TYPES = [
   { value: 'strength', label: 'Силова тренировка', color: 'bg-blue-100 text-blue-800' },
   { value: 'cardio', label: 'Кардио', color: 'bg-red-100 text-red-800' },
@@ -108,13 +118,16 @@ export default function ClientCalendarPage() {
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
   const [client, setClient] = useState<Client | null>(null);
   const [programs, setPrograms] = useState<WorkoutProgram[]>([]);
+  const [workoutTemplates, setWorkoutTemplates] = useState<WorkoutTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showTemplateSelectModal, setShowTemplateSelectModal] = useState(false);
   const [showRestModal, setShowRestModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutSession | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [copySourceDate, setCopySourceDate] = useState<Date | null>(null);
+  const [copyWorkoutId, setCopyWorkoutId] = useState<string | null>(null);
 
   // Form states
   const [workoutForm, setWorkoutForm] = useState({
@@ -131,6 +144,7 @@ export default function ClientCalendarPage() {
   useEffect(() => {
     fetchClientData();
     fetchPrograms();
+    fetchWorkoutTemplates();
   }, [clientId]);
 
   useEffect(() => {
@@ -193,6 +207,24 @@ export default function ClientCalendarPage() {
       setPrograms(data || []);
     } catch (error) {
       console.error("Error fetching programs:", error);
+    }
+  };
+
+  const fetchWorkoutTemplates = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("workouts")
+        .select("id, name, description, exercises, workout_type, difficulty_level, estimated_duration_minutes")
+        .eq("trainer_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setWorkoutTemplates(data || []);
+    } catch (error) {
+      console.error("Error fetching workout templates:", error);
     }
   };
 
@@ -353,7 +385,7 @@ export default function ClientCalendarPage() {
 
       if (editingWorkout) {
         // Update existing workout session
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("workout_sessions")
           .update(workoutData)
           .eq("id", editingWorkout.id)
@@ -365,7 +397,7 @@ export default function ClientCalendarPage() {
         }
       } else {
         // Create new workout session
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("workout_sessions")
           .insert(workoutData)
           .select();
@@ -484,17 +516,77 @@ export default function ClientCalendarPage() {
     }
   };
 
+  const addWorkoutFromTemplate = async (templateId: string, date: Date) => {
+    const template = workoutTemplates.find(t => t.id === templateId);
+    if (!template) {
+      alert("Тренировката не е намерена");
+      return;
+    }
+
+    try {
+      const workoutData = {
+        client_id: clientId,
+        name: template.name,
+        scheduled_date: dateToLocalDateString(date),
+        program_id: null,
+        status: 'planned' as const,
+        workout_type: template.workout_type,
+        exercises: template.exercises || [],
+        instructions: template.description || null
+      };
+
+      console.log("Adding workout from template:", workoutData);
+
+      const { data, error } = await supabase
+        .from("workout_sessions")
+        .insert(workoutData)
+        .select();
+
+      if (error) {
+        console.error("Supabase error details:", error);
+        throw error;
+      }
+
+      console.log("Workout added successfully:", data);
+
+      setShowTemplateSelectModal(false);
+      fetchWorkouts();
+      alert(`Тренировка "${template.name}" добавена успешно!`);
+    } catch (error) {
+      console.error("Error adding workout from template:", error);
+      if (error && typeof error === 'object' && 'message' in error) {
+        alert(`Грешка при добавяне на тренировката: ${(error as { message: string }).message}`);
+      } else {
+        alert("Грешка при добавяне на тренировката");
+      }
+    }
+  };
+
   const handleQuickAction = (date: Date, action: string) => {
     // Check if action is a copy workout action
     if (action.startsWith('copy_workout_')) {
       const workoutId = action.replace('copy_workout_', '');
-      copyWorkout(workoutId, date);
+
+      // If a workout is already selected for copying, paste it
+      if (copyWorkoutId) {
+        copyWorkout(copyWorkoutId, date);
+        setCopyWorkoutId(null);
+      } else {
+        // Select this workout for copying
+        setCopyWorkoutId(workoutId);
+        const workout = workouts.find(w => w.id === workoutId);
+        alert(`Тренировка "${workout?.name}" избрана за копиране. Кликнете на друг ден за да я поставите там.`);
+      }
       return;
     }
 
     switch (action) {
       case 'add_rest':
         openCreateModal(date, 'rest', 'Ден за почивка');
+        break;
+      case 'add_from_template':
+        setSelectedDate(date);
+        setShowTemplateSelectModal(true);
         break;
       case 'copy_day':
         if (copySourceDate) {
@@ -510,6 +602,12 @@ export default function ClientCalendarPage() {
 
           setCopySourceDate(date);
           alert('Ден избран за копиране. Сега кликнете на друг ден за да поставите копието.');
+        }
+        break;
+      case 'paste_workout':
+        if (copyWorkoutId) {
+          copyWorkout(copyWorkoutId, date);
+          setCopyWorkoutId(null);
         }
         break;
       default:
@@ -619,6 +717,7 @@ export default function ClientCalendarPage() {
               onDeleteWorkout={deleteWorkout}
               onQuickAction={handleQuickAction}
               copySourceDate={copySourceDate}
+              copyWorkoutId={copyWorkoutId}
             />
           ))}
         </div>
@@ -666,6 +765,17 @@ export default function ClientCalendarPage() {
         }}
       />
 
+      {/* Template Select Modal */}
+      {showTemplateSelectModal && selectedDate && (
+        <TemplateSelectModal
+          isOpen={showTemplateSelectModal}
+          selectedDate={selectedDate}
+          templates={workoutTemplates}
+          onSelectTemplate={(templateId) => addWorkoutFromTemplate(templateId, selectedDate)}
+          onClose={() => setShowTemplateSelectModal(false)}
+        />
+      )}
+
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-8">
@@ -681,22 +791,25 @@ function CalendarDayCell({
   onEditWorkout,
   onDeleteWorkout,
   onQuickAction,
-  copySourceDate
+  copySourceDate,
+  copyWorkoutId
 }: {
   day: CalendarDay;
   onEditWorkout: (workout: WorkoutSession) => void;
   onDeleteWorkout: (workoutId: string) => void;
   onQuickAction: (date: Date, action: string) => void;
   copySourceDate: Date | null;
+  copyWorkoutId: string | null;
 }) {
   const dayNumber = day.date.getDate();
-  
+
   return (
     <div className={`
       min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-border transition-colors hover:bg-muted/30 group
       ${!day.isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : ''}
       ${day.isToday ? 'bg-blue-50 border-blue-300' : ''}
       ${copySourceDate && dateToLocalDateString(day.date) === dateToLocalDateString(copySourceDate) ? 'bg-yellow-50 border-yellow-300' : ''}
+      ${copyWorkoutId ? 'cursor-copy' : ''}
     `}>
       <div className="flex items-center justify-between mb-1 sm:mb-2">
         <span className={`text-xs sm:text-sm font-medium ${day.isToday ? 'text-blue-600' : ''}`}>
@@ -712,10 +825,14 @@ function CalendarDayCell({
               <Plus className="h-2 w-2 sm:h-3 sm:w-3" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={() => onQuickAction(day.date, 'default')}>
               <Plus className="h-4 w-4 mr-2" />
-              Добави тренировка
+              Създай нова тренировка
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_from_template')}>
+              <Dumbbell className="h-4 w-4 mr-2" />
+              Добави готова тренировка
             </DropdownMenuItem>
             {day.workouts.length === 0 && (
               <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_rest')}>
@@ -728,6 +845,12 @@ function CalendarDayCell({
               <Copy className="h-4 w-4 mr-2" />
               {copySourceDate ? 'Постави ден' : 'Копирай ден'}
             </DropdownMenuItem>
+            {copyWorkoutId && (
+              <DropdownMenuItem onClick={() => onQuickAction(day.date, 'paste_workout')}>
+                <Copy className="h-4 w-4 mr-2" />
+                Постави тренировка тук
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -762,10 +885,14 @@ function CalendarDayCell({
                 <span className="sm:hidden">+</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-48">
+            <DropdownMenuContent align="center" className="w-56">
               <DropdownMenuItem onClick={() => onQuickAction(day.date, 'default')}>
                 <Plus className="h-4 w-4 mr-2" />
-                Добави тренировка
+                Създай нова тренировка
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_from_template')}>
+                <Dumbbell className="h-4 w-4 mr-2" />
+                Добави готова тренировка
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_rest')}>
                 <Bed className="h-4 w-4 mr-2" />
@@ -1151,6 +1278,111 @@ function RestDayModal({
             <Button onClick={onSave} className="flex-1 bg-gray-600 hover:bg-gray-700">
               <Save className="h-4 w-4 mr-2" />
               {isEditing ? 'Запази промените' : 'Добави почивка'}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function TemplateSelectModal({
+  isOpen,
+  selectedDate,
+  templates,
+  onSelectTemplate,
+  onClose
+}: {
+  isOpen: boolean;
+  selectedDate: Date;
+  templates: WorkoutTemplate[];
+  onSelectTemplate: (templateId: string) => void;
+  onClose: () => void;
+}) {
+  if (!isOpen) return null;
+
+  const getWorkoutTypeLabel = (type: string) => {
+    const workoutType = WORKOUT_TYPES.find(t => t.value === type);
+    return workoutType?.label || type;
+  };
+
+  const getWorkoutTypeColor = (type: string) => {
+    const workoutType = WORKOUT_TYPES.find(t => t.value === type);
+    return workoutType?.color || 'bg-gray-100 text-gray-800';
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold">Избери готова тренировка</h3>
+              <p className="text-sm text-muted-foreground">
+                Дата: {selectedDate.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {templates.length === 0 ? (
+            <div className="text-center py-8">
+              <Dumbbell className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <p className="text-muted-foreground mb-4">
+                Все още нямате създадени готови тренировки.
+              </p>
+              <Button variant="outline" asChild>
+                <Link href="/protected/workouts">
+                  Създай тренировка
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-medium">{template.name}</h4>
+                        <Badge className={`text-xs ${getWorkoutTypeColor(template.workout_type)}`}>
+                          {getWorkoutTypeLabel(template.workout_type)}
+                        </Badge>
+                      </div>
+
+                      {template.description && (
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {template.description}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Dumbbell className="h-3 w-3" />
+                          {template.exercises?.length || 0} упражнения
+                        </span>
+                        <span>⏱️ {template.estimated_duration_minutes} мин</span>
+                        <span>📊 {template.difficulty_level === 'beginner' ? 'Начинаещ' : template.difficulty_level === 'intermediate' ? 'Средно' : 'Напреднал'}</span>
+                      </div>
+                    </div>
+
+                    <Button size="sm" onClick={() => onSelectTemplate(template.id)}>
+                      Избери
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2 mt-6">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Отказ
             </Button>
           </div>
         </div>

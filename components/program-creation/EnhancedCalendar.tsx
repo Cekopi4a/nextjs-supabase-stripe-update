@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarViewToggle } from "@/components/program-creation/CalendarViewToggle";
-import { ChevronLeft, ChevronRight, Dumbbell, Moon, Calendar as CalendarIcon, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Dumbbell, Bed, Calendar as CalendarIcon, Plus } from "lucide-react";
 import { DayType } from "@/components/program-creation/DayOptionsModal";
 
 export interface CalendarDay {
@@ -14,6 +14,7 @@ export interface CalendarDay {
   isInProgramDuration: boolean;
   dayType?: DayType;
   workoutCount: number;
+  workoutName?: string;
 }
 
 interface EnhancedCalendarProps {
@@ -27,6 +28,7 @@ interface EnhancedCalendarProps {
   programDurationWeeks: number;
   dayTypes: Record<string, DayType>;
   workoutsByDate: Record<string, unknown[]>;
+  workoutNames?: Record<string, string>;
 }
 
 const BULGARIAN_MONTHS = [
@@ -47,7 +49,7 @@ function CalendarDayCell({
 
   const getDayIcon = () => {
     if (day.dayType === 'workout') return <Dumbbell className="h-3 w-3" />;
-    if (day.dayType === 'rest') return <Moon className="h-3 w-3" />;
+    if (day.dayType === 'rest') return <Bed className="h-3 w-3" />;
     return null;
   };
 
@@ -102,15 +104,15 @@ function CalendarDayCell({
           {getDayIcon()}
         </div>
         
-        {day.workoutCount > 0 && (
+        {day.workoutName && (
           <div className="flex-1 flex flex-col justify-center">
-            <div className="text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded text-center">
-              {day.workoutCount} упр.
+            <div className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded text-center font-medium truncate">
+              {day.workoutName}
             </div>
           </div>
         )}
         
-        {day.workoutCount === 0 && day.dayType !== 'rest' && day.isCurrentMonth && (
+        {!day.workoutName && day.dayType !== 'rest' && day.isCurrentMonth && (
           <div className="flex-1 flex items-center justify-center opacity-30">
             <Plus className="h-4 w-4" />
           </div>
@@ -190,7 +192,8 @@ export function EnhancedCalendar({
   programStartDate,
   programDurationWeeks,
   dayTypes,
-  workoutsByDate
+  workoutsByDate,
+  workoutNames = {}
 }: EnhancedCalendarProps) {
   const generateCalendarDays = (): CalendarDay[] => {
     if (view === 'week') {
@@ -255,7 +258,8 @@ export function EnhancedCalendar({
       isSelected,
       isInProgramDuration,
       dayType: dayTypes[dateKey],
-      workoutCount: workoutsByDate[dateKey]?.length || 0
+      workoutCount: workoutsByDate[dateKey]?.length || 0,
+      workoutName: workoutNames[dateKey]
     };
   };
 
@@ -332,7 +336,7 @@ export function EnhancedCalendar({
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-purple-100 border border-purple-200 rounded flex items-center justify-center">
-              <Moon className="h-2 w-2 text-purple-600" />
+              <Bed className="h-2 w-2 text-purple-600" />
             </div>
             <span className="text-gray-600">Почивен ден</span>
           </div>

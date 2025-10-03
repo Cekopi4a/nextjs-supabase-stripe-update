@@ -126,11 +126,22 @@ export default function EditCalendarPage() {
 
       // Convert sessions to calendar format
       const workoutsMap: {[dateKey: string]: WorkoutDay} = {};
+      const restDaysMap: {[dateKey: string]: RestDay} = {};
       const dayTypesMap: {[dateKey: string]: DayType} = {};
 
       if (sessions) {
         for (const session of sessions) {
           const dateKey = session.scheduled_date;
+
+          // Check if it's a rest day
+          if (session.workout_type === 'rest') {
+            restDaysMap[dateKey] = {
+              name: session.name,
+              description: session.description || session.instructions || ''
+            };
+            dayTypesMap[dateKey] = 'rest';
+            continue;
+          }
 
           // Fetch exercise details for each exercise in session
           const exercisesWithDetails: WorkoutExercise[] = [];
@@ -163,7 +174,7 @@ export default function EditCalendarPage() {
             name: session.name,
             exercises: exercisesWithDetails,
             estimated_duration: session.planned_duration_minutes || 60,
-            workout_type: 'strength',
+            workout_type: session.workout_type || 'strength',
             status: session.status as 'assigned' | 'completed' | 'skipped'
           };
 
@@ -172,6 +183,7 @@ export default function EditCalendarPage() {
       }
 
       setWorkoutsByDate(workoutsMap);
+      setRestDaysByDate(restDaysMap);
       setDayTypes(dayTypesMap);
 
     } catch (error) {
@@ -448,6 +460,7 @@ export default function EditCalendarPage() {
             name: workoutDay.name || `Тренировка ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
             description: `Планирана тренировка за ${new Date(dateKey).toLocaleDateString('bg-BG')}`,
             planned_duration_minutes: workoutDay.estimated_duration || 60,
+            workout_type: workoutDay.workout_type || 'strength',
             exercises: workoutDay.exercises.map((ex: WorkoutExercise) => ({
               exercise_id: ex.exercise_id,
               planned_sets: ex.sets,
@@ -467,6 +480,29 @@ export default function EditCalendarPage() {
         if (sessionError) {
           console.error("Session error:", sessionError);
           throw sessionError;
+        }
+      }
+
+      // Create rest day sessions
+      for (const [dateKey, restDay] of Object.entries(restDaysByDate)) {
+        const { error: restError } = await supabase
+          .from("workout_sessions")
+          .insert({
+            program_id: programId,
+            client_id: programData.client_id,
+            scheduled_date: dateKey,
+            name: restDay.name || 'Почивен ден',
+            description: restDay.description || '',
+            planned_duration_minutes: 0,
+            workout_type: 'rest',
+            exercises: [],
+            status: "planned",
+            instructions: restDay.description || null
+          });
+
+        if (restError) {
+          console.error("Rest day error:", restError);
+          throw restError;
         }
       }
 
@@ -534,41 +570,39 @@ export default function EditCalendarPage() {
 
         {/* Layout: Calendar + Sidebar */}
         <div className="space-y-6">
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Calendar - Takes 2 columns */}
-            <div className="lg:col-span-2">
-              <WorkoutCalendarWithEditor
-                currentDate={currentDate}
-                onDateChange={setCurrentDate}
-                view={calendarView}
-                onViewChange={setCalendarView}
-                programStartDate={programStartDate}
-                programDurationWeeks={programData?.estimated_duration_weeks || 8}
-                dayTypes={dayTypes}
-                workoutsByDate={workoutsByDate}
-                restDaysByDate={restDaysByDate}
-                onSaveWorkout={handleSaveWorkout}
-                onSaveRestDay={handleSaveRestDay}
-                onUpdateWorkoutStatus={handleUpdateWorkoutStatus}
-                onSetDayType={handleSetDayType}
-                onSelectedDateChange={setSelectedDateForExercise}
-                isTrainer={true}
-                availableExercises={exercises}
-                onRefreshExercises={loadExercises}
-              />
-            </div>
+          {/* Calendar - Full Width */}
+          <div>
+            <WorkoutCalendarWithEditor
+              currentDate={currentDate}
+              onDateChange={setCurrentDate}
+              view={calendarView}
+              onViewChange={setCalendarView}
+              programStartDate={programStartDate}
+              programDurationWeeks={programData?.estimated_duration_weeks || 8}
+              dayTypes={dayTypes}
+              workoutsByDate={workoutsByDate}
+              restDaysByDate={restDaysByDate}
+              onSaveWorkout={handleSaveWorkout}
+              onSaveRestDay={handleSaveRestDay}
+              onUpdateWorkoutStatus={handleUpdateWorkoutStatus}
+              onSetDayType={handleSetDayType}
+              onSelectedDateChange={setSelectedDateForExercise}
+              isTrainer={true}
+              availableExercises={exercises}
+              onRefreshExercises={loadExercises}
+            />
+          </div>
 
-            {/* Exercise Library Sidebar - Takes 1 column */}
-            <div className="lg:col-span-1">
-              <ExerciseLibrarySidebar
-                exercises={exercises}
-                isOpen={sidebarOpen}
-                onToggle={() => setSidebarOpen(!sidebarOpen)}
-                onAddExercise={handleAddExerciseFromLibrary}
-                onAddWorkout={handleAddWorkoutFromLibrary}
-                selectedDate={selectedDateForExercise}
-              />
-            </div>
+          {/* Exercise Library Sidebar - Full Width Below */}
+          <div>
+            <ExerciseLibrarySidebar
+              exercises={exercises}
+              isOpen={sidebarOpen}
+              onToggle={() => setSidebarOpen(!sidebarOpen)}
+              onAddExercise={handleAddExerciseFromLibrary}
+              onAddWorkout={handleAddWorkoutFromLibrary}
+              selectedDate={selectedDateForExercise}
+            />
           </div>
         </div>
 
