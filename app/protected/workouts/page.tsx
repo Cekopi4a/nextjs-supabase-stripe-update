@@ -74,7 +74,7 @@ const BULGARIAN_MONTHS = [
   "Юли", "Август", "Септември", "Октомври", "Ноември", "Декември"
 ];
 
-const BULGARIAN_DAYS = ["Нед", "Пон", "Вто", "Сря", "Чет", "Пет", "Съб"];
+const BULGARIAN_DAYS = ["Пон", "Вто", "Сря", "Чет", "Пет", "Съб", "Нед"];
 
 export default function ClientWorkoutsPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -256,15 +256,21 @@ export default function ClientWorkoutsPage() {
   const generateCalendarDays = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    
+
     const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-    
+    // Adjust to start from Monday (1) instead of Sunday (0)
+    const firstDayOfWeek = firstDay.getDay();
+    const daysToSubtract = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+    startDate.setDate(startDate.getDate() - daysToSubtract);
+
     const endDate = new Date(lastDay);
-    endDate.setDate(endDate.getDate() + (6 - lastDay.getDay()));
+    // Adjust to end on Sunday (0)
+    const lastDayOfWeek = lastDay.getDay();
+    const daysToAdd = lastDayOfWeek === 0 ? 0 : 7 - lastDayOfWeek;
+    endDate.setDate(endDate.getDate() + daysToAdd);
     
     const days: CalendarDay[] = [];
     const currentDateLoop = new Date(startDate);

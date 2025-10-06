@@ -115,12 +115,6 @@ export default function LeftSidebar({
           badge: clientsCount > 0 ? clientsCount.toString() : undefined,
         },
         {
-          label: "Тренировки",
-          href: "/workout",
-          icon: Dumbbell,
-          isSection: true,
-        },
-        {
           label: "Програми",
           href: "/programs",
           icon: BookOpen,
@@ -131,15 +125,9 @@ export default function LeftSidebar({
           icon: Dumbbell,
         },
         {
-          label: "Workout Builder",
+          label: "Тренировки",
           href: "/workout-builder",
           icon: Target,
-        },
-        {
-          label: "Хранене",
-          href: "/nutrition",
-          icon: Apple,
-          isSection: true,
         },
         {
           label: "Храни",
@@ -315,12 +303,12 @@ export default function LeftSidebar({
           if (isSection && (!isCollapsed || isMobile)) {
             return (
               <div key={index} className={cn(
-                "pt-5 pb-2 px-3 mt-3",
-                index !== 0 && "border-t-2 border-primary/20"
+                "pt-4 pb-2 px-3",
+                index !== 0 && "border-t border-border/50 mt-2"
               )}>
-                <div className="flex items-center gap-2.5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-lg px-3 py-2">
-                  <Icon className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-bold text-primary uppercase tracking-wide">
+                <div className="flex items-center gap-2">
+                  <Icon className="h-3.5 w-3.5 text-muted-foreground/70" />
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     {label}
                   </span>
                 </div>

@@ -457,94 +457,117 @@ export default function ClientsPage() {
         {/* Clients Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredClients.map(client => (
-            <Card key={client.id} className="p-5 hover:shadow-lg transition-all duration-200 border-0 shadow-md">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <Avatar
-                    src={client.avatar_url}
-                    alt={client.full_name || "Клиент"}
-                    size="lg"
-                    className="flex-shrink-0"
-                    fallback={
-                      <div className="bg-gradient-to-br from-blue-500 to-purple-600 w-full h-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-sm">
+            <Card key={client.id} className="group hover:shadow-xl transition-all duration-300 border border-border/50 hover:border-primary/30 overflow-hidden">
+              {/* Header with Avatar */}
+              <div className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/20 dark:via-purple-950/20 dark:to-pink-950/20 p-6 pb-16">
+                <div className="absolute top-4 right-4">
+                  <Badge
+                    variant={client.trainer_status === 'active' ? 'default' : 'secondary'}
+                    className="text-xs py-1 px-3 shadow-sm"
+                  >
+                    {client.trainer_status === 'active' ? '✓ Активен' : 'Неактивен'}
+                  </Badge>
+                </div>
+
+                {/* Avatar */}
+                <div className="flex justify-center">
+                  <div className="relative">
+                    {client.avatar_url ? (
+                      <img
+                        src={client.avatar_url}
+                        alt={client.full_name || "Клиент"}
+                        className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 shadow-lg object-cover"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 shadow-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                        <span className="text-white font-bold text-2xl">
                           {client.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'К'}
                         </span>
                       </div>
-                    }
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base text-foreground truncate">{client.full_name}</h3>
-                    <p className="text-gray-500 truncate text-sm">{client.email}</p>
+                    )}
+                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 border-4 border-white dark:border-gray-800 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-4 w-4 text-white" />
+                    </div>
                   </div>
                 </div>
-                <Badge 
-                  variant={client.trainer_status === 'active' ? 'default' : 'secondary'}
-                  className="text-xs py-1 px-2"
-                >
-                  {client.trainer_status === 'active' ? 'Активен' : 'Неактивен'}
-                </Badge>
               </div>
 
-              {/* Plans info */}
-              <div className="grid grid-cols-1 gap-3 mb-4">
-                <div className="bg-blue-50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Dumbbell className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-900">Тренировъчен план</span>
-                  </div>
-                  <p className="text-sm text-blue-700">
-                    {client.workout_program_name || 'Няма зададен план'}
-                  </p>
+              {/* Content */}
+              <div className="p-5 -mt-12 relative">
+                <div className="text-center mb-4">
+                  <h3 className="font-bold text-lg text-foreground mb-1">{client.full_name}</h3>
+                  <p className="text-muted-foreground text-sm truncate">{client.email}</p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Utensils className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-900">Хранителен план</span>
+
+                {/* Plans info */}
+                <div className="grid grid-cols-1 gap-3 mb-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="p-1.5 bg-blue-500 rounded-md">
+                        <Dumbbell className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <span className="text-xs font-semibold text-blue-900 dark:text-blue-100">Тренировъчен план</span>
+                    </div>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 font-medium truncate">
+                      {client.workout_program_name || 'Няма зададен план'}
+                    </p>
                   </div>
-                  <p className="text-sm text-green-700">
-                    {client.nutrition_plan_name || 'Няма зададен план'}
-                  </p>
+                  <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/30 dark:to-green-900/30 rounded-lg p-3 border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="p-1.5 bg-green-500 rounded-md">
+                        <Utensils className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <span className="text-xs font-semibold text-green-900 dark:text-green-100">Хранителен план</span>
+                    </div>
+                    <p className="text-sm text-green-700 dark:text-green-300 font-medium truncate">
+                      {client.nutrition_plan_name || 'Няма зададен план'}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <Button variant="outline" size="sm" className="text-xs h-9 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors" asChild>
+                    <Link href={`/protected/clients/${client.id}/nutrition`}>
+                      <Apple className="h-3.5 w-3.5 mr-1.5" />
+                      Храна
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs h-9 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-300 transition-colors" asChild>
+                    <Link href={`/protected/clients/${client.id}/progress`}>
+                      <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
+                      Прогрес
+                    </Link>
+                  </Button>
+                </div>
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-1 gap-2 mb-3">
-                <Button variant="outline" size="sm" className="text-xs h-8" asChild>
-                  <Link href={`/protected/clients/${client.id}/nutrition`}>
-                    <Apple className="h-3 w-3 mr-1" />
-                    Храна
-                  </Link>
-                </Button>
-                <Button variant="outline" size="sm" className="text-xs h-8" asChild>
-                  <Link href={`/protected/clients/${client.id}/progress`}>
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    Прогрес
-                  </Link>
-                </Button>
-              </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" className="text-xs h-9 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300 transition-colors" asChild>
+                    <Link href={`/protected/clients/${client.id}/calendar`}>
+                      <Calendar className="h-3.5 w-3.5 mr-1.5" />
+                      Тренировки
+                    </Link>
+                  </Button>
 
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" className="text-xs h-8" asChild>
-                  <Link href={`/protected/clients/${client.id}/calendar`}>
-                    <Calendar className="h-3 w-3 mr-1" />
-                    Тренировки
-                  </Link>
-                </Button>
-                
-                <Button variant="ghost" size="sm" className="text-xs h-8" asChild>
-                  <Link href={`/protected/clients/${client.id}`}>
-                    <Eye className="h-3 w-3 mr-1" />
-                    Преглед
-                  </Link>
-                </Button>
-              </div>
+                  <Button size="sm" className="text-xs h-9 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm" asChild>
+                    <Link href={`/protected/clients/${client.id}`}>
+                      <Eye className="h-3.5 w-3.5 mr-1.5" />
+                      Преглед
+                    </Link>
+                  </Button>
+                </div>
 
-              {/* Last activity */}
-              <div className="text-xs text-gray-500 pt-3 border-t mt-3 space-y-1">
-                <div>Последна активност: {client.lastActive || 'Никога'}</div>
-                <div>Присъединен: {client.joinedDate || 'Неизвестно'}</div>
+                {/* Last activity */}
+                <div className="text-xs text-muted-foreground pt-4 border-t mt-4 space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" />
+                    <span>Последна активност: {client.lastActive || 'Никога'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="h-3 w-3" />
+                    <span>Присъединен: {client.joinedDate || 'Неизвестно'}</span>
+                  </div>
+                </div>
               </div>
             </Card>
           ))}

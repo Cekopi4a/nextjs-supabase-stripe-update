@@ -23,17 +23,15 @@ interface Workout {
   id: string;
   name: string;
   scheduled_date: string;
-  estimated_duration_minutes: number;
+  estimated_duration_minutes?: number;
   workout_type: string;
   difficulty_level?: string;
-  status?: 'scheduled' | 'completed' | 'skipped';
+  status?: 'planned' | 'completed' | 'skipped';
   workout_programs?: {
     name: string;
-    trainer_id: string;
-    profiles?: {
-      full_name: string;
-    };
   };
+  exercises?: unknown[];
+  instructions?: string;
   completed_at?: string;
 }
 
@@ -75,7 +73,12 @@ export default function WorkoutCalendarPage() {
 
   useEffect(() => {
     if (userRole) {
-      fetchWorkouts();
+      // Redirect clients to their programs page
+      if (userRole === 'client') {
+        window.location.href = '/protected/programs';
+      } else {
+        fetchWorkouts();
+      }
     }
   }, [currentDate, userRole]);
 
@@ -110,53 +113,24 @@ export default function WorkoutCalendarPage() {
       const startDate = dateToLocalDateString(startOfMonth);
       const endDate = dateToLocalDateString(endOfMonth);
 
+      // For trainers - show their personal workouts (where they are the client)
       let query = supabase
-        .from("workouts")
+        .from("workout_sessions")
         .select(`
           *,
-          workout_programs!inner(
-            name,
-            trainer_id,
-            profiles!workout_programs_trainer_id_fkey(full_name)
-          )
+          workout_programs(name)
         `)
+        .eq("client_id", user.id)
         .gte("scheduled_date", startDate)
         .lte("scheduled_date", endDate)
         .order("scheduled_date", { ascending: true });
-
-      // Filter based on user role
-      if (userRole === 'client') {
-        query = query.eq("workout_programs.client_id", user.id);
-      } else if (userRole === 'trainer') {
-        query = query.eq("workout_programs.trainer_id", user.id);
-      }
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      // Get workout completion status from logs
-      const workoutIds = data?.map(w => w.id) || [];
-      if (workoutIds.length > 0) {
-        const { data: logs } = await supabase
-          .from("workout_logs")
-          .select("workout_id, completed, completed_at")
-          .in("workout_id", workoutIds);
-
-        // Merge completion status
-        const workoutsWithStatus = data?.map(workout => {
-          const log = logs?.find(l => l.workout_id === workout.id);
-          return {
-            ...workout,
-            status: log ? (log.completed ? 'completed' : 'skipped') : 'scheduled',
-            completed_at: log?.completed_at
-          };
-        }) || [];
-
-        setWorkouts(workoutsWithStatus);
-      } else {
-        setWorkouts(data || []);
-      }
+      // workout_sessions already has status field
+      setWorkouts(data || []);
     } catch (error) {
       console.error("Error fetching workouts:", error);
     } finally {
@@ -218,22 +192,16 @@ export default function WorkoutCalendarPage() {
 
   const markWorkoutComplete = async (workoutId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { error } = await supabase
-        .from("workout_logs")
-        .upsert({
-          client_id: user.id,
-          workout_id: workoutId,
-          date: dateToLocalDateString(new Date()),
-          exercises_completed: [], // Empty for quick complete
-          completed: true,
+        .from("workout_sessions")
+        .update({
+          status: 'completed',
           completed_at: new Date().toISOString()
-        });
+        })
+        .eq("id", workoutId);
 
       if (error) throw error;
-      
+
       // Refresh workouts
       fetchWorkouts();
     } catch (error) {
@@ -248,10 +216,10 @@ export default function WorkoutCalendarPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center">
             <CalendarIcon className="h-6 w-6 mr-2" />
-            Календар с тренировки
+            Моят тренировъчен календар
           </h1>
           <p className="text-muted-foreground">
-            Планирайте и проследявайте тренировките си
+            Личните ми тренировки
           </p>
         </div>
         
@@ -259,14 +227,6 @@ export default function WorkoutCalendarPage() {
           <Button variant="outline" onClick={goToToday}>
             Днес
           </Button>
-          {userRole === 'trainer' && (
-            <Button asChild>
-              <Link href="/protected/programs/create">
-                <Plus className="h-4 w-4 mr-2" />
-                Нова програма
-              </Link>
-            </Button>
-          )}
         </div>
       </div>
 
@@ -398,22 +358,22 @@ function CalendarDayCell({
   );
 }
 
-function WorkoutItem({ 
-  workout, 
-  onClick, 
-  onMarkComplete, 
-  userRole 
-}: { 
-  workout: Workout; 
+function WorkoutItem({
+  workout,
+  onClick,
+  onMarkComplete,
+  userRole
+}: {
+  workout: Workout;
   onClick: () => void;
   onMarkComplete: (workoutId: string) => void;
   userRole: string | null;
 }) {
   const isCompleted = workout.status === 'completed';
   const workoutTypeColor = WORKOUT_COLORS[workout.workout_type as keyof typeof WORKOUT_COLORS] || WORKOUT_COLORS.strength;
-  
+
   return (
-    <div 
+    <div
       className={`
         text-xs p-2 rounded border cursor-pointer transition-all hover:shadow-sm
         ${isCompleted ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-700 dark:text-green-300' : workoutTypeColor}
@@ -429,8 +389,8 @@ function WorkoutItem({
           )}
           <span className="font-medium truncate">{workout.name}</span>
         </div>
-        
-        {!isCompleted && userRole === 'client' && (
+
+        {!isCompleted && (
           <Button
             size="sm"
             variant="ghost"
@@ -444,12 +404,14 @@ function WorkoutItem({
           </Button>
         )}
       </div>
-      
+
       <div className="flex items-center gap-2 mt-1">
-        <span className="flex items-center gap-1">
-          <Clock className="h-2 w-2" />
-          {workout.estimated_duration_minutes}мин
-        </span>
+        {workout.estimated_duration_minutes && (
+          <span className="flex items-center gap-1">
+            <Clock className="h-2 w-2" />
+            {workout.estimated_duration_minutes}мин
+          </span>
+        )}
         {workout.difficulty_level && (
           <span className="text-[10px] opacity-75">
             {workout.difficulty_level}
@@ -460,19 +422,19 @@ function WorkoutItem({
   );
 }
 
-function WorkoutDetailsModal({ 
-  workout, 
-  onClose, 
-  onMarkComplete, 
-  userRole 
-}: { 
-  workout: Workout; 
+function WorkoutDetailsModal({
+  workout,
+  onClose,
+  onMarkComplete,
+  userRole
+}: {
+  workout: Workout;
   onClose: () => void;
   onMarkComplete: (workoutId: string) => void;
   userRole: string | null;
 }) {
   const isCompleted = workout.status === 'completed';
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md">
@@ -483,36 +445,42 @@ function WorkoutDetailsModal({
               ✕
             </Button>
           </div>
-          
+
           <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Програма</p>
-              <p className="font-medium">{workout.workout_programs?.name}</p>
-              {workout.workout_programs?.profiles?.full_name && (
-                <p className="text-sm text-muted-foreground">
-                  Треньор: {workout.workout_programs.profiles.full_name}
-                </p>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+            {workout.workout_programs?.name && (
               <div>
-                <p className="text-sm text-muted-foreground">Продължителност</p>
-                <p className="font-medium">{workout.estimated_duration_minutes} минути</p>
+                <p className="text-sm text-muted-foreground">Програма</p>
+                <p className="font-medium">{workout.workout_programs.name}</p>
               </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              {workout.estimated_duration_minutes && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Продължителност</p>
+                  <p className="font-medium">{workout.estimated_duration_minutes} минути</p>
+                </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground">Тип</p>
                 <Badge variant="secondary">{workout.workout_type}</Badge>
               </div>
             </div>
-            
+
             {workout.difficulty_level && (
               <div>
                 <p className="text-sm text-muted-foreground">Ниво</p>
                 <p className="font-medium">{workout.difficulty_level}</p>
               </div>
             )}
-            
+
+            {workout.instructions && (
+              <div>
+                <p className="text-sm text-muted-foreground">Инструкции</p>
+                <p className="text-sm">{workout.instructions}</p>
+              </div>
+            )}
+
             <div>
               <p className="text-sm text-muted-foreground">Статус</p>
               <Badge variant={isCompleted ? "success" : "secondary"}>
@@ -525,21 +493,14 @@ function WorkoutDetailsModal({
               )}
             </div>
           </div>
-          
+
           <div className="flex gap-2 mt-6">
             <Button variant="outline" onClick={onClose} className="flex-1">
               Затвори
             </Button>
-            
-            <Button asChild className="flex-1">
-              <Link href={`/protected/workouts/${workout.id}`}>
-                <Eye className="h-4 w-4 mr-2" />
-                Детайли
-              </Link>
-            </Button>
-            
-            {!isCompleted && userRole === 'client' && (
-              <Button 
+
+            {!isCompleted && (
+              <Button
                 onClick={() => {
                   onMarkComplete(workout.id);
                   onClose();
