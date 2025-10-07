@@ -22,8 +22,8 @@ export default function Footer() {
       { name: 'Партньори', href: '#' },
     ],
     legal: [
-      { name: 'Поверителност', href: '#' },
-      { name: 'Условия', href: '#' },
+      { name: 'Поверителност', href: '/privacy' },
+      { name: 'Условия', href: '/terms' },
       { name: 'Бисквитки', href: '#' },
       { name: 'Лицензи', href: '#' },
     ],

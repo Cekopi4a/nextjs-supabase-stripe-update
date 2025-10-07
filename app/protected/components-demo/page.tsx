@@ -107,6 +107,13 @@ export default function ComponentsDemo() {
           </TabsList>
         </div>
 
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-2">🎨 Цветови палитри</h3>
+          <TabsList className="w-full">
+            <TabsTrigger value="color-palettes">Цветови палитри</TabsTrigger>
+          </TabsList>
+        </div>
+
         {/* ============ TAILWIND CSS TABS ============ */}
 
         {/* Tailwind Buttons */}
@@ -1325,6 +1332,338 @@ export default function ComponentsDemo() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Color Palettes */}
+        <TabsContent value="color-palettes" className="space-y-6">
+          <div className="rounded-xl border bg-gradient-to-r from-violet-500/10 to-purple-500/10 p-6">
+            <h2 className="text-2xl font-bold mb-2">🎨 Цветови палитри за Fitness App</h2>
+            <p className="text-muted-foreground">Различни цветови схеми за визуализация и избор</p>
+          </div>
+
+          {/* Palette 1: Energetic Orange/Red */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-r from-orange-500 to-red-500"></div>
+                Палитра 1: Енергична (Оранжево-Червена)
+              </CardTitle>
+              <CardDescription>Динамична и мотивираща - подходяща за fitness приложения</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-orange-500 shadow-lg shadow-orange-500/30"></div>
+                  <p className="text-xs font-mono">orange-500</p>
+                  <p className="text-xs text-muted-foreground">Primary</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-red-500 shadow-lg shadow-red-500/30"></div>
+                  <p className="text-xs font-mono">red-500</p>
+                  <p className="text-xs text-muted-foreground">Accent</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-amber-400"></div>
+                  <p className="text-xs font-mono">amber-400</p>
+                  <p className="text-xs text-muted-foreground">Highlight</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-800 border"></div>
+                  <p className="text-xs font-mono">slate-800</p>
+                  <p className="text-xs text-muted-foreground">Dark BG</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-50 border"></div>
+                  <p className="text-xs font-mono">slate-50</p>
+                  <p className="text-xs text-muted-foreground">Light BG</p>
+                </div>
+              </div>
+              <div className="p-6 rounded-lg bg-gradient-to-br from-orange-500 to-red-500">
+                <h4 className="text-white font-bold mb-2">Примерен UI елемент</h4>
+                <p className="text-white/90 text-sm mb-4">Добре дошли в твоята фитнес трансформация!</p>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 rounded-lg bg-white text-orange-600 font-semibold hover:bg-white/90">Започни</button>
+                  <button className="px-4 py-2 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:bg-amber-500">Научи повече</button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Palette 2: Professional Blue/Cyan */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                Палитра 2: Професионална (Синьо-Циан)
+              </CardTitle>
+              <CardDescription>Чиста и модерна - вдъхва доверие и професионализъм</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-blue-600 shadow-lg shadow-blue-600/30"></div>
+                  <p className="text-xs font-mono">blue-600</p>
+                  <p className="text-xs text-muted-foreground">Primary</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-cyan-500 shadow-lg shadow-cyan-500/30"></div>
+                  <p className="text-xs font-mono">cyan-500</p>
+                  <p className="text-xs text-muted-foreground">Accent</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-sky-400"></div>
+                  <p className="text-xs font-mono">sky-400</p>
+                  <p className="text-xs text-muted-foreground">Highlight</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-900 border"></div>
+                  <p className="text-xs font-mono">slate-900</p>
+                  <p className="text-xs text-muted-foreground">Dark BG</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-50 border"></div>
+                  <p className="text-xs font-mono">slate-50</p>
+                  <p className="text-xs text-muted-foreground">Light BG</p>
+                </div>
+              </div>
+              <div className="p-6 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500">
+                <h4 className="text-white font-bold mb-2">Примерен UI елемент</h4>
+                <p className="text-white/90 text-sm mb-4">Професионален подход към твоя прогрес</p>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 rounded-lg bg-white text-blue-600 font-semibold hover:bg-white/90">Започни</button>
+                  <button className="px-4 py-2 rounded-lg bg-cyan-400 text-slate-900 font-semibold hover:bg-cyan-500">Научи повече</button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Palette 3: Natural Green */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-r from-green-500 to-emerald-500"></div>
+                Палитра 3: Естествена (Зелена)
+              </CardTitle>
+              <CardDescription>Балансирана и здравословна - идеална за wellness и nutrition</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-green-600 shadow-lg shadow-green-600/30"></div>
+                  <p className="text-xs font-mono">green-600</p>
+                  <p className="text-xs text-muted-foreground">Primary</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-emerald-500 shadow-lg shadow-emerald-500/30"></div>
+                  <p className="text-xs font-mono">emerald-500</p>
+                  <p className="text-xs text-muted-foreground">Accent</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-lime-400"></div>
+                  <p className="text-xs font-mono">lime-400</p>
+                  <p className="text-xs text-muted-foreground">Highlight</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-800 border"></div>
+                  <p className="text-xs font-mono">slate-800</p>
+                  <p className="text-xs text-muted-foreground">Dark BG</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-stone-50 border"></div>
+                  <p className="text-xs font-mono">stone-50</p>
+                  <p className="text-xs text-muted-foreground">Light BG</p>
+                </div>
+              </div>
+              <div className="p-6 rounded-lg bg-gradient-to-br from-green-600 to-emerald-500">
+                <h4 className="text-white font-bold mb-2">Примерен UI елемент</h4>
+                <p className="text-white/90 text-sm mb-4">Здравословни навици за по-добър живот</p>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 rounded-lg bg-white text-green-600 font-semibold hover:bg-white/90">Започни</button>
+                  <button className="px-4 py-2 rounded-lg bg-lime-400 text-slate-900 font-semibold hover:bg-lime-500">Научи повече</button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Palette 4: Modern Purple/Violet */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-r from-purple-500 to-violet-500"></div>
+                Палитра 4: Модерна (Лилаво-Виолетова)
+              </CardTitle>
+              <CardDescription>Premium и иновативна - за луксозни fitness услуги</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-purple-600 shadow-lg shadow-purple-600/30"></div>
+                  <p className="text-xs font-mono">purple-600</p>
+                  <p className="text-xs text-muted-foreground">Primary</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-violet-500 shadow-lg shadow-violet-500/30"></div>
+                  <p className="text-xs font-mono">violet-500</p>
+                  <p className="text-xs text-muted-foreground">Accent</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-fuchsia-400"></div>
+                  <p className="text-xs font-mono">fuchsia-400</p>
+                  <p className="text-xs text-muted-foreground">Highlight</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-900 border"></div>
+                  <p className="text-xs font-mono">slate-900</p>
+                  <p className="text-xs text-muted-foreground">Dark BG</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-50 border"></div>
+                  <p className="text-xs font-mono">slate-50</p>
+                  <p className="text-xs text-muted-foreground">Light BG</p>
+                </div>
+              </div>
+              <div className="p-6 rounded-lg bg-gradient-to-br from-purple-600 to-violet-500">
+                <h4 className="text-white font-bold mb-2">Примерен UI елемент</h4>
+                <p className="text-white/90 text-sm mb-4">Premium fitness опит на ново ниво</p>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 rounded-lg bg-white text-purple-600 font-semibold hover:bg-white/90">Започни</button>
+                  <button className="px-4 py-2 rounded-lg bg-fuchsia-400 text-white font-semibold hover:bg-fuchsia-500">Научи повече</button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Palette 5: Bold Dark Mode */}
+          <Card className="bg-slate-950 text-white border-slate-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-r from-slate-700 to-zinc-600"></div>
+                Палитра 5: Тъмна (Dark Mode Focused)
+              </CardTitle>
+              <CardDescription className="text-slate-400">Минималистична и елегантна - за нощни тренировки</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-50 border border-slate-700"></div>
+                  <p className="text-xs font-mono text-slate-300">slate-50</p>
+                  <p className="text-xs text-slate-500">Primary Text</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-zinc-700 border border-slate-700"></div>
+                  <p className="text-xs font-mono text-slate-300">zinc-700</p>
+                  <p className="text-xs text-slate-500">Cards</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-blue-500 shadow-lg shadow-blue-500/30"></div>
+                  <p className="text-xs font-mono text-slate-300">blue-500</p>
+                  <p className="text-xs text-slate-500">Accent</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-900 border border-slate-700"></div>
+                  <p className="text-xs font-mono text-slate-300">slate-900</p>
+                  <p className="text-xs text-slate-500">BG</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-950 border border-slate-700"></div>
+                  <p className="text-xs font-mono text-slate-300">slate-950</p>
+                  <p className="text-xs text-slate-500">Deep BG</p>
+                </div>
+              </div>
+              <div className="p-6 rounded-lg bg-zinc-800/50 border border-slate-700">
+                <h4 className="text-white font-bold mb-2">Примерен UI елемент</h4>
+                <p className="text-slate-300 text-sm mb-4">Елегантен тъмен дизайн за всяка тренировка</p>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600">Започни</button>
+                  <button className="px-4 py-2 rounded-lg bg-slate-700 text-white font-semibold hover:bg-slate-600">Научи повече</button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Palette 6: Vibrant Gradient Mix */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></div>
+                Палитра 6: Динамична (Multi-Gradient)
+              </CardTitle>
+              <CardDescription>Креативна и жизнена - за youth-focused fitness брандове</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-pink-500 shadow-lg shadow-pink-500/30"></div>
+                  <p className="text-xs font-mono">pink-500</p>
+                  <p className="text-xs text-muted-foreground">Primary</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-purple-500 shadow-lg shadow-purple-500/30"></div>
+                  <p className="text-xs font-mono">purple-500</p>
+                  <p className="text-xs text-muted-foreground">Mid</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-indigo-500 shadow-lg shadow-indigo-500/30"></div>
+                  <p className="text-xs font-mono">indigo-500</p>
+                  <p className="text-xs text-muted-foreground">Accent</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-slate-900 border"></div>
+                  <p className="text-xs font-mono">slate-900</p>
+                  <p className="text-xs text-muted-foreground">Dark BG</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-20 rounded-lg bg-white border"></div>
+                  <p className="text-xs font-mono">white</p>
+                  <p className="text-xs text-muted-foreground">Light BG</p>
+                </div>
+              </div>
+              <div className="p-6 rounded-lg bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">
+                <h4 className="text-white font-bold mb-2">Примерен UI елемент</h4>
+                <p className="text-white/90 text-sm mb-4">Ярък и креативен подход към фитнеса</p>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 rounded-lg bg-white text-pink-600 font-semibold hover:bg-white/90">Започни</button>
+                  <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700">Научи повече</button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Comparison Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>📊 Сравнителна визуализация</CardTitle>
+              <CardDescription>Всички палитри в едно място за лесно сравнение</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="space-y-2">
+                  <div className="h-24 rounded-lg bg-gradient-to-br from-orange-500 to-red-500"></div>
+                  <p className="text-xs font-semibold text-center">Енергична</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-24 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500"></div>
+                  <p className="text-xs font-semibold text-center">Професионална</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-24 rounded-lg bg-gradient-to-br from-green-600 to-emerald-500"></div>
+                  <p className="text-xs font-semibold text-center">Естествена</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-24 rounded-lg bg-gradient-to-br from-purple-600 to-violet-500"></div>
+                  <p className="text-xs font-semibold text-center">Модерна</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-24 rounded-lg bg-slate-950 border"></div>
+                  <p className="text-xs font-semibold text-center">Тъмна</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-24 rounded-lg bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500"></div>
+                  <p className="text-xs font-semibold text-center">Динамична</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
       </Tabs>
