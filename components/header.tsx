@@ -123,7 +123,7 @@ export default function Header() {
 
   return (
     <>
-    <header className="bg-background/95 backdrop-blur-sm border-b border-border h-16 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-40">
+    <header className="bg-background/80 backdrop-blur-xl border-b border-border/50 h-16 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-40 shadow-sm">
       {/* Left section - Logo/Menu */}
       <div className="flex items-center">
         {/* Logo and navigation for non-authenticated users */}
@@ -132,14 +132,15 @@ export default function Header() {
             <Logo showText={true} href="/" className="hidden md:flex" />
 
             {/* Desktop Navigation Menu */}
-            <nav className="hidden lg:flex ml-10 space-x-8">
+            <nav className="hidden lg:flex ml-12 space-x-1">
               {navigationItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-sm font-medium text-foreground hover:text-blue-600 transition-colors"
+                  className="relative px-4 py-2 text-sm font-medium text-foreground/80 hover:text-blue-600 transition-all duration-200 rounded-lg hover:bg-blue-50/50 dark:hover:bg-blue-950/30 group"
                 >
                   {item.label}
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-cyan-500 transition-all duration-300 group-hover:w-3/4 rounded-full"></span>
                 </Link>
               ))}
             </nav>
@@ -147,12 +148,12 @@ export default function Header() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+              className="lg:hidden p-2.5 rounded-xl hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 transition-all duration-200 hover:scale-105 active:scale-95"
             >
               {showMobileMenu ? (
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-foreground" />
               ) : (
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5 text-foreground" />
               )}
             </button>
           </>
@@ -165,7 +166,7 @@ export default function Header() {
             <Button
               variant="ghost"
               size="sm"
-              className="lg:hidden h-9 w-9 p-0 hover:bg-muted"
+              className="lg:hidden h-10 w-10 p-0 hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 rounded-xl transition-all duration-200"
               onClick={() => {
                 window.dispatchEvent(new CustomEvent('toggleMobileMenu'));
               }}
@@ -185,23 +186,29 @@ export default function Header() {
       </div>
 
       {/* Right section */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Theme Toggle - always visible */}
-        <ThemeToggle />
-        
+        <div className="mr-1">
+          <ThemeToggle />
+        </div>
+
         {loading ? (
           /* Loading state */
           <div className="flex items-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600/30 border-t-blue-600"></div>
           </div>
         ) : user ? (
           /* Authenticated user header */
           <>
             {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative hover:bg-blue-50/50">
-              <Bell className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="relative h-10 w-10 p-0 hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 rounded-xl transition-all duration-200 hover:scale-105"
+            >
+              <Bell className="h-4.5 w-4.5 text-foreground/70" />
               {/* Notification badge */}
-              <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-lg">
+              <span className="absolute -top-0.5 -right-0.5 h-5 w-5 bg-gradient-to-br from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-semibold shadow-lg ring-2 ring-background animate-pulse">
                 2
               </span>
             </Button>
@@ -210,76 +217,84 @@ export default function Header() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-3 pl-3 border-l border-border hover:bg-blue-50/50 rounded-r-xl py-2 px-3 transition-all duration-200 hover:scale-[1.02]"
+                className="flex items-center gap-2.5 pl-4 ml-2 border-l border-border/50 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-cyan-50/50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 rounded-r-2xl py-1.5 pr-3 transition-all duration-200 hover:shadow-md group"
               >
                 <div className="hidden sm:block text-right">
-                  <p className="text-sm font-medium text-foreground leading-tight">
+                  <p className="text-sm font-semibold text-foreground leading-tight group-hover:text-blue-600 transition-colors">
                     {profile?.full_name || "Потребител"}
                   </p>
-                  <p className="text-xs text-muted-foreground leading-tight capitalize">
+                  <p className="text-xs text-muted-foreground leading-tight capitalize font-medium">
                     {profile?.role || "client"}
                   </p>
                 </div>
-                <div className="h-9 w-9 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                  <User className="h-4 w-4 text-blue-600" />
+                <div className="h-10 w-10 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-background group-hover:ring-blue-200 dark:group-hover:ring-blue-800 transition-all duration-200 group-hover:scale-105">
+                  <User className="h-5 w-5 text-white" />
                 </div>
-                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" style={{ transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-300" style={{ transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </button>
 
               {/* Dropdown menu */}
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-background rounded-lg shadow-lg border border-border py-2 z-50">
+                <div className="absolute right-0 top-full mt-3 w-72 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   {/* User info in dropdown */}
-                  <div className="px-4 py-3 border-b border-border">
+                  <div className="px-4 py-4 border-b border-border/50">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium text-sm">
+                      <div className="h-12 w-12 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-blue-200 dark:ring-blue-800">
+                        <span className="text-white font-bold text-lg">
                           {profile?.full_name?.charAt(0).toUpperCase() || "П"}
                         </span>
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground text-sm">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground text-sm truncate">
                           {profile?.full_name || "Потребител"}
                         </p>
-                        <p className="text-xs text-muted-foreground">{user?.email}</p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          {profile?.role || "client"}
-                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                        <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 border border-blue-200/50 dark:border-blue-800/50">
+                          <p className="text-xs font-medium text-blue-700 dark:text-blue-400 capitalize">
+                            {profile?.role || "client"}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Menu items */}
-                  <div className="py-2">
+                  <div className="py-2 px-2">
                     <button
                       onClick={() => {
                         router.push('/protected/account');
                         setShowUserMenu(false);
                       }}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted w-full text-left transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 w-full text-left transition-all duration-200 rounded-xl group"
                     >
-                      <UserCircle className="h-4 w-4" />
+                      <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
+                        <UserCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
                       Моят профил
                     </button>
-                    
+
                     <button
                       onClick={() => {
                         router.push('/protected/settings');
                         setShowUserMenu(false);
                       }}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-muted w-full text-left transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-foreground hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 w-full text-left transition-all duration-200 rounded-xl group"
                     >
-                      <Settings className="h-4 w-4" />
+                      <div className="h-8 w-8 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center group-hover:bg-cyan-200 dark:group-hover:bg-cyan-900/50 transition-colors">
+                        <Settings className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                      </div>
                       Настройки
                     </button>
                   </div>
 
-                  <div className="border-t border-border pt-2">
+                  <div className="border-t border-border/50 pt-2 px-2 mt-2">
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 w-full text-left transition-colors"
+                      className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 w-full text-left transition-all duration-200 rounded-xl group"
                     >
-                      <LogOut className="h-4 w-4" />
+                      <div className="h-8 w-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition-colors">
+                        <LogOut className="h-4 w-4 text-red-600 dark:text-red-400" />
+                      </div>
                       Изход
                     </button>
                   </div>
@@ -290,10 +305,19 @@ export default function Header() {
         ) : (
           /* Guest user header */
           <>
-            <Button variant="outline" size="sm" className="border-blue-200 hover:border-blue-300 hover:bg-blue-50/50" asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 font-medium transition-all duration-200 hover:shadow-md rounded-xl"
+              asChild
+            >
               <Link href="/sign-in">Вход</Link>
             </Button>
-            <Button size="sm" className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg" asChild>
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-lg hover:shadow-xl font-semibold transition-all duration-200 hover:scale-105 active:scale-95 rounded-xl"
+              asChild
+            >
               <Link href="/sign-up">Регистрация</Link>
             </Button>
           </>
@@ -303,28 +327,36 @@ export default function Header() {
     
     {/* Mobile Navigation Menu */}
     {!loading && !user && showMobileMenu && (
-      <div 
+      <div
         ref={mobileMenuRef}
-        className="fixed inset-x-0 top-16 bg-background/95 backdrop-blur-sm border-b border-border z-30 lg:hidden"
+        className="fixed inset-x-0 top-16 bg-background/95 backdrop-blur-xl border-b border-border/50 z-30 lg:hidden shadow-xl animate-in slide-in-from-top-4 duration-300"
       >
         <nav className="px-4 py-6 space-y-2">
-          {navigationItems.map((item) => (
-            <Link 
+          {navigationItems.map((item, index) => (
+            <Link
               key={item.href}
               href={item.href}
               onClick={() => setShowMobileMenu(false)}
-              className="block px-4 py-3 rounded-xl text-foreground hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200 font-medium"
+              className="block px-4 py-3.5 rounded-xl text-foreground hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 transition-all duration-200 font-medium hover:pl-5 hover:shadow-sm"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               {item.label}
             </Link>
           ))}
-          
+
           {/* Mobile Auth Buttons */}
-          <div className="pt-4 mt-4 border-t border-border space-y-3">
-            <Button variant="outline" className="w-full border-blue-200 hover:border-blue-300 hover:bg-blue-50/50" asChild>
+          <div className="pt-6 mt-4 border-t border-border/50 space-y-3">
+            <Button
+              variant="outline"
+              className="w-full border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 font-medium h-11 rounded-xl hover:shadow-md transition-all duration-200"
+              asChild
+            >
               <Link href="/sign-in">Вход в акаунта</Link>
             </Button>
-            <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg" asChild>
+            <Button
+              className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-lg hover:shadow-xl font-semibold h-11 rounded-xl transition-all duration-200 hover:scale-[1.02]"
+              asChild
+            >
               <Link href="/sign-up">Създай акаунт безплатно</Link>
             </Button>
           </div>

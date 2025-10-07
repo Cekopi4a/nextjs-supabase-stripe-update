@@ -952,12 +952,6 @@ function WorkoutItem({
           <span className="font-medium truncate">{workout.name}</span>
         </div>
 
-        {!isRestDay && workout.exercises && workout.exercises.length > 0 && (
-          <span className="text-[8px] sm:text-xs text-muted-foreground ml-1 hidden sm:inline">
-            ({workout.exercises.length} упр.)
-          </span>
-        )}
-
         <div className="flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100">
           <Button
             size="sm"
