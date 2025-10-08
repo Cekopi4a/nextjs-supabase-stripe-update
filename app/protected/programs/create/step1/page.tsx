@@ -9,6 +9,7 @@ export interface ProgramData {
   difficulty: string;
   durationWeeks: number;
   description: string;
+  startDate: string;
 }
 
 export default function CreateProgramStep1() {
@@ -17,7 +18,8 @@ export default function CreateProgramStep1() {
     name: "",
     difficulty: "",
     durationWeeks: 8,
-    description: ""
+    description: "",
+    startDate: new Date().toISOString().split('T')[0]
   });
 
   const handleSubmit = (data: ProgramData) => {
@@ -25,7 +27,8 @@ export default function CreateProgramStep1() {
       name: data.name,
       difficulty: data.difficulty,
       durationWeeks: data.durationWeeks.toString(),
-      description: data.description
+      description: data.description,
+      startDate: data.startDate
     });
 
     router.push(`/protected/programs/create/step2?${queryParams.toString()}`);

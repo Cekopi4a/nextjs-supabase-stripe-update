@@ -967,13 +967,42 @@ export default function RecipesPageClient({
             filteredAndSortedRecipes().map((recipe) => (
               <Card
                 key={recipe.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
+                className="hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden group"
                 onClick={() => handleRecipeClick(recipe)}
               >
+                {/* Image Header */}
+                {recipe.images?.[0] ? (
+                  <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                    <img
+                      src={recipe.images[0]}
+                      alt={recipe.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      {recipe.difficulty_level && (
+                        <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm">
+                          {DIFFICULTY_LEVELS.find(d => d.value === recipe.difficulty_level)?.label}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative h-48 w-full bg-gradient-to-br from-blue-100 via-cyan-50 to-sky-100 flex items-center justify-center">
+                    <ChefHat className="h-16 w-16 text-blue-300" />
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      {recipe.difficulty_level && (
+                        <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm">
+                          {DIFFICULTY_LEVELS.find(d => d.value === recipe.difficulty_level)?.label}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg">{recipe.name}</CardTitle>
+                      <CardTitle className="text-lg line-clamp-1">{recipe.name}</CardTitle>
                       {recipe.description && (
                         <p className="text-sm text-gray-600 mt-1 line-clamp-2">{recipe.description}</p>
                       )}
@@ -981,11 +1010,6 @@ export default function RecipesPageClient({
                         <Badge variant="secondary">
                           {RECIPE_CATEGORIES.find(c => c.value === recipe.category)?.label}
                         </Badge>
-                        {recipe.difficulty_level && (
-                          <Badge variant="outline">
-                            {DIFFICULTY_LEVELS.find(d => d.value === recipe.difficulty_level)?.label}
-                          </Badge>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1374,13 +1398,95 @@ export default function RecipesPageClient({
                   .map((recipe) => (
                     <Card
                       key={recipe.id}
-                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      className="hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden group"
                       onClick={() => handleRecipeClick(recipe)}
                     >
+                      {/* Image Header */}
+                      {recipe.images?.[0] ? (
+                        <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                          <img
+                            src={recipe.images[0]}
+                            alt={recipe.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            <Badge variant="default" className="bg-blue-600 text-white text-xs">
+                              Собствена
+                            </Badge>
+                          </div>
+                          <div className="absolute bottom-2 right-2 flex gap-1">
+                            {canEdit(recipe) && (
+                              <>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm hover:bg-white"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEdit(recipe);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm hover:bg-white text-red-600 hover:text-red-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(recipe.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative h-48 w-full bg-gradient-to-br from-blue-100 via-cyan-50 to-sky-100 flex items-center justify-center">
+                          <ChefHat className="h-16 w-16 text-blue-300" />
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            <Badge variant="default" className="bg-blue-600 text-white text-xs">
+                              Собствена
+                            </Badge>
+                          </div>
+                          <div className="absolute bottom-2 right-2 flex gap-1">
+                            {canEdit(recipe) && (
+                              <>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm hover:bg-white"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEdit(recipe);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm hover:bg-white text-red-600 hover:text-red-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(recipe.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <CardTitle className="text-lg">{recipe.name}</CardTitle>
+                            <CardTitle className="text-lg line-clamp-1">{recipe.name}</CardTitle>
                             {recipe.description && (
                               <p className="text-sm text-gray-600 mt-1 line-clamp-2">{recipe.description}</p>
                             )}
@@ -1388,38 +1494,8 @@ export default function RecipesPageClient({
                               <Badge variant="secondary">
                                 {RECIPE_CATEGORIES.find(c => c.value === recipe.category)?.label}
                               </Badge>
-                              <Badge variant="default" className="text-xs">
-                                Собствена
-                              </Badge>
                             </div>
                           </div>
-
-                          {canEdit(recipe) && (
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEdit(recipe);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(recipe.id);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
                         </div>
                       </CardHeader>
 
@@ -1478,13 +1554,42 @@ export default function RecipesPageClient({
                   .map((recipe) => (
                     <Card
                       key={recipe.id}
-                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      className="hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden group"
                       onClick={() => handleRecipeClick(recipe)}
                     >
+                      {/* Image Header */}
+                      {recipe.images?.[0] ? (
+                        <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                          <img
+                            src={recipe.images[0]}
+                            alt={recipe.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            {recipe.is_verified && (
+                              <Badge variant="default" className="bg-green-600 text-white text-xs">
+                                Проверена
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative h-48 w-full bg-gradient-to-br from-blue-100 via-cyan-50 to-sky-100 flex items-center justify-center">
+                          <ChefHat className="h-16 w-16 text-blue-300" />
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            {recipe.is_verified && (
+                              <Badge variant="default" className="bg-green-600 text-white text-xs">
+                                Проверена
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <CardTitle className="text-lg">{recipe.name}</CardTitle>
+                            <CardTitle className="text-lg line-clamp-1">{recipe.name}</CardTitle>
                             {recipe.description && (
                               <p className="text-sm text-gray-600 mt-1 line-clamp-2">{recipe.description}</p>
                             )}
@@ -1492,11 +1597,6 @@ export default function RecipesPageClient({
                               <Badge variant="secondary">
                                 {RECIPE_CATEGORIES.find(c => c.value === recipe.category)?.label}
                               </Badge>
-                              {recipe.is_verified && (
-                                <Badge variant="default" className="text-xs">
-                                  Проверена
-                                </Badge>
-                              )}
                             </div>
                           </div>
                         </div>

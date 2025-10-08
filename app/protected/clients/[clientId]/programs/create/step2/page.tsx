@@ -47,6 +47,7 @@ export interface ProgramData {
   difficulty: string;
   durationWeeks: number;
   description: string;
+  startDate: string;
 }
 
 interface Client {
@@ -77,7 +78,7 @@ export default function CreateClientProgramStep2() {
   const [dayTypes, setDayTypes] = useState<{[dateKey: string]: DayType}>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const [programStartDate] = useState<Date>(new Date());
+  const [programStartDate, setProgramStartDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [restDaysByDate, setRestDaysByDate] = useState<{[dateKey: string]: any}>({});
 
@@ -116,10 +117,20 @@ export default function CreateClientProgramStep2() {
       name: searchParams.get("name") || "",
       difficulty: searchParams.get("difficulty") || "",
       durationWeeks: Number(searchParams.get("durationWeeks")) || 8,
-      description: searchParams.get("description") || ""
+      description: searchParams.get("description") || "",
+      startDate: searchParams.get("startDate") || new Date().toISOString().split('T')[0]
     };
 
     setProgramData(params);
+
+    // Set program start date from params (avoid timezone issues)
+    if (params.startDate) {
+      const [year, month, day] = params.startDate.split('-').map(Number);
+      const startDate = new Date(year, month - 1, day);
+      setProgramStartDate(startDate);
+      setCurrentDate(startDate);
+    }
+
     loadExercises();
     loadClient();
     checkActiveProgram();
@@ -283,6 +294,7 @@ export default function CreateClientProgramStep2() {
           description: programData?.description || "",
           difficulty_level: programData?.difficulty || "beginner",
           estimated_duration_weeks: programData?.durationWeeks || 8,
+          start_date: programData?.startDate,
           is_active: true
         })
         .select()

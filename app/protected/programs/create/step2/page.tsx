@@ -42,6 +42,7 @@ export interface ProgramData {
   difficulty: string;
   durationWeeks: number;
   description: string;
+  startDate: string;
 }
 
 export default function CreateProgramStep2() {
@@ -64,7 +65,7 @@ export default function CreateProgramStep2() {
   const [dayTypes, setDayTypes] = useState<{[dateKey: string]: DayType}>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const [programStartDate] = useState<Date>(new Date());
+  const [programStartDate, setProgramStartDate] = useState<Date>(new Date());
 
   // Helper function to get local date key without timezone conversion
   const getLocalDateKey = (date: Date): string => {
@@ -142,10 +143,20 @@ export default function CreateProgramStep2() {
       name: searchParams.get("name") || "",
       difficulty: searchParams.get("difficulty") || "",
       durationWeeks: Number(searchParams.get("durationWeeks")) || 8,
-      description: searchParams.get("description") || ""
+      description: searchParams.get("description") || "",
+      startDate: searchParams.get("startDate") || new Date().toISOString().split('T')[0]
     };
 
     setProgramData(params);
+
+    // Set program start date from params (avoid timezone issues)
+    if (params.startDate) {
+      const [year, month, day] = params.startDate.split('-').map(Number);
+      const startDate = new Date(year, month - 1, day);
+      setProgramStartDate(startDate);
+      setCurrentDate(startDate);
+    }
+
     loadExercises();
     loadClients();
   }, [searchParams, loadExercises, loadClients]);
@@ -451,6 +462,7 @@ export default function CreateProgramStep2() {
             difficulty_level: programData?.difficulty,
             estimated_duration_weeks: programData?.durationWeeks,
             workouts_per_week: Object.keys(workoutsByDate).filter(k => workoutsByDate[k].exercises.length > 0).length,
+            start_date: programData?.startDate,
             is_active: true // Always create as active
           })
           .select()

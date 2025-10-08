@@ -91,32 +91,48 @@ export default function PricingPage() {
   return (
     <div className="flex-1">
       {/* Header Section */}
-      <section className="px-4 py-16 bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-600 px-4 py-2 rounded-full text-sm font-medium mb-6">
+      <section className="relative px-4 py-32 bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-black overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}></div>
+        </div>
+
+        {/* Decorative gradient orbs */}
+        <div className="absolute top-20 -left-20 w-96 h-96 bg-gradient-to-br from-blue-400/30 to-cyan-400/30 dark:from-blue-600/20 dark:to-cyan-600/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 -right-20 w-96 h-96 bg-gradient-to-br from-cyan-400/30 to-blue-400/30 dark:from-cyan-600/20 dark:to-blue-600/20 rounded-full blur-3xl"></div>
+
+        <div className="relative max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-700 dark:text-blue-300 px-5 py-2.5 rounded-full text-sm font-semibold mb-8 border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
             <Target className="h-4 w-4" />
             Ценови планове
           </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Изберете своя 
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">
-              {" "}перфектен план
+
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] text-gray-900 dark:text-white">
+            ИЗБЕРЕТЕ ВАШИЯ
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600">
+              ПЕРФЕКТЕН ПЛАН
             </span>
           </h1>
-          
-          <p className="text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
+
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto font-medium">
             Започнете безплатно или изберете план, който най-добре отговаря на нуждите ви. Всички планове включват пълна поддръжка и редовни актуализации.
           </p>
 
           {/* Billing Toggle */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-gray-100 p-1 rounded-lg flex gap-1">
+          <div className="flex justify-center mb-10">
+            <div className="bg-white dark:bg-gray-800 p-1.5 rounded-2xl flex gap-1 shadow-lg border border-gray-200 dark:border-gray-700">
               <Button
                 variant={billingInterval === "monthly" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setBillingInterval("monthly")}
-                className="px-6"
+                className={`px-8 py-2.5 rounded-xl font-semibold transition-all ${
+                  billingInterval === "monthly"
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                }`}
               >
                 Месечно
               </Button>
@@ -124,36 +140,44 @@ export default function PricingPage() {
                 variant={billingInterval === "yearly" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setBillingInterval("yearly")}
-                className="px-6"
+                className={`px-8 py-2.5 rounded-xl font-semibold transition-all ${
+                  billingInterval === "yearly"
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                }`}
               >
                 Годишно
-                <span className="ml-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                <span className="ml-2 bg-green-500 text-white text-xs px-2.5 py-1 rounded-full font-bold">
                   -17%
                 </span>
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-8 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600 dark:text-gray-400">
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-500" />
-              14 дни безплатен тест
+              <Check className="h-5 w-5 text-green-500" />
+              <span className="font-medium">14 дни безплатен тест</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-500" />
-              Без договор
+              <Check className="h-5 w-5 text-green-500" />
+              <span className="font-medium">Без договор</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-green-500" />
-              Отменяне по всяко време
+              <Check className="h-5 w-5 text-green-500" />
+              <span className="font-medium">Отменяне по всяко време</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="px-4 py-24 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative px-4 py-24 bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-cyan-400/10 dark:from-blue-600/10 dark:to-cyan-600/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 dark:from-cyan-600/10 dark:to-blue-600/10 rounded-full blur-3xl"></div>
+
+        <div className="relative max-w-7xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {pricingPlans.map((plan, index) => (
               <Card 
@@ -263,22 +287,22 @@ export default function PricingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 py-24 bg-gradient-to-r from-blue-500 to-purple-500">
+      <section className="px-4 py-24 bg-gradient-to-r from-blue-600 to-cyan-500">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
             Готови да започнете?
           </h2>
-          <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+          <p className="text-xl text-blue-100 mb-10 leading-relaxed font-medium">
             Присъединете се към хиляди професионални треньори, които вече използват нашата платформа
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="px-10 py-4 text-lg h-auto bg-white text-blue-600 hover:bg-gray-100" asChild>
+            <Button size="lg" className="px-10 py-6 text-lg font-bold h-auto bg-white text-blue-600 hover:bg-gray-100 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105" asChild>
               <Link href="/sign-up">
                 Започнете безплатно
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="px-10 py-4 text-lg h-auto border-white text-white hover:bg-white hover:text-blue-600" asChild>
+            <Button variant="outline" size="lg" className="px-10 py-6 text-lg font-bold h-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-105" asChild>
               <Link href="/sign-in">Влезте в акаунта си</Link>
             </Button>
           </div>

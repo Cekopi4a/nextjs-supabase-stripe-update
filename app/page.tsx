@@ -2,13 +2,36 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dumbbell, Star, ArrowRight, Check, Target, Plus, Minus } from "lucide-react";
+import { Dumbbell, Star, ArrowRight, Check, Target, Plus, Minus, Users, Calendar, TrendingUp, Clock, DollarSign } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import Footer from "@/components/footer";
 
 export default function Home() {
+
+  const targetAudience = [
+    {
+      title: "Персонални треньори",
+      description: "Професионално управление на клиенти и програми",
+      image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      title: "Нутриционисти",
+      description: "Създавайте и управлявайте хранителни планове",
+      image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      title: "Йога и Пилатес инструктори",
+      description: "Планирайте сесии и следете прогреса на клиентите",
+      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      title: "Фитнес коучове",
+      description: "Цялостна подкрепа за постигане на фитнес цели",
+      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+    }
+  ];
 
   const testimonials = [
     {
@@ -19,18 +42,18 @@ export default function Home() {
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
     },
     {
-      name: "Петя Николова", 
-      role: "Клиент",
-      content: "Имам всичко на едно място - програмата ми, хранителния план и проследяване на напредъка.",
+      name: "Анна Георгиева",
+      role: "Нутриционист",
+      content: "Платформата ми позволява лесно да управлявам хранителните планове на клиентите ми. Спестявам часове работа всеки ден.",
       rating: 5,
       avatar: "https://images.unsplash.com/photo-1494790108755-2616c6e1e6d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
     },
     {
-      name: "Александър Димитров",
-      role: "Фитнес треньор",
-      content: "Платформата ми спестява часове работа. Клиентите ми са доволни от персонализирания подход.",
+      name: "Елена Иванова",
+      role: "Йога инструктор",
+      content: "Идеална платформа за планиране на сесиите ми. Клиентите винаги знаят какво ги очаква и виждат прогреса си.",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80"
     }
   ];
 
@@ -270,125 +293,50 @@ export default function Home() {
         `}</style>
       </section>
 
-      {/* Why Choose FitLife Studio */}
-      <section className="relative px-4 py-24 bg-gradient-to-br from-white via-blue-50/20 to-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+      {/* Target Audience Section */}
+      <section className="relative px-4 py-24 bg-white dark:bg-gray-900 overflow-hidden">
         {/* Background decorations */}
-        <div className="absolute top-20 left-0 w-72 h-72 bg-gradient-to-br from-blue-400/10 to-cyan-400/10 dark:from-blue-600/10 dark:to-cyan-600/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-0 w-96 h-96 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 dark:from-cyan-600/10 dark:to-blue-600/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-400/5 to-cyan-400/5 dark:from-blue-600/5 dark:to-cyan-600/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-400/5 to-blue-400/5 dark:from-cyan-600/5 dark:to-blue-600/5 rounded-full blur-3xl"></div>
 
         <div className="relative max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left Content */}
-            <div className="order-2 lg:order-1">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-700 dark:text-blue-300 px-5 py-2.5 rounded-full text-sm font-semibold mb-6 border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
-                <Dumbbell className="h-4 w-4" />
-                Как работи платформата
-              </div>
-
-              <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6 leading-tight">
-                Всичко необходимо за <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">успешно управление</span> на клиентите
-              </h2>
-
-              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed font-medium">
-                Над 100 персонални треньора вече използват нашата платформа за управление на техните клиенти. Присъединете се към тях!
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 mb-10">
-                <Button
-                  size="lg"
-                  className="px-8 py-6 text-base font-bold h-auto bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1"
-                  asChild
-                >
-                  <Link href="/sign-up">
-                    Започнете днес
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="px-8 py-6 text-base font-bold h-auto border-2 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 shadow-lg"
-                  asChild
-                >
-                  <Link href="/about">
-                    Научете повече
-                  </Link>
-                </Button>
-              </div>
-
-              {/* Quick stats */}
-              <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-1">500+</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 font-semibold">Клиенти</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-1">100+</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 font-semibold">Треньори</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-black bg-gradient-to-br from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-1">4.8★</div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 font-semibold">Рейтинг</div>
-                </div>
-              </div>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-700 dark:text-blue-300 px-5 py-2.5 rounded-full text-sm font-semibold mb-6 border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
+              <Users className="h-4 w-4" />
+              За кого е платформата
             </div>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6">
+              Създадено специално за <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">фитнес професионалисти</span>
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto font-medium">
+              Независимо от специализацията ви, нашата платформа ще ви помогне да управлявате клиентите си ефективно
+            </p>
+          </div>
 
-            {/* Right Features Grid */}
-            <div className="grid grid-cols-2 gap-5 order-1 lg:order-2">
-              <div className="group relative bg-white dark:bg-gray-800 p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center mb-4 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Dumbbell className="h-7 w-7" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {targetAudience.map((audience, index) => (
+              <div key={index} className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+                <div className="relative h-80">
+                  <Image
+                    src={audience.image}
+                    alt={audience.title}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h3 className="text-xl font-bold text-white mb-2">{audience.title}</h3>
+                    <p className="text-gray-200 text-sm leading-relaxed">{audience.description}</p>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  Управление на клиенти
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                  Добавяйте клиенти чрез специален код или линк
-                </p>
               </div>
-
-              <div className="group relative bg-white dark:bg-gray-800 p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-600 mt-8">
-                <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Target className="h-7 w-7" />
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                  Индивидуални програми
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                  Създавайте персонализирани тренировки за всеки клиент
-                </p>
-              </div>
-
-              <div className="group relative bg-white dark:bg-gray-800 p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center mb-4 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Star className="h-7 w-7" />
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  Хранителни планове
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                  Създавайте персонализирани хранителни режими
-                </p>
-              </div>
-
-              <div className="group relative bg-white dark:bg-gray-800 p-6 rounded-2xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-600 mt-8">
-                <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Check className="h-7 w-7" />
-                </div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                  Проследяване на прогреса
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                  Клиентите въвеждат килограми, измервания и цели
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Premium Fitness Services */}
-      <section className="relative px-4 py-24 bg-white dark:bg-gray-900 overflow-hidden">
+      {/* Features Section */}
+      <section className="relative px-4 py-24 bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
         {/* Background decorations */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-br from-blue-400/5 to-cyan-400/5 dark:from-blue-600/5 dark:to-cyan-600/5 rounded-full blur-3xl"></div>
 
@@ -396,139 +344,229 @@ export default function Home() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-700 dark:text-blue-300 px-5 py-2.5 rounded-full text-sm font-semibold mb-6 border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
               <Star className="h-4 w-4" />
-              Ключови функционалности
+              Функционалности
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6">
-              Мощни инструменти за <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">професионалисти</span>
+              Всичко което ви трябва на <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">едно място</span>
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto font-medium">
-              Всичко необходимо за ефективно управление на клиенти на едно място
+              Мощни инструменти за ефективно управление на клиенти, програми и хранителни планове
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Card 1 */}
-            <div className="group relative p-8 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-950/20 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-transparent rounded-full blur-2xl group-hover:from-blue-400/20 transition-all"></div>
-
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Dumbbell className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  Клиентски профили
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
-                  Всеки клиент се регистрира с уникален код от треньора и получава персонализиран достъп
-                </p>
-                <div className="flex items-center text-blue-600 dark:text-blue-400 font-semibold text-sm group-hover:gap-2 transition-all">
-                  Научете повече
-                  <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </div>
+            <div className="group relative p-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
+                <Calendar className="h-7 w-7" />
               </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                Индивидуални тренировъчни и хранителни планове
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+                Създавайте персонализирани програми за всеки клиент с календар за лесно проследяване
+              </p>
             </div>
 
             {/* Card 2 */}
-            <div className="group relative p-8 bg-gradient-to-br from-white to-cyan-50/30 dark:from-gray-800 dark:to-cyan-950/20 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-400/10 to-transparent rounded-full blur-2xl group-hover:from-cyan-400/20 transition-all"></div>
-
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Star className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                  Календар с тренировки
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
-                  Персонален календар за всеки клиент с детайлни тренировки за всеки ден
-                </p>
-                <div className="flex items-center text-cyan-600 dark:text-cyan-400 font-semibold text-sm group-hover:gap-2 transition-all">
-                  Научете повече
-                  <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </div>
+            <div className="group relative p-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
+                <Dumbbell className="h-7 w-7" />
               </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                Богата библиотека с упражнения и храни
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+                Достъп до обширна база данни с упражнения, храни и готови рецепти
+              </p>
             </div>
 
             {/* Card 3 */}
-            <div className="group relative p-8 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-950/20 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-transparent rounded-full blur-2xl group-hover:from-blue-400/20 transition-all"></div>
-
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Target className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  Планер за хранене
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
-                  Интерактивен планер за създаване на персонализирани хранителни режими
-                </p>
-                <div className="flex items-center text-blue-600 dark:text-blue-400 font-semibold text-sm group-hover:gap-2 transition-all">
-                  Научете повече
-                  <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </div>
+            <div className="group relative p-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
+                <TrendingUp className="h-7 w-7" />
               </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                Следене на макроси
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+                Автоматично изчисляване и проследяване на макронутриенти за всеки план
+              </p>
             </div>
 
             {/* Card 4 */}
-            <div className="group relative p-8 bg-gradient-to-br from-white to-cyan-50/30 dark:from-gray-800 dark:to-cyan-950/20 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-400/10 to-transparent rounded-full blur-2xl group-hover:from-cyan-400/20 transition-all"></div>
-
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Check className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                  Проследяване на напредък
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
-                  Клиентите виждат своя напредък в реално време спрямо поставените цели
-                </p>
-                <div className="flex items-center text-cyan-600 dark:text-cyan-400 font-semibold text-sm group-hover:gap-2 transition-all">
-                  Научете повече
-                  <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </div>
+            <div className="group relative p-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
+                <Plus className="h-7 w-7" />
               </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                Създаване на собствено съдържание
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+                Добавяйте собствени тренировки, упражнения, храни и рецепти
+              </p>
             </div>
 
             {/* Card 5 */}
-            <div className="group relative p-8 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-950/20 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-transparent rounded-full blur-2xl group-hover:from-blue-400/20 transition-all"></div>
-
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Dumbbell className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  Управление на абонамент
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
-                  Избор между Free, Pro и Beast планове с различен брой клиенти
-                </p>
-                <div className="flex items-center text-blue-600 dark:text-blue-400 font-semibold text-sm group-hover:gap-2 transition-all">
-                  Научете повече
-                  <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </div>
+            <div className="group relative p-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
+                <Target className="h-7 w-7" />
               </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                Задаване и следене на цели
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+                Определяйте цели за клиентите и проследявайте постигането им
+              </p>
             </div>
 
             {/* Card 6 */}
-            <div className="group relative p-8 bg-gradient-to-br from-white to-cyan-50/30 dark:from-gray-800 dark:to-cyan-950/20 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-cyan-400/10 to-transparent rounded-full blur-2xl group-hover:from-cyan-400/20 transition-all"></div>
+            <div className="group relative p-8 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-600 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
+                <Check className="h-7 w-7" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                Детайлно проследяване на напредъка
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm">
+                Клиентите могат да записват тегло, измервания и постижения
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-5 text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Star className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                  Известия за клиенти
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
-                  Автоматични известия при нови програми, планове и актуализации
+      {/* Problems & Savings Section */}
+      <section className="relative px-4 py-24 bg-white dark:bg-gray-900 overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/5 to-cyan-400/5 dark:from-blue-600/5 dark:to-cyan-600/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-cyan-400/5 to-blue-400/5 dark:from-cyan-600/5 dark:to-blue-600/5 rounded-full blur-3xl"></div>
+
+        <div className="relative max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-700 dark:text-blue-300 px-5 py-2.5 rounded-full text-sm font-semibold mb-6 border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
+              <DollarSign className="h-4 w-4" />
+              Проблеми и спестявания
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6">
+              Решения които <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">оптимизират</span> вашата работа
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto font-medium">
+              Спестете време, пари и усилия с нашата автоматизирана платформа
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-start">
+            {/* Problems Column */}
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-8">
+                ❌ Проблеми които решаваме
+              </h3>
+
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 hover:shadow-xl transition-all">
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Хаос в управлението на клиенти
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                  Разпръснати файлове, Excel таблици и бележки. Губите часове в организация.
                 </p>
-                <div className="flex items-center text-cyan-600 dark:text-cyan-400 font-semibold text-sm group-hover:gap-2 transition-all">
-                  Научете повече
-                  <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              </div>
+
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 hover:shadow-xl transition-all">
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Време за ръчно създаване на планове
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                  Прекарвате 2-3 часа на седмица в създаване и актуализиране на индивидуални програми.
+                </p>
+              </div>
+
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 hover:shadow-xl transition-all">
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Липса на проследяване
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                  Трудно проследявате напредъка на клиентите. Не знаете кой се справя добре и кой се нуждае от помощ.
+                </p>
+              </div>
+
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 hover:shadow-xl transition-all">
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Непрофесионално представяне
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300 text-sm">
+                  Клиентите получават PDF файлове или WhatsApp съобщения вместо професионална цифрова платформа.
+                </p>
+              </div>
+            </div>
+
+            {/* Savings Column */}
+            <div className="space-y-6">
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-8">
+                ✅ Спестявания с нашата платформа
+              </h3>
+
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 hover:shadow-xl transition-all">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Спестете 10+ часа седмично
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm">
+                      Автоматизирано създаване на планове и централизирано управление на всички клиенти.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 hover:shadow-xl transition-all">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
+                    <DollarSign className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Увеличете приходите с 30%
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm">
+                      Управлявайте повече клиенти едновременно без да жертвате качеството на услугата.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 hover:shadow-xl transition-all">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      По-добро задържане на клиенти
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm">
+                      Професионалната платформа и лесното проследяване повишават удовлетвореността с 40%.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 hover:shadow-xl transition-all">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
+                    <Star className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Професионален имидж
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm">
+                      Изградете доверие с модерна, професионална платформа за управление на клиенти.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -700,47 +738,54 @@ export default function Home() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="px-4 py-24 bg-gray-900">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative px-4 py-24 bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-cyan-400/10 dark:from-blue-600/10 dark:to-cyan-600/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 dark:from-cyan-600/10 dark:to-blue-600/10 rounded-full blur-3xl"></div>
+
+        <div className="relative max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-700 dark:text-blue-300 px-5 py-2.5 rounded-full text-sm font-semibold mb-6 border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
               <Star className="h-4 w-4" />
-              Отзиви от треньори и клиенти
+              Отзиви от професионалисти
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Какво казват потребителите на платформата
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6">
+              Доверени от <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">фитнес експерти</span>
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Вижте как нашата платформа помага на треньорите да управляват клиентите си по-ефективно
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto font-medium">
+              Вижте как различни видове треньори и инструктори използват нашата платформа
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-8 bg-gray-800 border-gray-700 hover:shadow-xl transition-all hover:scale-105">
-                <div className="text-center">
+              <Card key={index} className="relative p-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-2xl transition-all hover:-translate-y-2 overflow-hidden group">
+                {/* Decorative gradient blob */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-cyan-400/10 dark:from-blue-600/20 dark:to-cyan-600/20 rounded-full blur-2xl group-hover:from-blue-400/20 group-hover:to-cyan-400/20 dark:group-hover:from-blue-600/30 dark:group-hover:to-cyan-600/30 transition-all"></div>
+
+                <div className="relative text-center">
                   <div className="flex justify-center mb-4">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-blue-400 text-blue-400" />
+                      <Star key={i} className="h-5 w-5 fill-blue-600 dark:fill-blue-400 text-blue-600 dark:text-blue-400" />
                     ))}
                   </div>
 
-                  <p className="text-gray-300 mb-6 italic leading-relaxed">
+                  <p className="text-gray-700 dark:text-gray-300 mb-6 italic leading-relaxed text-base">
                     &quot;{testimonial.content}&quot;
                   </p>
 
-                  <div className="w-16 h-16 rounded-full mx-auto mb-4 overflow-hidden">
+                  <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden border-4 border-blue-100 dark:border-blue-900 shadow-lg">
                     <Image
                       src={testimonial.avatar}
                       alt={testimonial.name}
-                      width={64}
-                      height={64}
+                      width={80}
+                      height={80}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
-                  <h4 className="text-white font-bold mb-1">{testimonial.name}</h4>
-                  <p className="text-gray-400 text-sm">{testimonial.role}</p>
+                  <h4 className="text-gray-900 dark:text-white font-bold text-lg mb-1">{testimonial.name}</h4>
+                  <p className="text-blue-600 dark:text-blue-400 text-sm font-semibold">{testimonial.role}</p>
                 </div>
               </Card>
             ))}
@@ -819,25 +864,68 @@ export default function Home() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="px-4 py-24 bg-gradient-to-r from-blue-500 to-purple-500">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+      <section className="relative px-4 py-32 overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+            alt="Gym Background"
+            fill
+            className="object-cover"
+            priority={false}
+          />
+          {/* Dark overlay with gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/95 via-blue-800/90 to-cyan-900/95"></div>
+          {/* Pattern overlay */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}></div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="relative max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-sm font-semibold mb-8 border border-white/30 shadow-lg">
+            <Dumbbell className="h-4 w-4" />
+            Започнете днес
+          </div>
+
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
             Започнете да управлявате клиентите си професионално
           </h2>
-          <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+          <p className="text-xl md:text-2xl text-blue-100 mb-12 leading-relaxed font-medium max-w-3xl mx-auto">
             Присъединете се към стотици треньори, които вече използват нашата платформа за управление на клиентите си
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="px-10 py-4 text-lg h-auto bg-white text-blue-600 hover:bg-gray-100" asChild>
+            <Button size="lg" className="px-10 py-6 text-lg font-bold h-auto bg-white text-blue-600 hover:bg-blue-50 rounded-xl shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105" asChild>
               <Link href="/sign-up">
                 ЗАПОЧНЕТЕ БЕЗПЛАТНО - ДО 3 КЛИЕНТА
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="px-10 py-4 text-lg h-auto border-white text-white hover:bg-white hover:text-blue-600" asChild>
+            <Button variant="outline" size="lg" className="px-10 py-6 text-lg font-bold h-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 rounded-xl shadow-xl backdrop-blur-sm bg-white/10 transition-all duration-300 hover:scale-105" asChild>
               <Link href="/sign-in">Вход за треньори</Link>
             </Button>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="mt-16 pt-10 border-t border-white/20">
+            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-black text-white mb-2">872+</div>
+                <div className="text-sm text-blue-200 font-semibold">Активни клиенти</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-black text-white mb-2">120+</div>
+                <div className="text-sm text-blue-200 font-semibold">Професионални треньори</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-black text-white mb-2">4.9★</div>
+                <div className="text-sm text-blue-200 font-semibold">Средна оценка</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

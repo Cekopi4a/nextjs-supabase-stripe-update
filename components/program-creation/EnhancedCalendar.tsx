@@ -248,7 +248,7 @@ export function EnhancedCalendar({
 
     // Check if date is within program duration
     const programEndDate = new Date(programStartDate);
-    programEndDate.setDate(programStartDate.getDate() + (programDurationWeeks * 7));
+    programEndDate.setDate(programStartDate.getDate() + (programDurationWeeks * 7) - 1);
     const isInProgramDuration = date >= programStartDate && date <= programEndDate;
 
     return {
