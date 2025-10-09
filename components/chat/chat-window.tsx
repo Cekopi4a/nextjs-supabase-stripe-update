@@ -1,0 +1,189 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { ChatHeader } from "./chat-header";
+import { MessageBubble } from "./message-bubble";
+import { MessageInput } from "./message-input";
+import { TypingIndicator } from "./typing-indicator";
+import { MessageSquare, Loader2 } from "lucide-react";
+import { cn } from "@/utils/styles";
+
+export interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  read_at?: string | null;
+  created_at: string;
+}
+
+export interface ChatUser {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+  isOnline?: boolean;
+  lastSeen?: string;
+}
+
+interface ChatWindowProps {
+  conversationId?: string;
+  messages: Message[];
+  currentUserId: string;
+  otherUser?: ChatUser;
+  onSendMessage: (content: string) => Promise<void>;
+  onMarkAsRead?: (messageIds: string[]) => Promise<void>;
+  onBack?: () => void;
+  isLoading?: boolean;
+  isTyping?: boolean;
+}
+
+export function ChatWindow({
+  conversationId,
+  messages,
+  currentUserId,
+  otherUser,
+  onSendMessage,
+  onMarkAsRead,
+  onBack,
+  isLoading = false,
+  isTyping = false,
+}: ChatWindowProps) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    if (autoScroll && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, autoScroll]);
+
+  // Mark messages as read when they appear
+  useEffect(() => {
+    if (!conversationId || !onMarkAsRead) return;
+
+    const unreadMessages = messages.filter(
+      (msg) => msg.sender_id !== currentUserId && !msg.read_at
+    );
+
+    if (unreadMessages.length > 0) {
+      const messageIds = unreadMessages.map((msg) => msg.id);
+      onMarkAsRead(messageIds);
+    }
+  }, [messages, conversationId, currentUserId, onMarkAsRead]);
+
+  // Detect if user is scrolling up (disable auto-scroll)
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+
+    setAutoScroll(isNearBottom);
+  };
+
+  // Empty state (no conversation selected)
+  if (!conversationId || !otherUser) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-muted/20 to-background p-8 text-center">
+        <div className="max-w-md">
+          <MessageSquare className="h-24 w-24 text-muted-foreground/30 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-foreground mb-3">
+            Изберете разговор
+          </h2>
+          <p className="text-muted-foreground">
+            Изберете разговор от лявата страна или започнете нов разговор с клиент
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col">
+        <ChatHeader
+          userName={otherUser.full_name}
+          userAvatar={otherUser.avatar_url}
+          isOnline={otherUser.isOnline}
+          lastSeen={otherUser.lastSeen}
+          onBack={onBack}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-background">
+      {/* Header */}
+      <ChatHeader
+        userName={otherUser.full_name}
+        userAvatar={otherUser.avatar_url}
+        isOnline={otherUser.isOnline}
+        lastSeen={otherUser.lastSeen}
+        onBack={onBack}
+      />
+
+      {/* Messages container */}
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-6 bg-gradient-to-b from-background via-muted/5 to-background"
+      >
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center px-4">
+            <MessageSquare className="h-16 w-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              Няма съобщения
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Започнете разговора с първо съобщение
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Messages */}
+            {messages.map((message, index) => {
+              const isOwn = message.sender_id === currentUserId;
+              const isRead = !!message.read_at;
+
+              return (
+                <MessageBubble
+                  key={message.id}
+                  content={message.content}
+                  isOwn={isOwn}
+                  senderName={isOwn ? "Вие" : otherUser.full_name}
+                  senderAvatar={isOwn ? undefined : otherUser.avatar_url}
+                  timestamp={message.created_at}
+                  isRead={isRead}
+                />
+              );
+            })}
+
+            {/* Typing indicator */}
+            {isTyping && (
+              <TypingIndicator
+                senderName={otherUser.full_name}
+                senderAvatar={otherUser.avatar_url}
+              />
+            )}
+
+            {/* Scroll anchor */}
+            <div ref={messagesEndRef} />
+          </>
+        )}
+      </div>
+
+      {/* Message input */}
+      <MessageInput
+        onSendMessage={onSendMessage}
+        placeholder={`Съобщение до ${otherUser.full_name}...`}
+      />
+    </div>
+  );
+}

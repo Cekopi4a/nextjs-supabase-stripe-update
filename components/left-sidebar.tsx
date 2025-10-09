@@ -20,11 +20,13 @@ import {
   Menu,
   X,
   ChefHat,
+  MessageSquare,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { useNotifications } from "@/contexts/notification-context";
 
 type MenuItem = {
   label: string;
@@ -48,8 +50,8 @@ interface LeftSidebarProps {
   planType?: "free" | "pro" | "beast";
 }
 
-export default function LeftSidebar({ 
-  userRole = "client", 
+export default function LeftSidebar({
+  userRole = "client",
   hasPremiumAccess = false,
   userProfile,
   clientsCount = 0,
@@ -59,6 +61,7 @@ export default function LeftSidebar({
   const basePath = "/protected";
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { unreadMessagesCount } = useNotifications();
 
   // Load collapsed state from localStorage
   useEffect(() => {
@@ -113,6 +116,12 @@ export default function LeftSidebar({
           href: "/clients",
           icon: Users,
           badge: clientsCount > 0 ? clientsCount.toString() : undefined,
+        },
+        {
+          label: "Съобщения",
+          href: "/chat",
+          icon: MessageSquare,
+          badge: unreadMessagesCount > 0 ? unreadMessagesCount.toString() : undefined,
         },
         {
           label: "Тренировки",
@@ -196,6 +205,12 @@ export default function LeftSidebar({
           label: "Начало",
           href: "/",
           icon: Home,
+        },
+        {
+          label: "Съобщения",
+          href: "/chat",
+          icon: MessageSquare,
+          badge: unreadMessagesCount > 0 ? unreadMessagesCount.toString() : undefined,
         },
         {
           label: "Програми",

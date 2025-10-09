@@ -8,6 +8,7 @@ import { Bell, User, LogOut, Settings, UserCircle, ChevronDown, Menu, X } from "
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useNotifications } from "@/contexts/notification-context";
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
@@ -19,6 +20,7 @@ export default function Header() {
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createSupabaseClient();
+  const { unreadMessagesCount } = useNotifications();
 
   useEffect(() => {
     const getUser = async () => {
@@ -205,12 +207,15 @@ export default function Header() {
               variant="ghost"
               size="sm"
               className="relative h-10 w-10 p-0 hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 rounded-xl transition-all duration-200 hover:scale-105"
+              onClick={() => router.push('/protected/chat')}
             >
               <Bell className="h-4.5 w-4.5 text-foreground/70" />
-              {/* Notification badge */}
-              <span className="absolute -top-0.5 -right-0.5 h-5 w-5 bg-gradient-to-br from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-semibold shadow-lg ring-2 ring-background animate-pulse">
-                2
-              </span>
+              {/* Notification badge - показва само ако има непрочетени съобщения */}
+              {unreadMessagesCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 h-5 w-5 bg-gradient-to-br from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-semibold shadow-lg ring-2 ring-background animate-pulse">
+                  {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                </span>
+              )}
             </Button>
 
             {/* User profile section */}

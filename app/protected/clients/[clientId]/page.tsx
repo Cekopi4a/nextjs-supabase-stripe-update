@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { 
-  ChevronLeft, 
+import {
+  ChevronLeft,
   Calendar as CalendarIcon,
   Target,
   User,
@@ -18,7 +18,8 @@ import {
   AlertTriangle,
   Coffee,
   UtensilsCrossed,
-  Sunset
+  Sunset,
+  MessageSquare
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { formatScheduledDate, getTodayDateString } from "@/utils/date-utils";
@@ -62,7 +63,8 @@ export default function ClientProfilePage() {
   const [todayMeals, setTodayMeals] = useState<MealPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
-  
+  const [creatingChat, setCreatingChat] = useState(false);
+
   const supabase = createSupabaseClient();
 
   useEffect(() => {
@@ -244,8 +246,44 @@ export default function ClientProfilePage() {
             )}
           </div>
           </div>
-          <div className="shrink-0">
-            <Button 
+          <div className="shrink-0 flex gap-2">
+            {/* Chat button */}
+            <Button
+              variant="outline"
+              className="border-blue-300 text-blue-700 hover:text-blue-800 hover:bg-blue-50"
+              disabled={creatingChat}
+              onClick={async () => {
+                try {
+                  setCreatingChat(true);
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) return;
+
+                  // Create or get conversation
+                  const response = await fetch('/api/chat/conversations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ client_id: clientId })
+                  });
+
+                  if (response.ok) {
+                    router.push('/protected/chat');
+                  } else {
+                    alert('Грешка при отваряне на чата');
+                  }
+                } catch (e) {
+                  console.error(e);
+                  alert('Грешка при отваряне на чата');
+                } finally {
+                  setCreatingChat(false);
+                }
+              }}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              {creatingChat ? 'Отваряне...' : 'Съобщение'}
+            </Button>
+
+            {/* Delete button */}
+            <Button
               variant="outline"
               className="border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
               disabled={deleting}

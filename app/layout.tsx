@@ -4,6 +4,7 @@ import Header from "@/components/header";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
+import { NotificationProvider } from "@/contexts/notification-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,13 +32,15 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1 flex flex-col">
-              {children}
-            </main>
-          </div>
-          <Toaster richColors />
+          <NotificationProvider>
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <main className="flex-1 flex flex-col">
+                {children}
+              </main>
+            </div>
+            <Toaster richColors />
+          </NotificationProvider>
         </ThemeProvider>
       </body>
     </html>
