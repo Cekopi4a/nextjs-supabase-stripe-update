@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     
     const { data: exercises, error } = await supabase
       .from("exercises")
-      .select("id, name, muscle_groups, equipment, difficulty")
+      .select("id, name, primary_muscles, secondary_muscles, equipment, level, images, custom_images, video_urls")
       .in("id", exerciseIds);
 
     if (error) {
