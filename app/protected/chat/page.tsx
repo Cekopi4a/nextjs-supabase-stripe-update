@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { ChatList, Conversation } from "@/components/chat/chat-list";
 import { ChatWindow, Message, ChatUser } from "@/components/chat/chat-window";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/utils/styles";
 import { useNotifications } from "@/contexts/notification-context";
 
-export default function ChatPage() {
+function ChatPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createSupabaseClient();
   const { refreshUnreadCount } = useNotifications();
 
@@ -183,6 +184,20 @@ export default function ChatPage() {
     // Refresh unread count when opening a conversation
     refreshUnreadCount();
   }, [loadMessages, loadOtherUser, refreshUnreadCount]);
+
+  // Check URL parameter for conversation ID
+  useEffect(() => {
+    const conversationParam = searchParams.get('conversation');
+    if (conversationParam && conversations.length > 0 && !selectedConversationId) {
+      const conversation = conversations.find(c => c.id === conversationParam);
+      if (conversation) {
+        setSelectedConversationId(conversationParam);
+        loadMessages(conversationParam);
+        loadOtherUser(conversationParam);
+        refreshUnreadCount();
+      }
+    }
+  }, [searchParams, conversations, selectedConversationId, loadMessages, loadOtherUser, refreshUnreadCount]);
 
   // Setup Realtime subscription with Broadcast for instant messaging
   useEffect(() => {
@@ -367,5 +382,13 @@ export default function ChatPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }

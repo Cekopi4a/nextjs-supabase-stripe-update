@@ -20,7 +20,8 @@ import {
   AlertCircle,
   Award,
   Dumbbell,
-  Utensils
+  Utensils,
+  MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -48,6 +49,68 @@ export default function ClientsPage() {
   useEffect(() => {
     fetchClients();
   }, []);
+
+  const handleSendMessage = async (clientId: string) => {
+    console.log('🔵 handleSendMessage clicked for client:', clientId);
+
+    try {
+      const supabase = createSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.error('❌ No user found');
+        return;
+      }
+
+      console.log('✅ Current user:', user.id);
+
+      // Check if conversation already exists
+      console.log('🔍 Checking for existing conversation...');
+      const { data: existingConversation, error: convError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('trainer_id', user.id)
+        .eq('client_id', clientId)
+        .single();
+
+      console.log('📊 Existing conversation check result:', { existingConversation, convError });
+
+      if (convError && convError.code !== 'PGRST116') {
+        console.error('❌ Error checking conversation:', convError);
+        return;
+      }
+
+      if (existingConversation) {
+        // Conversation exists, redirect to chat with this conversation
+        console.log('✅ Found existing conversation, redirecting...');
+        router.push(`/protected/chat?conversation=${existingConversation.id}`);
+      } else {
+        // Create new conversation
+        console.log('🆕 Creating new conversation...');
+        const { data: newConversation, error: createError } = await supabase
+          .from('conversations')
+          .insert({
+            trainer_id: user.id,
+            client_id: clientId,
+          })
+          .select()
+          .single();
+
+        console.log('📊 New conversation result:', { newConversation, createError });
+
+        if (createError) {
+          console.error('❌ Error creating conversation:', createError);
+          return;
+        }
+
+        // Redirect to chat with new conversation
+        console.log('✅ Redirecting to new conversation...');
+        router.push(`/protected/chat?conversation=${newConversation.id}`);
+      }
+    } catch (error) {
+      console.error('❌ Error in handleSendMessage:', error);
+    }
+  };
   
 
   useEffect(() => {
@@ -541,7 +604,7 @@ export default function ClientsPage() {
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 mb-2">
                   <Button variant="outline" size="sm" className="text-xs h-9 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300 transition-colors" asChild>
                     <Link href={`/protected/clients/${client.id}/calendar`}>
                       <Calendar className="h-3.5 w-3.5 mr-1.5" />
@@ -556,6 +619,17 @@ export default function ClientsPage() {
                     </Link>
                   </Button>
                 </div>
+
+                {/* Message Button - Full Width */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs h-9 hover:bg-cyan-50 hover:text-cyan-700 hover:border-cyan-300 transition-colors"
+                  onClick={() => handleSendMessage(client.id)}
+                >
+                  <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                  Изпрати съобщение
+                </Button>
 
                 {/* Last activity */}
                 <div className="text-xs text-muted-foreground pt-4 border-t mt-4 space-y-1">
