@@ -23,6 +23,7 @@ function ChatPageContent() {
   const [isLoadingConversations, setIsLoadingConversations] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
   // Get current user
   useEffect(() => {
@@ -37,6 +38,113 @@ function ChatPageContent() {
 
     getCurrentUser();
   }, [supabase, router]);
+
+  // Setup presence tracking and heartbeat
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    let heartbeatInterval: NodeJS.Timeout;
+    let presenceChannel: RealtimeChannel;
+
+    const setupPresence = async () => {
+      // Initial presence update
+      await fetch("/api/presence/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_online: true }),
+      });
+
+      // Setup heartbeat - update presence every 30 seconds
+      heartbeatInterval = setInterval(async () => {
+        await fetch("/api/presence/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_online: true }),
+        });
+      }, 30000);
+
+      // Subscribe to presence changes from database
+      presenceChannel = supabase
+        .channel("user_presence_changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "user_presence",
+          },
+          (payload) => {
+            const presence = payload.new as { user_id: string; is_online: boolean };
+            setOnlineUsers((prev) => {
+              const newSet = new Set(prev);
+              if (presence.is_online) {
+                newSet.add(presence.user_id);
+              } else {
+                newSet.delete(presence.user_id);
+              }
+              return newSet;
+            });
+          }
+        )
+        .subscribe();
+
+      // Load initial presence status
+      const { data: presenceData } = await supabase
+        .from("user_presence")
+        .select("user_id, is_online")
+        .eq("is_online", true);
+
+      if (presenceData) {
+        setOnlineUsers(new Set(presenceData.map((p) => p.user_id)));
+      }
+    };
+
+    setupPresence();
+
+    // Handle visibility change (tab switching, browser closing)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        fetch("/api/presence/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_online: false }),
+        });
+      } else {
+        fetch("/api/presence/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_online: true }),
+        });
+      }
+    };
+
+    // Handle page unload
+    const handleBeforeUnload = () => {
+      navigator.sendBeacon(
+        "/api/presence/update",
+        JSON.stringify({ is_online: false })
+      );
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(heartbeatInterval);
+      if (presenceChannel) {
+        presenceChannel.unsubscribe();
+      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      // Mark as offline when leaving
+      fetch("/api/presence/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_online: false }),
+      });
+    };
+  }, [currentUserId, supabase]);
 
   // Load conversations
   const loadConversations = useCallback(async () => {
@@ -94,7 +202,7 @@ function ChatPageContent() {
               id: profile?.id || otherUserId,
               full_name: profile?.full_name || "Unknown",
               avatar_url: profile?.avatar_url,
-              isOnline: false, // TODO: Implement presence
+              isOnline: onlineUsers.has(otherUserId),
             },
             lastMessage: lastMessage || undefined,
             unreadCount: unreadCount || 0,
@@ -109,7 +217,7 @@ function ChatPageContent() {
     } finally {
       setIsLoadingConversations(false);
     }
-  }, [currentUserId, supabase]);
+  }, [currentUserId, supabase, onlineUsers]);
 
   useEffect(() => {
     if (currentUserId) {
@@ -168,13 +276,13 @@ function ChatPageContent() {
           id: profile.id,
           full_name: profile.full_name || "Unknown",
           avatar_url: profile.avatar_url,
-          isOnline: false, // TODO: Implement presence
+          isOnline: onlineUsers.has(profile.id),
         });
       }
     } catch (error) {
       console.error("Error loading other user:", error);
     }
-  }, [currentUserId, supabase]);
+  }, [currentUserId, supabase, onlineUsers]);
 
   // Handle conversation selection
   const handleSelectConversation = useCallback((conversationId: string) => {
