@@ -9,6 +9,7 @@ import { UnsavedChangesDialog } from "@/components/program-creation/UnsavedChang
 import { Button } from "@/components/ui/button";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { ChevronLeft, Check } from "lucide-react";
+import { notifyProgramCreated } from "@/utils/notifications/create-notification-client";
 
 import { Exercise } from '@/lib/types/exercises';
 
@@ -433,7 +434,16 @@ export default function CreateProgramStep2() {
 
     try {
       const user = await supabase.auth.getUser();
-      
+
+      // Get trainer profile for notifications
+      const { data: trainerProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.data.user?.id)
+        .single();
+
+      const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
       for (const clientId of selectedClients) {
         // Step 1: Deactivate all existing active programs for this client
         const { error: deactivateError } = await supabase
@@ -469,6 +479,14 @@ export default function CreateProgramStep2() {
           .single();
 
         if (programError) throw programError;
+
+        // Step 2.5: Create notification for the client
+        await notifyProgramCreated(
+          clientId,
+          programData?.name || "Нова програма",
+          program.id,
+          trainerName
+        );
 
         // Create workout sessions based on calendar data
         for (const [dateKey, workoutDay] of Object.entries(workoutsByDate)) {

@@ -4,11 +4,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { createSupabaseClient } from "@/utils/supabase/client";
-import { Bell, User, LogOut, Settings, UserCircle, ChevronDown, Menu, X } from "lucide-react";
+import { User, LogOut, Settings, UserCircle, ChevronDown, Menu, X, MessageCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useNotifications } from "@/contexts/notification-context";
+import { NotificationsDropdown } from "@/components/notifications-dropdown";
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
@@ -202,15 +203,18 @@ export default function Header() {
         ) : user ? (
           /* Authenticated user header */
           <>
-            {/* Notifications */}
+            {/* System Notifications */}
+            <NotificationsDropdown userId={user.id} />
+
+            {/* Chat Messages */}
             <Button
               variant="ghost"
               size="sm"
               className="relative h-10 w-10 p-0 hover:bg-gradient-to-br hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 rounded-xl transition-all duration-200 hover:scale-105"
               onClick={() => router.push('/protected/chat')}
             >
-              <Bell className="h-4.5 w-4.5 text-foreground/70" />
-              {/* Notification badge - показва само ако има непрочетени съобщения */}
+              <MessageCircle className="h-4.5 w-4.5 text-foreground/70" />
+              {/* Chat badge - показва само ако има непрочетени съобщения */}
               {unreadMessagesCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 h-5 w-5 bg-gradient-to-br from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-semibold shadow-lg ring-2 ring-background animate-pulse">
                   {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
@@ -313,7 +317,7 @@ export default function Header() {
             <Button
               variant="outline"
               size="sm"
-              className="border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-950/30 dark:hover:to-cyan-950/30 font-medium transition-all duration-200 hover:shadow-md rounded-xl"
+              className="border-blue-600/50 dark:border-blue-500/50 hover:border-blue-600 dark:hover:border-blue-400 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white font-medium transition-all duration-200 hover:shadow-lg rounded-xl"
               asChild
             >
               <Link href="/sign-in">Вход</Link>

@@ -12,6 +12,7 @@ import { createSupabaseClient } from "@/utils/supabase/client";
 import { dateToLocalDateString } from "@/utils/date-utils";
 import FoodSearch from "@/components/ui/food-search";
 import RecipeSearch from "@/components/ui/recipe-search";
+import { notifyNutritionPlanUpdated } from "@/utils/notifications/create-notification-client";
 import {
   ArrowLeft,
   Apple,
@@ -372,6 +373,8 @@ export default function EditNutritionPlanPage({
             (m) => m.scheduled_date === dateToLocalDateString(selectedDate)
           )}
           clientId={plan.client_id}
+          plan={plan}
+          planId={planId}
           onClose={() => {
             setShowDayModal(false);
             fetchMeals();
@@ -452,14 +455,19 @@ function DayMealsModal({
   selectedDate,
   meals,
   clientId,
+  plan,
+  planId,
   onClose,
 }: {
   isOpen: boolean;
   selectedDate: Date;
   meals: MealPlan[];
   clientId: string;
+  plan: any;
+  planId: string;
   onClose: () => void;
 }) {
+  const supabase = createSupabaseClient();
   const [editingMeal, setEditingMeal] = useState<MealPlan | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -528,6 +536,30 @@ function DayMealsModal({
 
         const result = await response.json();
         console.log("Meal created successfully:", result);
+      }
+
+      // Send notification to client about nutrition plan update
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: trainerProfile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", user.id)
+            .single();
+
+          const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+          await notifyNutritionPlanUpdated(
+            clientId,
+            plan.name,
+            planId,
+            trainerName
+          );
+        }
+      } catch (notificationError) {
+        console.error("Error sending notification:", notificationError);
+        // Don't fail the meal save if notification fails
       }
 
       setEditingMeal(null);

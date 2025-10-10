@@ -41,6 +41,7 @@ import { dateToLocalDateString } from "@/utils/date-utils";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { WorkoutEditModal } from "@/components/calendar/WorkoutEditModal";
+import { notifyWorkoutCreated, notifyWorkoutUpdated } from "@/utils/notifications/create-notification-client";
 
 interface WorkoutSession {
   id: string;
@@ -395,16 +396,67 @@ export default function ClientCalendarPage() {
           console.error("Supabase error:", error);
           throw error;
         }
+
+        // Send notification to client about workout update
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: trainerProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", user.id)
+              .single();
+
+            const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+            await notifyWorkoutUpdated(
+              clientId,
+              workoutForm.name,
+              editingWorkout.id,
+              trainerName
+            );
+          }
+        } catch (notificationError) {
+          console.error("Error sending notification:", notificationError);
+          // Don't fail the workout save if notification fails
+        }
       } else {
         // Create new workout session
-        const { error } = await supabase
+        const { data: workout, error } = await supabase
           .from("workout_sessions")
           .insert(workoutData)
-          .select();
+          .select()
+          .single();
 
         if (error) {
           console.error("Supabase error:", error);
           throw error;
+        }
+
+        // Send notification to client about new workout
+        if (workout) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data: trainerProfile } = await supabase
+                .from("profiles")
+                .select("full_name")
+                .eq("id", user.id)
+                .single();
+
+              const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+              await notifyWorkoutCreated(
+                clientId,
+                workoutForm.name,
+                workout.id,
+                trainerName
+              );
+            }
+          } catch (notificationError) {
+            console.error("Error sending notification:", notificationError);
+            // Don't fail the workout save if notification fails
+          }
         }
       }
 
@@ -469,11 +521,38 @@ export default function ClientCalendarPage() {
         exercises: workout.exercises || []
       }));
 
-      const { error } = await supabase
+      const { data: copiedWorkouts, error } = await supabase
         .from("workout_sessions")
-        .insert(workoutsToCreate);
+        .insert(workoutsToCreate)
+        .select();
 
       if (error) throw error;
+
+      // Send notification to client about copied workouts
+      if (copiedWorkouts && copiedWorkouts.length > 0) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: trainerProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", user.id)
+              .single();
+
+            const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+            // Send one notification for all copied workouts
+            await notifyWorkoutCreated(
+              clientId,
+              `${copiedWorkouts.length} тренировки`,
+              copiedWorkouts[0].id,
+              trainerName
+            );
+          }
+        } catch (notificationError) {
+          console.error("Error sending notification:", notificationError);
+        }
+      }
 
       setCopySourceDate(null);
       fetchWorkouts();
@@ -502,11 +581,38 @@ export default function ClientCalendarPage() {
         exercises: workout.exercises || []
       };
 
-      const { error } = await supabase
+      const { data: copiedWorkout, error } = await supabase
         .from("workout_sessions")
-        .insert(workoutData);
+        .insert(workoutData)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Send notification to client about copied workout
+      if (copiedWorkout) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: trainerProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", user.id)
+              .single();
+
+            const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+            await notifyWorkoutCreated(
+              clientId,
+              workout.name,
+              copiedWorkout.id,
+              trainerName
+            );
+          }
+        } catch (notificationError) {
+          console.error("Error sending notification:", notificationError);
+        }
+      }
 
       fetchWorkouts();
       alert("Тренировка успешно копирана!");
@@ -540,7 +646,8 @@ export default function ClientCalendarPage() {
       const { data, error } = await supabase
         .from("workout_sessions")
         .insert(workoutData)
-        .select();
+        .select()
+        .single();
 
       if (error) {
         console.error("Supabase error details:", error);
@@ -548,6 +655,31 @@ export default function ClientCalendarPage() {
       }
 
       console.log("Workout added successfully:", data);
+
+      // Send notification to client about new workout from template
+      if (data) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: trainerProfile } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", user.id)
+              .single();
+
+            const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+            await notifyWorkoutCreated(
+              clientId,
+              template.name,
+              data.id,
+              trainerName
+            );
+          }
+        } catch (notificationError) {
+          console.error("Error sending notification:", notificationError);
+        }
+      }
 
       setShowTemplateSelectModal(false);
       fetchWorkouts();

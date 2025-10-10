@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { Apple, ArrowLeft, Save, AlertCircle } from "lucide-react";
+import { notifyNutritionPlanCreated } from "@/utils/notifications/create-notification-client";
 import {
   Select,
   SelectContent,
@@ -175,6 +176,24 @@ export default function CreateNutritionPlanPage() {
       }
 
       console.log("Plan created successfully:", plan);
+
+      // Get trainer profile for notification
+      const { data: trainerProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
+      const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+      // Send notification to client about new nutrition plan
+      await notifyNutritionPlanCreated(
+        formData.client_id,
+        formData.name,
+        plan.id,
+        trainerName
+      );
+
       router.push(`/protected/nutrition-plans/${plan.id}`);
     } catch (error: any) {
       console.error("Error creating nutrition plan:", {

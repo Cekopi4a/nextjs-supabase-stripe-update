@@ -23,6 +23,7 @@ import { createSupabaseClient } from "@/utils/supabase/client";
 import { formatScheduledDate } from "@/utils/date-utils";
 import { Exercise } from "@/lib/types/exercises";
 import { ExerciseSelector } from "@/components/exercises/ExerciseSelector";
+import { notifyWorkoutUpdated } from "@/utils/notifications/create-notification-client";
 
 interface WorkoutSession {
   id: string;
@@ -146,7 +147,7 @@ export function WorkoutEditModal({
     try {
       // Filter out exercises without selected exercise_id
       const validExercises = exercises.filter(ex => ex.exercise_id && ex.exercise_id.trim() !== "");
-      
+
       const { error } = await supabase
         .from("workout_sessions")
         .update({
@@ -164,6 +165,30 @@ export function WorkoutEditModal({
         .eq("id", workout.id);
 
       if (error) throw error;
+
+      // Send notification to client about workout update
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && workout.client_id) {
+          const { data: trainerProfile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", user.id)
+            .single();
+
+          const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+          await notifyWorkoutUpdated(
+            workout.client_id,
+            workoutName,
+            workout.id,
+            trainerName
+          );
+        }
+      } catch (notificationError) {
+        console.error("Error sending notification:", notificationError);
+        // Don't fail the workout save if notification fails
+      }
 
       onSave();
       onClose();

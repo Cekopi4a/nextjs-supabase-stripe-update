@@ -11,6 +11,7 @@ import { createSupabaseClient } from "@/utils/supabase/client";
 import { ChevronLeft, Check } from "lucide-react";
 import { Exercise } from '@/lib/types/exercises';
 import { toast } from "sonner";
+import { notifyProgramUpdated } from "@/utils/notifications/create-notification-client";
 
 interface WorkoutExercise {
   exercise_id: string;
@@ -515,6 +516,24 @@ export default function EditCalendarPage() {
           updated_at: new Date().toISOString()
         })
         .eq("id", programId);
+
+      // Get trainer profile for notification
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: trainerProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user?.id)
+        .single();
+
+      const trainerName = trainerProfile?.full_name || "Вашият треньор";
+
+      // Send notification to client about program update
+      await notifyProgramUpdated(
+        programData.client_id,
+        programData.name,
+        programId,
+        trainerName
+      );
 
       setHasUnsavedChanges(false);
       toast.success("Програмата е обновена успешно");
