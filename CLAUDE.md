@@ -59,6 +59,9 @@
 - `sonner` - Toast notifications
 - `lodash` - Utility functions
 - `@react-email/*` - Email templates
+- `@hookform/resolvers` - Form validation
+- `zod` - Schema validation
+- `react-hook-form` - Form management
 
 ## 📁 Архитектура на проекта
 
@@ -81,7 +84,9 @@ app/
 │   ├── workouts/    # Workout management
 │   ├── account/     # Account settings
 │   ├── analytics/   # Analytics dashboard
-│   ├── goals/       # Goal tracking
+│   ├── goals/       # Goal tracking & progress
+│   ├── chat/        # Real-time messaging
+│   ├── notifications/ # Notifications system
 │   └── subscription/ # Subscription management
 ├── join/           # Invitation handling
 ├── pricing/        # Pricing page
@@ -92,17 +97,21 @@ app/
 ### Основни функционалности
 1. **Client Management** - Управление на клиенти и покани
 2. **Training Programs** - Създаване и управление на тренировъчни програми
-3. **Workout Builder** - Конструктор на тренировки с drag & drop
-4. **Exercise Library** - Библиотека с упражнения
+3. **Workout Builder** - Конструктор на тренировки с drag & drop и календарен интерфейс
+4. **Exercise Library** - Библиотека с упражнения (общи + персонални)
 5. **Nutrition Planning** - Хранителни планове и макроси
 6. **Food Library** - Библиотека с храни и макронутриенти
 7. **Recipe Management** - Управление на рецепти
-8. **Calendar** - Календар за тренировки
-9. **Analytics** - Статистика и анализи
-10. **Goals** - Проследяване на цели
-11. **Billing** - Subscription management via Stripe (Free/Pro/Beast plans)
-12. **Authentication** - Multi-provider auth
-13. **Account Settings** - Управление на профил и настройки
+8. **Calendar** - Календар за тренировки с inline editing
+9. **Analytics Dashboard** - Статистика и анализи за треньори
+10. **Goals & Progress** - Проследяване на цели и напредък
+11. **Body Measurements** - Проследяване на тегло и измервания
+12. **Progress Photos** - Качване и съхранение на снимки
+13. **Real-time Chat** - Мгновена комуникация между треньори и клиенти
+14. **Notifications System** - Система за уведомления и известия
+15. **Billing** - Subscription management via Stripe (Free/Pro/Beast plans)
+16. **Authentication** - Multi-provider auth
+17. **Account Settings** - Управление на профил и настройки
 
 ## 🔧 Development правила
 
@@ -134,9 +143,13 @@ app/
 
 ### Ключови модели
 - Users (треньори и клиенти)
-- Training Programs
-- Nutrition Plans
-- Food Items
+- Training Programs & Workouts
+- Exercise Library (общи + персонални)
+- Nutrition Plans & Recipes
+- Food Items & Ingredients
+- Body Measurements & Progress Photos
+- Chat Conversations & Messages
+- Notifications
 - Client-Trainer relationships
 
 ### Authentication Flow
@@ -189,12 +202,35 @@ RESEND_FROM_EMAIL=...
 
 # Site
 NEXT_PUBLIC_SITE_URL=...
+
+# Optional: Stripe (if using direct integration)
+STRIPE_PUBLISHABLE_KEY=...
+STRIPE_SECRET_KEY=...
 ```
 
 ### Development
 - Port: 3001 (configured in NEXT_PUBLIC_SITE_URL)
 - Hot reload enabled
 - TypeScript strict mode
+
+## 🆕 Ново в проекта (Декември 2024)
+
+### Реализирани функционалности:
+- ✅ **Real-time Chat System** - Мгновена комуникация с Supabase Broadcast
+- ✅ **Workout Builder** - Drag & drop конструктор с календарен интерфейс
+- ✅ **Exercise Library** - Разширена библиотека с търсене и филтриране
+- ✅ **Food & Recipe Management** - Пълна система за храни и рецепти
+- ✅ **Progress Tracking** - Body measurements и progress photos
+- ✅ **Analytics Dashboard** - Статистики за треньори
+- ✅ **Notifications System** - Toast и real-time уведомления
+- ✅ **Enhanced Client Dashboard** - Подобрен дневен dashboard
+
+### Ключови файлове за разбиране:
+- `CHAT_SYSTEM_README.md` - Документация за chat системата
+- `app/protected/goals/page.tsx` - Goals и progress tracking
+- `components/chat/` - Chat компоненти
+- `app/protected/workout-builder/` - Workout builder
+- `app/api/chat/` - Chat API endpoints
 
 ---
 

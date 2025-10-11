@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Performance Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            background: #f9f9f9;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .warning {
+            border-left-color: #ff9800;
+            background: #fff3e0;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976D2;
+        }
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Chat Performance Test</h1>
+        <p>Тест на оптимизациите на чат системата</p>
+        
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-value" id="conversations-load-time">-</div>
+                <div class="metric-label">Conversations Load Time</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="messages-load-time">-</div>
+                <div class="metric-label">Messages Load Time</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="send-message-time">-</div>
+                <div class="metric-label">Send Message Time</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value" id="memory-usage">-</div>
+                <div class="metric-label">Memory Usage (MB)</div>
+            </div>
+        </div>
+
+        <div>
+            <button onclick="testConversationsLoading()">Тест Conversations Loading</button>
+            <button onclick="testMessagesLoading()">Тест Messages Loading</button>
+            <button onclick="testSendMessage()">Тест Send Message</button>
+            <button onclick="testMemoryUsage()">Тест Memory Usage</button>
+            <button onclick="runAllTests()">Всички тестове</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://umxmcnfurnnvaurutoho.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVteG1jbmZ1cm5udmF1cnV0b2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNDA2NTUsImV4cCI6MjA2OTcxNjY1NX0.aiiqhNALmoDfT6f2Js_yXa73cs4GM7ewqwvVbIJELes';
+        
+        const TEST_USER_ID = '3c5d2e18-c39a-4f09-afe2-60b2a1bbebc5';
+        const TEST_CONVERSATION_ID = 'f31d2fd3-16e9-40e0-b85d-9daaf611de7a';
+
+        function addResult(message, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testConversationsLoading() {
+            addResult('🔄 Тестване на conversations loading...');
+            const startTime = performance.now();
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_user_conversations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    },
+                    body: JSON.stringify({ user_id: TEST_USER_ID })
+                });
+
+                const endTime = performance.now();
+                const loadTime = endTime - startTime;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('conversations-load-time').textContent = `${loadTime.toFixed(0)}ms`;
+                    addResult(`✅ Conversations заредени за ${loadTime.toFixed(2)}ms (${data.length} conversations)`);
+                    
+                    if (loadTime < 200) {
+                        addResult('🚀 Отлично performance!', 'success');
+                    } else if (loadTime < 500) {
+                        addResult('⚠️ Добро performance, но може да се подобри', 'warning');
+                    } else {
+                        addResult('❌ Performance трябва да се подобри', 'error');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                addResult(`❌ Грешка при зареждане на conversations: ${error.message}`, 'error');
+            }
+        }
+
+        async function testMessagesLoading() {
+            addResult('🔄 Тестване на messages loading...');
+            const startTime = performance.now();
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?conversation_id=eq.${TEST_CONVERSATION_ID}&select=*&order=created_at.asc`, {
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+
+                const endTime = performance.now();
+                const loadTime = endTime - startTime;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('messages-load-time').textContent = `${loadTime.toFixed(0)}ms`;
+                    addResult(`✅ Messages заредени за ${loadTime.toFixed(2)}ms (${data.length} messages)`);
+                    
+                    if (loadTime < 100) {
+                        addResult('🚀 Отлично performance!', 'success');
+                    } else if (loadTime < 300) {
+                        addResult('⚠️ Добро performance', 'warning');
+                    } else {
+                        addResult('❌ Performance трябва да се подобри', 'error');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                addResult(`❌ Грешка при зареждане на messages: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSendMessage() {
+            addResult('🔄 Тестване на send message...');
+            const startTime = performance.now();
+            
+            try {
+                const testMessage = {
+                    conversation_id: TEST_CONVERSATION_ID,
+                    sender_id: TEST_USER_ID,
+                    content: `Test message ${Date.now()}`
+                };
+
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'apikey': SUPABASE_ANON_KEY
+                    },
+                    body: JSON.stringify(testMessage)
+                });
+
+                const endTime = performance.now();
+                const sendTime = endTime - startTime;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('send-message-time').textContent = `${sendTime.toFixed(0)}ms`;
+                    addResult(`✅ Message изпратен за ${sendTime.toFixed(2)}ms`);
+                    
+                    if (sendTime < 100) {
+                        addResult('🚀 Отлично performance!', 'success');
+                    } else if (sendTime < 200) {
+                        addResult('⚠️ Добро performance', 'warning');
+                    } else {
+                        addResult('❌ Performance трябва да се подобри', 'error');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                addResult(`❌ Грешка при изпращане на message: ${error.message}`, 'error');
+            }
+        }
+
+        function testMemoryUsage() {
+            if ('memory' in performance) {
+                const memory = performance.memory;
+                const used = memory.usedJSHeapSize / 1024 / 1024; // MB
+                document.getElementById('memory-usage').textContent = used.toFixed(1);
+                
+                if (used < 30) {
+                    addResult(`✅ Memory usage: ${used.toFixed(2)}MB - Отлично!`, 'success');
+                } else if (used < 50) {
+                    addResult(`⚠️ Memory usage: ${used.toFixed(2)}MB - Добро`, 'warning');
+                } else {
+                    addResult(`❌ Memory usage: ${used.toFixed(2)}MB - Трябва оптимизация`, 'error');
+                }
+            } else {
+                addResult('❌ Memory API не е налично в този браузър', 'error');
+            }
+        }
+
+        async function runAllTests() {
+            addResult('🚀 Започване на всички тестове...');
+            await testConversationsLoading();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testMessagesLoading();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testSendMessage();
+            testMemoryUsage();
+            addResult('✅ Всички тестове завършени!');
+        }
+
+        // Автоматично стартиране на тестовете при зареждане
+        window.addEventListener('load', () => {
+            addResult('🎯 Performance test готов за използване');
+            addResult('💡 Кликнете "Всички тестове" за пълно тестване');
+        });
+    </script>
+</body>
+</html>

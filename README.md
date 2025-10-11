@@ -1,10 +1,12 @@
-<a href="https://nextjs-supabase-stripe-update.vercel.app">
-  <img alt="Update – Vercel Next.js Template" src="https://images.update.dev/nextjs-supabase-stripe-update-template-thumbnail.png">
-  <h1 align="center">Update + Next.js Template</h1>
-</a>
+# 🏋️ Fitness Training Platform
 
 <p align="center">
-  A full-featured SaaS starter with auth, billing, and entitlements—powered by <a href="https://update.dev">Update</a> and <a href="https://nextjs.org/">Next.js</a>.
+  <img alt="Fitness Training Platform" src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" width="600">
+  <h1 align="center">Fitness Training Platform</h1>
+</p>
+
+<p align="center">
+  A comprehensive SaaS platform for personal trainers to manage clients, create workout programs, and track progress—powered by <a href="https://nextjs.org/">Next.js</a>, <a href="https://supabase.com">Supabase</a>, and <a href="https://update.dev">Update</a>.
 </p>
 
 <p align="center">
@@ -19,17 +21,41 @@
 
 ## ⚡ Features
 
-- 💳 **Subscriptions** — Stripe billing with checkout, portals, trials, and failed payment recovery
-- 🔐 **Authentication** — Supabase auth with Update-powered extensions (e.g., magic links, redirects)
-- 🔓 **Entitlements** — Easy access control by plan, org, or user role
-- ⚙️ **Full-stack ready** — App Router, Middleware, Client, and Server usage supported
-- 🎨 **UI** — Built with [Tailwind CSS](https://tailwindcss.com) and [shadcn/ui](https://ui.shadcn.com)
+### 🏋️ Fitness Management
+- 👥 **Client Management** — Invite and manage clients with email invitations
+- 📅 **Workout Builder** — Drag & drop workout creator with calendar integration
+- 💪 **Exercise Library** — Comprehensive exercise database with custom additions
+- 🍎 **Nutrition Planning** — Create and manage nutrition plans with macros
+- 📊 **Progress Tracking** — Body measurements, progress photos, and goal tracking
+- 📈 **Analytics Dashboard** — Statistics and insights for trainers
+
+### 💬 Communication
+- 💬 **Real-time Chat** — Instant messaging between trainers and clients
+- 🔔 **Notifications** — Toast notifications and real-time alerts
+- 📧 **Email System** — Automated invitations and notifications
+
+### 💳 Business Features
+- 💳 **Subscriptions** — Stripe billing with Free/Pro/Beast plans
+- 🔐 **Authentication** — Multi-provider auth with Supabase
+- 🔓 **Role Management** — Trainer/Client role-based access control
+- ⚙️ **Full-stack Ready** — App Router, Middleware, and TypeScript
+
+### 🎨 Modern UI/UX
+- 🎨 **Beautiful Design** — Built with [Tailwind CSS](https://tailwindcss.com) and [shadcn/ui](https://ui.shadcn.com)
+- 🌙 **Dark/Light Mode** — Theme switching support
+- 📱 **Responsive** — Mobile-first design approach
 
 ---
 
 ## 🔗 Demo
 
 Live demo: [nextjs-supabase-stripe-update.vercel.app](https://nextjs-supabase-stripe-update.vercel.app/)
+
+### 🎯 Target Users
+- **Personal Trainers** — Manage clients and create workout programs
+- **Nutritionists** — Plan and track nutrition programs
+- **Fitness Coaches** — Comprehensive client management and progress tracking
+- **Yoga/Pilates Instructors** — Session planning and client communication
 
 ---
 
@@ -92,34 +118,86 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 
 ## 📦 What's Included
 
-- 🔌 **Update Client Setup**:
-  - `utils/update/client.ts` — for browser-side usage
-  - `utils/update/server.ts` — for server-side usage
-- 🧠 **Entitlements Checks**:
-  - Example usage of `client.entitlements.check()` to conditionally render UI
-- 💳 **Billing Integration**:
-  - Stripe Checkout & Customer Portal
-  - Cancel/reactivate subscriptions
-  - Usage-based plans (coming soon)
+### 🔌 Core Setup
+- **Supabase Integration**: Database, auth, and real-time features
+- **Update.dev Integration**: Billing and subscription management
+- **TypeScript**: Full type safety throughout the application
+
+### 🏋️ Fitness Features
+- **Workout Builder**: Calendar-based workout creation with drag & drop
+- **Exercise Library**: 500+ exercises with custom exercise creation
+- **Nutrition Planning**: Macro tracking and meal planning
+- **Progress Tracking**: Body measurements and photo progress
+- **Real-time Chat**: Instant messaging with Supabase Broadcast
+
+### 💳 Business Logic
+- **Subscription Plans**: Free, Pro, Beast tiers with Stripe integration
+- **Role Management**: Trainer/Client role-based access control
+- **Invitation System**: Email-based client onboarding
+- **Analytics**: Trainer dashboard with client statistics
+
+### 🎨 UI Components
+- **shadcn/ui**: Modern, accessible component library
+- **Tailwind CSS**: Utility-first styling with custom theme
+- **Dark/Light Mode**: Theme switching with next-themes
+- **Responsive Design**: Mobile-first approach
 
 ---
 
 ## 🧩 Tech Stack
 
-- [Next.js](https://nextjs.org)
-- [Update](https://update.dev)
-- [Supabase](https://supabase.com)
-- [Stripe](https://stripe.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [shadcn/ui](https://ui.shadcn.com)
+### Frontend
+- [Next.js 15.2.4](https://nextjs.org) — React framework with App Router
+- [TypeScript](https://typescriptlang.org) — Type safety and developer experience
+- [Tailwind CSS 4.0.13](https://tailwindcss.com) — Utility-first CSS framework
+- [shadcn/ui](https://ui.shadcn.com) — Modern component library
+- [Lucide React](https://lucide.dev) — Beautiful icons
+
+### Backend & Database
+- [Supabase](https://supabase.com) — PostgreSQL database with real-time features
+- [Supabase Auth](https://supabase.com/auth) — Authentication and user management
+- [Supabase Storage](https://supabase.com/storage) — File storage for progress photos
+
+### Business & Billing
+- [Update.dev](https://update.dev) — Subscription management
+- [Stripe](https://stripe.com) — Payment processing
+- [Resend](https://resend.com) — Email delivery service
+
+### Real-time & Communication
+- [Supabase Realtime](https://supabase.com/realtime) — Real-time chat and notifications
+- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) — Instant messaging
+
+### Development Tools
+- [ESLint](https://eslint.org) — Code linting and formatting
+- [Prettier](https://prettier.io) — Code formatting
+- [React Hook Form](https://react-hook-form.com) — Form management
+- [Zod](https://zod.dev) — Schema validation
 
 ---
 
+## 🚀 Getting Started
+
+### For Personal Trainers
+1. **Sign up** as a trainer
+2. **Invite clients** via email
+3. **Create workout programs** using the Workout Builder
+4. **Plan nutrition** with macro tracking
+5. **Track progress** with measurements and photos
+6. **Communicate** via real-time chat
+
+### For Clients
+1. **Accept invitation** from your trainer
+2. **View your programs** and nutrition plans
+3. **Track your progress** with goals and measurements
+4. **Communicate** with your trainer
+5. **Stay motivated** with progress photos and analytics
+
 ## 🤝 Support
 
-- 📚 [Full documentation](https://update.dev/docs)
-- 💬 [Join our Discord](https://discord.gg/Guege5tXFK)
+- 📚 [Project Documentation](PROJECT_CONTEXT.md) — Comprehensive project guide
+- 💬 [Chat System Guide](CHAT_SYSTEM_README.md) — Real-time messaging documentation
 - 🐛 Found a bug? [Open an issue](https://github.com/updatedotdev/nextjs-supabase-stripe-update/issues)
+- 💡 Need help? Check the [Claude Context](CLAUDE.md) for development guidelines
 
 ---
 

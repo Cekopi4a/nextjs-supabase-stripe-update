@@ -65,7 +65,7 @@ export function MessageInput({
   };
 
   return (
-    <div className="border-t border-border bg-background p-4">
+    <div className="border-t border-border bg-background p-4 flex-shrink-0">
       <div className="flex items-end gap-2">
         {/* Text input */}
         <div className="flex-1 relative">

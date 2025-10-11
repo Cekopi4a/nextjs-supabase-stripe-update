@@ -84,7 +84,7 @@ export function ChatWindow({
   };
 
   // Empty state (no conversation selected)
-  if (!conversationId || !otherUser) {
+  if (!conversationId) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-gradient-to-br from-muted/20 to-background p-8 text-center">
         <div className="max-w-md">
@@ -95,6 +95,31 @@ export function ChatWindow({
           <p className="text-muted-foreground">
             Изберете разговор от лявата страна или започнете нов разговор с клиент
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state for other user (conversation selected but user data not loaded yet)
+  if (!otherUser) {
+    return (
+      <div className="h-full flex flex-col bg-background">
+        <div className="border-b border-border bg-gradient-to-r from-background via-muted/5 to-background shadow-sm">
+          <div className="flex items-center gap-3 p-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 bg-muted rounded-full animate-pulse"></div>
+              <div className="flex-1 min-w-0">
+                <div className="h-4 bg-muted rounded animate-pulse mb-1"></div>
+                <div className="h-3 bg-muted rounded animate-pulse w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Зареждане на данните...</p>
+          </div>
         </div>
       </div>
     );
@@ -119,21 +144,23 @@ export function ChatWindow({
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full w-full flex flex-col bg-background overflow-hidden">
       {/* Header */}
-      <ChatHeader
-        userName={otherUser.full_name}
-        userAvatar={otherUser.avatar_url}
-        isOnline={otherUser.isOnline}
-        lastSeen={otherUser.lastSeen}
-        onBack={onBack}
-      />
+      <div className="flex-shrink-0">
+        <ChatHeader
+          userName={otherUser.full_name}
+          userAvatar={otherUser.avatar_url}
+          isOnline={otherUser.isOnline}
+          lastSeen={otherUser.lastSeen}
+          onBack={onBack}
+        />
+      </div>
 
       {/* Messages container */}
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 py-6 bg-gradient-to-b from-background via-muted/5 to-background"
+        className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 bg-gradient-to-b from-background via-muted/5 to-background"
       >
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-4">

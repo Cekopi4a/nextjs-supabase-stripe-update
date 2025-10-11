@@ -8,6 +8,7 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/utils/styles";
 import { useNotifications } from "@/contexts/notification-context";
+import { getOfflineQueue, OfflineMessageQueue, QueuedMessage } from "@/utils/chat/offline-queue";
 
 function ChatPageContent() {
   const router = useRouter();
@@ -24,8 +25,10 @@ function ChatPageContent() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [realtimeChannel, setRealtimeChannel] = useState<RealtimeChannel | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const [offlineQueue, setOfflineQueue] = useState<OfflineMessageQueue | null>(null);
+  const [offlineQueueLength, setOfflineQueueLength] = useState(0);
 
-  // Get current user
+  // Get current user и setup offline queue
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -34,6 +37,18 @@ function ChatPageContent() {
         return;
       }
       setCurrentUserId(user.id);
+
+      // Setup offline queue
+      const queue = getOfflineQueue();
+      setOfflineQueue(queue);
+      setOfflineQueueLength(queue.getQueueLength());
+
+      // Update queue length periodically
+      const interval = setInterval(() => {
+        setOfflineQueueLength(queue.getQueueLength());
+      }, 5000);
+
+      return () => clearInterval(interval);
     };
 
     getCurrentUser();
@@ -146,13 +161,55 @@ function ChatPageContent() {
     };
   }, [currentUserId, supabase]);
 
-  // Load conversations
+  // Load conversations - оптимизирано с новата database функция
   const loadConversations = useCallback(async () => {
     if (!currentUserId) return;
 
     try {
       setIsLoadingConversations(true);
 
+      // Използваме новата оптимизирана функция
+      const { data: conversationsData, error } = await supabase
+        .rpc('get_user_conversations', { user_id: currentUserId });
+
+      if (error) {
+        console.error("Database function error:", error);
+        // Fallback към стария метод ако функцията не работи
+        await loadConversationsFallback();
+        return;
+      }
+
+      // Transform данните към очаквания формат
+      const conversationsWithDetails = (conversationsData || []).map((conv) => ({
+        id: conv.id,
+        otherUser: {
+          id: conv.other_user_id,
+          full_name: conv.other_user_name || "Unknown",
+          avatar_url: conv.other_user_avatar,
+          isOnline: onlineUsers.has(conv.other_user_id),
+        },
+        lastMessage: conv.last_message_content ? {
+          content: conv.last_message_content,
+          created_at: conv.last_message_created,
+          sender_id: conv.last_message_sender,
+        } : undefined,
+        unreadCount: conv.unread_count || 0,
+        last_message_at: conv.last_message_at,
+      }));
+
+      setConversations(conversationsWithDetails);
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+      // Fallback към стария метод
+      await loadConversationsFallback();
+    } finally {
+      setIsLoadingConversations(false);
+    }
+  }, [currentUserId, onlineUsers]);
+
+  // Fallback метод (старата логика) - само ако новата функция не работи
+  const loadConversationsFallback = async () => {
+    try {
       const { data: conversationsData, error } = await supabase
         .from("conversations")
         .select(`
@@ -213,11 +270,9 @@ function ChatPageContent() {
 
       setConversations(conversationsWithDetails);
     } catch (error) {
-      console.error("Error loading conversations:", error);
-    } finally {
-      setIsLoadingConversations(false);
+      console.error("Error in fallback conversation loading:", error);
     }
-  }, [currentUserId, supabase, onlineUsers]);
+  };
 
   useEffect(() => {
     if (currentUserId) {
@@ -259,17 +314,32 @@ function ChatPageContent() {
         .eq("id", conversationId)
         .single();
 
-      if (!conversation) return;
+      if (!conversation) {
+        console.error("Conversation not found:", conversationId);
+        return;
+      }
 
       const otherUserId = conversation.trainer_id === currentUserId
         ? conversation.client_id
         : conversation.trainer_id;
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url")
         .eq("id", otherUserId)
         .single();
+
+      if (profileError) {
+        console.error("Error loading profile:", profileError);
+        // Set fallback user data if profile loading fails
+        setOtherUser({
+          id: otherUserId,
+          full_name: "Unknown User",
+          avatar_url: undefined,
+          isOnline: onlineUsers.has(otherUserId),
+        });
+        return;
+      }
 
       if (profile) {
         setOtherUser({
@@ -281,12 +351,22 @@ function ChatPageContent() {
       }
     } catch (error) {
       console.error("Error loading other user:", error);
+      // Set fallback user data on error
+      setOtherUser({
+        id: "unknown",
+        full_name: "Unknown User",
+        avatar_url: undefined,
+        isOnline: false,
+      });
     }
   }, [currentUserId, supabase, onlineUsers]);
 
   // Handle conversation selection
   const handleSelectConversation = useCallback((conversationId: string) => {
     setSelectedConversationId(conversationId);
+    // Reset otherUser to null to show loading state
+    setOtherUser(null);
+    // Load messages and other user data
     loadMessages(conversationId);
     loadOtherUser(conversationId);
     // Refresh unread count when opening a conversation
@@ -300,6 +380,8 @@ function ChatPageContent() {
       const conversation = conversations.find(c => c.id === conversationParam);
       if (conversation) {
         setSelectedConversationId(conversationParam);
+        // Reset otherUser to null to show loading state
+        setOtherUser(null);
         loadMessages(conversationParam);
         loadOtherUser(conversationParam);
         refreshUnreadCount();
@@ -310,6 +392,12 @@ function ChatPageContent() {
   // Setup Realtime subscription with Broadcast for instant messaging
   useEffect(() => {
     if (!selectedConversationId || !currentUserId) return;
+
+    // Cleanup previous channel if exists
+    if (realtimeChannel) {
+      realtimeChannel.unsubscribe();
+      setRealtimeChannel(null);
+    }
 
     // Subscribe to broadcast messages for instant delivery
     const channel = supabase
@@ -380,50 +468,107 @@ function ChatPageContent() {
 
     return () => {
       channel.unsubscribe();
+      setRealtimeChannel(null);
     };
-  }, [selectedConversationId, currentUserId, supabase]);
+  }, [selectedConversationId, currentUserId]); // Премахнах supabase от dependencies
 
-  // Send message with instant broadcast
+  // Send message with offline queue support
   const handleSendMessage = async (content: string) => {
-    if (!selectedConversationId || !currentUserId) return;
+    if (!selectedConversationId || !currentUserId || !offlineQueue) return;
+
+    // OPTIMISTIC UPDATE: Add temporary message immediately
+    const tempMessage: Message = {
+      id: `temp-${Date.now()}`,
+      conversation_id: selectedConversationId,
+      sender_id: currentUserId,
+      content,
+      created_at: new Date().toISOString(),
+      read_at: null,
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
 
     try {
-      // Insert message to database
-      const { data: newMessage, error } = await supabase
-        .from("messages")
-        .insert({
+      // Ако сме online, опитай да изпратиш директно
+      if (navigator.onLine) {
+        try {
+          // Insert message to database
+          const { data: newMessage, error } = await supabase
+            .from("messages")
+            .insert({
+              conversation_id: selectedConversationId,
+              sender_id: currentUserId,
+              content,
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Remove temp message and add real message
+          setMessages((prev) => {
+            const withoutTemp = prev.filter(msg => msg.id !== tempMessage.id);
+            const exists = withoutTemp.some(msg => msg.id === newMessage.id);
+            if (exists) return withoutTemp;
+            return [...withoutTemp, newMessage];
+          });
+
+          // Broadcast message to other users
+          if (newMessage && realtimeChannel) {
+            try {
+              await realtimeChannel.send({
+                type: "broadcast",
+                event: "new_message",
+                payload: newMessage,
+              });
+            } catch (broadcastError) {
+              console.warn("Broadcast failed, but message saved:", broadcastError);
+            }
+          }
+
+          // Reload conversations to update last message
+          loadConversations();
+          return;
+
+        } catch (error) {
+          console.error("Direct send failed, adding to offline queue:", error);
+          // Fall through to offline queue
+        }
+      }
+
+      // Ако директното изпращане не успее или сме offline, добави в queue
+      const queuedMessageId = await offlineQueue.queueMessage(
+        selectedConversationId,
+        currentUserId,
+        content
+      );
+
+      // Remove temp message and add queued message indicator
+      setMessages((prev) => {
+        const withoutTemp = prev.filter(msg => msg.id !== tempMessage.id);
+        const queuedMessage: Message = {
+          id: queuedMessageId,
           conversation_id: selectedConversationId,
           sender_id: currentUserId,
           content,
-        })
-        .select()
-        .single();
+          created_at: new Date().toISOString(),
+          read_at: null,
+        };
+        return [...withoutTemp, queuedMessage];
+      });
 
-      if (error) throw error;
+      setOfflineQueueLength(offlineQueue.getQueueLength());
 
-      // OPTIMISTIC UPDATE: Add to your own messages IMMEDIATELY
-      if (newMessage) {
-        setMessages((prev) => {
-          const exists = prev.some(msg => msg.id === newMessage.id);
-          if (exists) return prev;
-          return [...prev, newMessage];
-        });
+      // Ако сме offline, покажи съобщение
+      if (!navigator.onLine) {
+        console.log("📴 Message queued for offline delivery");
       }
 
-      // Broadcast message to other users
-      if (newMessage && realtimeChannel) {
-        await realtimeChannel.send({
-          type: "broadcast",
-          event: "new_message",
-          payload: newMessage,
-        });
-      }
-
-      // Reload conversations to update last message
-      loadConversations();
     } catch (error) {
+      // Remove temp message on error
+      setMessages((prev) => prev.filter(msg => msg.id !== tempMessage.id));
       console.error("Error sending message:", error);
-      throw error;
+      throw new Error("Неуспешно изпращане на съобщението. Моля опитайте отново.");
     }
   };
 
@@ -459,35 +604,44 @@ function ChatPageContent() {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] max-h-[900px] flex rounded-lg overflow-hidden border border-border shadow-lg bg-background">
-      {/* Chat list (left sidebar) */}
-      <div className={cn(
-        "w-full lg:w-80 xl:w-96 flex-shrink-0",
-        selectedConversationId && "hidden lg:block"
-      )}>
-        <ChatList
-          conversations={conversations}
-          selectedConversationId={selectedConversationId || undefined}
-          onSelectConversation={handleSelectConversation}
-          isLoading={isLoadingConversations}
-        />
-      </div>
+    <div className="-m-3 sm:-m-4 lg:-m-6 h-[calc(100vh-0px)] flex flex-col bg-background">
+      {/* Offline Queue Indicator */}
+      {offlineQueueLength > 0 && (
+        <div className="bg-amber-500 text-amber-900 px-4 py-2 text-sm text-center border-b border-amber-600 flex-shrink-0">
+          📴 {offlineQueueLength} съобщения чакат за изпращане
+        </div>
+      )}
 
-      {/* Chat window */}
-      <div className={cn(
-        "flex-1 min-w-0",
-        !selectedConversationId && "hidden lg:block"
-      )}>
-        <ChatWindow
-          conversationId={selectedConversationId || undefined}
-          messages={messages}
-          currentUserId={currentUserId || ""}
-          otherUser={otherUser || undefined}
-          onSendMessage={handleSendMessage}
-          onMarkAsRead={handleMarkAsRead}
-          onBack={() => setSelectedConversationId(null)}
-          isLoading={isLoadingMessages}
-        />
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Chat list (left sidebar) */}
+        <div className={cn(
+          "w-full lg:w-80 xl:w-96 flex-shrink-0 border-r border-border overflow-hidden flex flex-col",
+          selectedConversationId && "hidden lg:flex"
+        )}>
+          <ChatList
+            conversations={conversations}
+            selectedConversationId={selectedConversationId || undefined}
+            onSelectConversation={handleSelectConversation}
+            isLoading={isLoadingConversations}
+          />
+        </div>
+
+        {/* Chat window */}
+        <div className={cn(
+          "flex-1 min-w-0 overflow-hidden",
+          !selectedConversationId && "hidden lg:block"
+        )}>
+          <ChatWindow
+            conversationId={selectedConversationId || undefined}
+            messages={messages}
+            currentUserId={currentUserId || ""}
+            otherUser={otherUser || undefined}
+            onSendMessage={handleSendMessage}
+            onMarkAsRead={handleMarkAsRead}
+            onBack={() => setSelectedConversationId(null)}
+            isLoading={isLoadingMessages}
+          />
+        </div>
       </div>
     </div>
   );
