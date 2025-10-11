@@ -363,48 +363,44 @@ export default function ClientWorkoutsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center">
-            <Dumbbell className="h-6 w-6 mr-2" />
+          <h1 className="text-xl md:text-2xl font-bold flex items-center">
+            <Dumbbell className="h-5 w-5 md:h-6 md:w-6 mr-2" />
             Моите тренировки
           </h1>
-          <p className="text-muted-foreground">
-            {userProfile?.full_name && (
-              <span className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Добре дошъл, {userProfile.full_name}!
-              </span>
-            )}
-          </p>
+          {userProfile?.full_name && (
+            <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+              <User className="h-3 w-3 md:h-4 md:w-4" />
+              Добре дошъл, {userProfile.full_name}!
+            </p>
+          )}
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={goToToday}>
-            Днес
-          </Button>
-        </div>
+
+        <Button variant="outline" size="sm" onClick={goToToday} className="self-start sm:self-auto">
+          Днес
+        </Button>
       </div>
 
       {/* Calendar Navigation */}
-      <Card className="p-8 bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-900 dark:to-blue-950/20 shadow-lg border-0 ring-1 ring-black/5 dark:ring-white/10">
+      <Card className="p-3 md:p-8 bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-900 dark:to-blue-950/20 shadow-lg border-0 ring-1 ring-black/5 dark:ring-white/10">
         {/* Header with Navigation */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 mb-4 md:mb-8">
+          <div className="flex items-center justify-between">
             <Button
               variant="outline"
               size="sm"
               onClick={() => navigateMonth('prev')}
-              className="h-10 w-10 rounded-full p-0 hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-950 transition-all shadow-sm"
+              className="h-9 w-9 md:h-10 md:w-10 rounded-full p-0 hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-950 transition-all shadow-sm"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
 
-            <div className="flex items-center gap-3 px-4 py-2 bg-white dark:bg-slate-800 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-              <CalendarIcon className="h-5 w-5 text-blue-600" />
-              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            <div className="flex items-center gap-2 md:gap-3 px-3 py-1.5 md:px-4 md:py-2 bg-white dark:bg-slate-800 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+              <CalendarIcon className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+              <h2 className="text-base md:text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent whitespace-nowrap">
                 {BULGARIAN_MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h2>
             </div>
@@ -413,31 +409,32 @@ export default function ClientWorkoutsPage() {
               variant="outline"
               size="sm"
               onClick={() => navigateMonth('next')}
-              className="h-10 w-10 rounded-full p-0 hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-950 transition-all shadow-sm"
+              className="h-9 w-9 md:h-10 md:w-10 rounded-full p-0 hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-950 transition-all shadow-sm"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-              <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Планирани</span>
+          {/* Legend - Mobile friendly */}
+          <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
+            <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1 md:py-2 bg-white dark:bg-slate-800 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+              <div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-xs md:text-sm font-medium text-slate-700 dark:text-slate-300">Планирани</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-              <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Завършени</span>
+            <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-4 py-1 md:py-2 bg-white dark:bg-slate-800 rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+              <div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-green-500 rounded-full"></div>
+              <span className="text-xs md:text-sm font-medium text-slate-700 dark:text-slate-300">Завършени</span>
             </div>
           </div>
         </div>
 
         {/* Calendar Grid */}
-        <div className="bg-white dark:bg-slate-800/50 rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 dark:ring-white/10">
+        <div className="bg-white dark:bg-slate-800/50 rounded-lg md:rounded-2xl overflow-hidden shadow-xl ring-1 ring-black/5 dark:ring-white/10">
           <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-700">
             {/* Week headers */}
             {BULGARIAN_DAYS.map((day) => (
-              <div key={day} className="p-4 text-center bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-800/50">
-                <span className="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+              <div key={day} className="p-1.5 md:p-4 text-center bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-800/50">
+                <span className="text-[10px] md:text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
                   {day}
                 </span>
               </div>
@@ -505,18 +502,18 @@ function CalendarDayCell({
 
   return (
     <div className={`
-      relative min-h-[140px] p-3 border-r border-b border-slate-200 dark:border-slate-700
+      relative min-h-[80px] md:min-h-[140px] p-1 md:p-3 border-r border-b border-slate-200 dark:border-slate-700
       transition-all duration-200
       ${!day.isCurrentMonth ? 'bg-slate-50/50 dark:bg-slate-900/30 opacity-60' : 'bg-white dark:bg-slate-800/30'}
       ${day.isToday ? 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/40 dark:to-cyan-950/40 ring-2 ring-blue-400 dark:ring-blue-600 ring-inset' : ''}
       ${hasWorkouts && !day.isToday ? 'hover:bg-blue-50/50 dark:hover:bg-blue-950/20' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}
     `}>
       {/* Day Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-1 md:mb-3">
+        <div className="flex items-center gap-1">
           <span className={`
-            text-sm font-bold
-            ${day.isToday ? 'flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-md' : ''}
+            text-[10px] md:text-sm font-bold
+            ${day.isToday ? 'flex items-center justify-center w-5 h-5 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-md' : ''}
             ${!day.isToday && day.isCurrentMonth ? 'text-slate-700 dark:text-slate-300' : ''}
             ${!day.isToday && !day.isCurrentMonth ? 'text-slate-400 dark:text-slate-600' : ''}
           `}>
@@ -526,16 +523,16 @@ function CalendarDayCell({
 
         {/* Workout Progress Indicator */}
         {hasWorkouts && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             {completedWorkouts === totalWorkouts ? (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full">
-                <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
-                <span className="text-[10px] font-bold text-green-700 dark:text-green-400">{totalWorkouts}</span>
+              <div className="flex items-center gap-0.5 md:gap-1 px-1 md:px-2 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full">
+                <CheckCircle2 className="h-2 w-2 md:h-3 md:w-3 text-green-600 dark:text-green-400" />
+                <span className="text-[8px] md:text-[10px] font-bold text-green-700 dark:text-green-400">{totalWorkouts}</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                <Dumbbell className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
+              <div className="flex items-center gap-0.5 md:gap-1 px-1 md:px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                <Dumbbell className="h-2 w-2 md:h-3 md:w-3 text-blue-600 dark:text-blue-400" />
+                <span className="text-[8px] md:text-[10px] font-bold text-blue-700 dark:text-blue-400">
                   {completedWorkouts}/{totalWorkouts}
                 </span>
               </div>
@@ -545,7 +542,7 @@ function CalendarDayCell({
       </div>
 
       {/* Workouts List */}
-      <div className="space-y-1.5">
+      <div className="space-y-0.5 md:space-y-1.5">
         {day.workouts.slice(0, 2).map((workout) => (
           <WorkoutItem
             key={workout.id}
@@ -557,18 +554,18 @@ function CalendarDayCell({
 
         {day.workouts.length > 2 && (
           <button
-            className="w-full text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-center py-1 px-2 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            className="w-full text-[9px] md:text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-center py-0.5 md:py-1 px-1 md:px-2 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
             onClick={() => day.workouts.length > 0 && onWorkoutClick(day.workouts[2])}
           >
-            +{day.workouts.length - 2} още
+            +{day.workouts.length - 2}
           </button>
         )}
       </div>
 
       {/* Today Indicator */}
       {day.isToday && (
-        <div className="absolute bottom-2 right-2">
-          <div className="w-1.5 h-1.5 bg-blue-600 dark:bg-cyan-400 rounded-full animate-pulse"></div>
+        <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2">
+          <div className="w-1 h-1 md:w-1.5 md:h-1.5 bg-blue-600 dark:bg-cyan-400 rounded-full animate-pulse"></div>
         </div>
       )}
     </div>
@@ -589,7 +586,7 @@ function WorkoutItem({
   return (
     <div
       className={`
-        group relative text-xs p-2.5 rounded-lg cursor-pointer transition-all duration-200
+        group relative text-[9px] md:text-xs p-1 md:p-2.5 rounded-md md:rounded-lg cursor-pointer transition-all duration-200
         ${isCompleted
           ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/40 dark:to-emerald-950/40 border border-green-200 dark:border-green-800 shadow-sm'
           : 'bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/40 dark:to-cyan-950/40 border border-blue-200 dark:border-blue-800 hover:shadow-md hover:scale-[1.02]'
@@ -597,25 +594,25 @@ function WorkoutItem({
       `}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-start gap-2 min-w-0 flex-1">
+      <div className="flex items-start justify-between gap-1 md:gap-2">
+        <div className="flex items-start gap-1 md:gap-2 min-w-0 flex-1">
           <div className={`
-            mt-0.5 p-1 rounded-md
+            mt-0.5 p-0.5 md:p-1 rounded-md
             ${isCompleted
               ? 'bg-green-100 dark:bg-green-900/50'
               : 'bg-blue-100 dark:bg-blue-900/50'
             }
           `}>
             {isCompleted ? (
-              <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
+              <CheckCircle2 className="h-2 w-2 md:h-3 md:w-3 text-green-600 dark:text-green-400" />
             ) : (
-              <Dumbbell className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+              <Dumbbell className="h-2 w-2 md:h-3 md:w-3 text-blue-600 dark:text-blue-400" />
             )}
           </div>
 
           <div className="min-w-0 flex-1">
             <div className={`
-              font-semibold truncate leading-tight
+              font-semibold truncate leading-tight text-[9px] md:text-xs
               ${isCompleted
                 ? 'text-green-800 dark:text-green-300'
                 : 'text-blue-800 dark:text-blue-300'
@@ -625,7 +622,7 @@ function WorkoutItem({
             </div>
 
             <div className={`
-              flex items-center gap-2 mt-1
+              hidden md:flex items-center gap-2 mt-1
               ${isCompleted
                 ? 'text-green-600 dark:text-green-400'
                 : 'text-blue-600 dark:text-blue-400'
@@ -648,7 +645,7 @@ function WorkoutItem({
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-green-100 dark:hover:bg-green-900/50 hover:scale-110"
+            className="hidden md:flex h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-green-100 dark:hover:bg-green-900/50 hover:scale-110"
             onClick={(e) => {
               e.stopPropagation();
               onMarkComplete(workout.id);
@@ -676,23 +673,23 @@ function ClientWorkoutDetailsModal({
   const isCompleted = workout.status === 'completed';
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <Card className="w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl border-0 ring-1 ring-black/10 dark:ring-white/10 animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 z-50 animate-in fade-in duration-200">
+      <Card className="w-full max-w-3xl max-h-[95vh] md:max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border-0 ring-1 ring-black/10 dark:ring-white/10 animate-in zoom-in-95 duration-200">
         {/* Header with Gradient */}
-        <div className="relative bg-gradient-to-br from-blue-600 to-cyan-500 p-6 text-white">
+        <div className="relative bg-gradient-to-br from-blue-600 to-cyan-500 p-3 md:p-6 text-white flex-shrink-0">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-30"></div>
 
-          <div className="relative flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
-                  <Dumbbell className="h-6 w-6" />
+          <div className="relative flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 md:gap-3 mb-2">
+                <div className="p-1.5 md:p-2 bg-white/20 backdrop-blur-sm rounded-lg flex-shrink-0">
+                  <Dumbbell className="h-4 w-4 md:h-6 md:w-6" />
                 </div>
-                <div>
-                  <h3 className="text-2xl font-bold">{workout.name}</h3>
-                  <p className="text-blue-100 text-sm flex items-center gap-2 mt-1">
-                    <CalendarIcon className="h-4 w-4" />
-                    {formatScheduledDate(workout.scheduled_date)}
+                <div className="min-w-0">
+                  <h3 className="text-lg md:text-2xl font-bold truncate">{workout.name}</h3>
+                  <p className="text-blue-100 text-xs md:text-sm flex items-center gap-1 md:gap-2 mt-0.5 md:mt-1">
+                    <CalendarIcon className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                    <span className="truncate">{formatScheduledDate(workout.scheduled_date)}</span>
                   </p>
                 </div>
               </div>
@@ -702,14 +699,14 @@ function ClientWorkoutDetailsModal({
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-10 w-10 p-0 rounded-full bg-white/10 hover:bg-white/20 text-white border-0"
+              className="h-8 w-8 md:h-10 md:w-10 p-0 rounded-full bg-white/10 hover:bg-white/20 text-white border-0 flex-shrink-0"
             >
               ✕
             </Button>
           </div>
 
           {/* Status Badge */}
-          <div className="relative mt-4">
+          <div className="relative mt-2 md:mt-4">
             <Badge
               variant={isCompleted ? "default" : "secondary"}
               className={`
@@ -717,17 +714,17 @@ function ClientWorkoutDetailsModal({
                   ? "bg-green-500 hover:bg-green-600 text-white border-0 shadow-lg"
                   : "bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm"
                 }
-                px-3 py-1
+                px-2 md:px-3 py-0.5 md:py-1 text-xs
               `}
             >
               {isCompleted ? (
-                <><CheckCircle2 className="h-3 w-3 mr-1" /> Завършена</>
+                <><CheckCircle2 className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" /> Завършена</>
               ) : (
-                <><Clock className="h-3 w-3 mr-1" /> Планирана</>
+                <><Clock className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" /> Планирана</>
               )}
             </Badge>
             {isCompleted && workout.completed_at && (
-              <p className="text-xs text-blue-100 mt-2">
+              <p className="text-[10px] md:text-xs text-blue-100 mt-1 md:mt-2">
                 Завършена: {new Date(workout.completed_at).toLocaleString('bg-BG')}
               </p>
             )}
@@ -735,44 +732,44 @@ function ClientWorkoutDetailsModal({
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-250px)] p-6 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-          <div className="space-y-6">
+        <div className="flex-1 overflow-y-auto p-3 md:p-6 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+          <div className="space-y-3 md:space-y-6">
             {/* Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-1">
-                  <Clock className="h-4 w-4" />
-                  <p className="text-xs font-semibold uppercase tracking-wide">Продължителност</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
+              <div className="bg-white dark:bg-slate-800 p-2 md:p-4 rounded-lg md:rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+                <div className="flex items-center gap-1 md:gap-2 text-blue-600 dark:text-blue-400 mb-1">
+                  <Clock className="h-3 w-3 md:h-4 md:w-4" />
+                  <p className="text-[9px] md:text-xs font-semibold uppercase tracking-wide">Време</p>
                 </div>
-                <p className="text-2xl font-bold text-slate-900 dark:text-white">{workout.estimated_duration_minutes} <span className="text-sm text-muted-foreground">мин</span></p>
+                <p className="text-lg md:text-2xl font-bold text-slate-900 dark:text-white">{workout.estimated_duration_minutes} <span className="text-[10px] md:text-sm text-muted-foreground">м</span></p>
               </div>
 
-              <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-                <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 mb-1">
-                  <Dumbbell className="h-4 w-4" />
-                  <p className="text-xs font-semibold uppercase tracking-wide">Тип</p>
+              <div className="bg-white dark:bg-slate-800 p-2 md:p-4 rounded-lg md:rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+                <div className="flex items-center gap-1 md:gap-2 text-cyan-600 dark:text-cyan-400 mb-1">
+                  <Dumbbell className="h-3 w-3 md:h-4 md:w-4" />
+                  <p className="text-[9px] md:text-xs font-semibold uppercase tracking-wide">Тип</p>
                 </div>
-                <p className="text-lg font-bold text-slate-900 dark:text-white capitalize">{workout.workout_type}</p>
+                <p className="text-sm md:text-lg font-bold text-slate-900 dark:text-white capitalize">{workout.workout_type}</p>
               </div>
 
               {workout.difficulty_level && (
-                <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-                  <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 mb-1">
-                    <User className="h-4 w-4" />
-                    <p className="text-xs font-semibold uppercase tracking-wide">Ниво</p>
+                <div className="bg-white dark:bg-slate-800 p-2 md:p-4 rounded-lg md:rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10 col-span-2 md:col-span-1">
+                  <div className="flex items-center gap-1 md:gap-2 text-orange-600 dark:text-orange-400 mb-1">
+                    <User className="h-3 w-3 md:h-4 md:w-4" />
+                    <p className="text-[9px] md:text-xs font-semibold uppercase tracking-wide">Ниво</p>
                   </div>
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">{workout.difficulty_level}</p>
+                  <p className="text-sm md:text-lg font-bold text-slate-900 dark:text-white">{workout.difficulty_level}</p>
                 </div>
               )}
             </div>
 
             {/* Program Info */}
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/40 dark:to-cyan-950/40 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400 mb-1">Програма</p>
-              <p className="font-bold text-slate-900 dark:text-white">{workout.workout_programs?.name}</p>
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/40 dark:to-cyan-950/40 p-3 md:p-4 rounded-lg md:rounded-xl border border-blue-200 dark:border-blue-800">
+              <p className="text-[9px] md:text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400 mb-1">Програма</p>
+              <p className="text-sm md:text-base font-bold text-slate-900 dark:text-white">{workout.workout_programs?.name}</p>
               {workout.workout_programs?.profiles?.full_name && (
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-1">
-                  <User className="h-3 w-3" />
+                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-1">
+                  <User className="h-2.5 w-2.5 md:h-3 md:w-3" />
                   Треньор: {workout.workout_programs.profiles.full_name}
                 </p>
               )}
@@ -781,53 +778,53 @@ function ClientWorkoutDetailsModal({
             {/* Exercises */}
             {workout.exercises && workout.exercises.length > 0 && (
               <div>
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
-                  <div className="h-8 w-1 bg-gradient-to-b from-blue-600 to-cyan-500 rounded-full"></div>
+                <h4 className="text-sm md:text-lg font-bold mb-2 md:mb-4 flex items-center gap-2 text-slate-900 dark:text-white">
+                  <div className="h-6 md:h-8 w-0.5 md:w-1 bg-gradient-to-b from-blue-600 to-cyan-500 rounded-full"></div>
                   Упражнения ({workout.exercises.length})
                 </h4>
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {workout.exercises.map((exercise, index) => (
-                    <div key={exercise.id || index} className="group bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-md transition-all">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 text-white font-bold text-sm flex-shrink-0">
+                    <div key={exercise.id || index} className="group bg-white dark:bg-slate-800 p-2 md:p-5 rounded-lg md:rounded-xl shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-md transition-all">
+                      <div className="flex items-start justify-between mb-2 md:mb-3">
+                        <div className="flex items-start gap-1.5 md:gap-3 flex-1 min-w-0">
+                          <div className="flex items-center justify-center w-5 h-5 md:w-8 md:h-8 rounded-md md:rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500 text-white font-bold text-[10px] md:text-sm flex-shrink-0">
                             {index + 1}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-bold text-slate-900 dark:text-white">{exercise.exercise?.name || 'Неизвестно упражнение'}</h5>
+                            <h5 className="font-bold text-xs md:text-base text-slate-900 dark:text-white truncate">{exercise.exercise?.name || 'Неизвестно упражнение'}</h5>
                             {exercise.exercise?.equipment && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 capitalize">{exercise.exercise.equipment}</p>
+                              <p className="text-[9px] md:text-xs text-slate-500 dark:text-slate-400 mt-0.5 capitalize">{exercise.exercise.equipment}</p>
                             )}
                           </div>
                         </div>
-                        <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                        <Badge variant="outline" className="text-[9px] md:text-xs bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 ml-1 flex-shrink-0">
                           {exercise.exercise?.level || 'средно'}
                         </Badge>
                       </div>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
-                          <span className="text-xs text-muted-foreground block mb-1">Серии</span>
-                          <p className="font-bold text-lg text-blue-600 dark:text-blue-400">{exercise.planned_sets}</p>
+                      <div className="grid grid-cols-4 gap-1.5 md:gap-3 mb-2 md:mb-3">
+                        <div className="bg-slate-50 dark:bg-slate-900/50 p-1.5 md:p-3 rounded-md md:rounded-lg">
+                          <span className="text-[8px] md:text-xs text-muted-foreground block mb-0.5 md:mb-1">Серии</span>
+                          <p className="font-bold text-sm md:text-lg text-blue-600 dark:text-blue-400">{exercise.planned_sets}</p>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
-                          <span className="text-xs text-muted-foreground block mb-1">Повторения</span>
-                          <p className="font-bold text-lg text-cyan-600 dark:text-cyan-400">{exercise.planned_reps}</p>
+                        <div className="bg-slate-50 dark:bg-slate-900/50 p-1.5 md:p-3 rounded-md md:rounded-lg">
+                          <span className="text-[8px] md:text-xs text-muted-foreground block mb-0.5 md:mb-1">Повт.</span>
+                          <p className="font-bold text-sm md:text-lg text-cyan-600 dark:text-cyan-400">{exercise.planned_reps}</p>
                         </div>
                         {exercise.planned_weight && (
-                          <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
-                            <span className="text-xs text-muted-foreground block mb-1">Тежест</span>
-                            <p className="font-bold text-lg text-purple-600 dark:text-purple-400">{exercise.planned_weight} кг</p>
+                          <div className="bg-slate-50 dark:bg-slate-900/50 p-1.5 md:p-3 rounded-md md:rounded-lg">
+                            <span className="text-[8px] md:text-xs text-muted-foreground block mb-0.5 md:mb-1">кг</span>
+                            <p className="font-bold text-sm md:text-lg text-purple-600 dark:text-purple-400">{exercise.planned_weight}</p>
                           </div>
                         )}
-                        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
-                          <span className="text-xs text-muted-foreground block mb-1">Почивка</span>
-                          <p className="font-bold text-lg text-green-600 dark:text-green-400">{exercise.rest_time}с</p>
+                        <div className="bg-slate-50 dark:bg-slate-900/50 p-1.5 md:p-3 rounded-md md:rounded-lg">
+                          <span className="text-[8px] md:text-xs text-muted-foreground block mb-0.5 md:mb-1">Почивка</span>
+                          <p className="font-bold text-sm md:text-lg text-green-600 dark:text-green-400">{exercise.rest_time}с</p>
                         </div>
                       </div>
 
                       {exercise.exercise?.primary_muscles && exercise.exercise.primary_muscles.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
+                        <div className="hidden md:flex flex-wrap gap-1 mb-2">
                           <span className="text-xs text-muted-foreground">Основни мускули:</span>
                           {exercise.exercise.primary_muscles.map((muscle, i) => (
                             <Badge key={i} variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
@@ -838,7 +835,7 @@ function ClientWorkoutDetailsModal({
                       )}
 
                       {exercise.exercise?.secondary_muscles && exercise.exercise.secondary_muscles.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
+                        <div className="hidden md:flex flex-wrap gap-1 mb-2">
                           <span className="text-xs text-muted-foreground">Вторични мускули:</span>
                           {exercise.exercise.secondary_muscles.map((muscle, i) => (
                             <Badge key={i} variant="outline" className="text-xs">
@@ -849,9 +846,9 @@ function ClientWorkoutDetailsModal({
                       )}
 
                       {exercise.notes && (
-                        <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                          <span className="text-xs font-semibold text-yellow-800 dark:text-yellow-300 block mb-1">Бележки:</span>
-                          <span className="text-sm text-yellow-900 dark:text-yellow-200">{exercise.notes}</span>
+                        <div className="mt-2 md:mt-3 p-2 md:p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md md:rounded-lg border border-yellow-200 dark:border-yellow-800">
+                          <span className="text-[9px] md:text-xs font-semibold text-yellow-800 dark:text-yellow-300 block mb-1">Бележки:</span>
+                          <span className="text-[10px] md:text-sm text-yellow-900 dark:text-yellow-200">{exercise.notes}</span>
                         </div>
                       )}
                     </div>
@@ -861,32 +858,24 @@ function ClientWorkoutDetailsModal({
             )}
 
             {workout.notes && (
-              <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400 mb-2">Общи бележки</p>
-                <p className="text-sm text-slate-900 dark:text-white">{workout.notes}</p>
+              <div className="bg-slate-100 dark:bg-slate-800 p-3 md:p-4 rounded-lg md:rounded-xl">
+                <p className="text-[9px] md:text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400 mb-1 md:mb-2">Общи бележки</p>
+                <p className="text-xs md:text-sm text-slate-900 dark:text-white">{workout.notes}</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="flex-1 h-12"
-            >
-              Затвори
-            </Button>
-
-            {!isCompleted && workout.exercises && workout.exercises.length > 0 && (
+        <div className="flex-shrink-0 p-3 md:p-6 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex flex-col md:flex-row gap-2 md:gap-3">
+            {!isCompleted && workout.exercises && workout.exercises.length > 0 ? (
               <>
                 <Button
                   onClick={() => onStartWorkout(workout)}
-                  className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl transition-all"
+                  className="w-full h-11 md:h-12 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl transition-all text-sm md:text-base font-semibold"
                 >
-                  <Play className="h-4 w-4 mr-2" />
+                  <Play className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                   Започни тренировка
                 </Button>
 
@@ -895,12 +884,28 @@ function ClientWorkoutDetailsModal({
                     onMarkComplete(workout.id);
                     onClose();
                   }}
-                  className="flex-1 h-12 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all"
+                  className="w-full h-11 md:h-12 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all text-sm md:text-base font-semibold"
                 >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Завърши тренировката
+                  <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  Завърши
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  className="w-full h-11 md:h-12 md:order-first"
+                >
+                  Затвори
                 </Button>
               </>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="w-full h-11 md:h-12"
+              >
+                Затвори
+              </Button>
             )}
           </div>
         </div>
