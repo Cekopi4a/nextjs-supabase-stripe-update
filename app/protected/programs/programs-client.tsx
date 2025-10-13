@@ -3,9 +3,16 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Calendar, Target, History } from "lucide-react";
+import { Plus, Users, Calendar, Target, History, Download, FileText, FileSpreadsheet, FileJson } from "lucide-react";
 import Link from "next/link";
 import { DeleteProgramButton } from "@/components/delete-program-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 interface WorkoutProgram {
   id: string;
@@ -138,6 +145,65 @@ export function ProgramsClient({
 
 function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole: string }) {
   const relatedUser = program.profiles;
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async (format: "pdf" | "excel" | "json") => {
+    setIsExporting(true);
+    try {
+      const formatEndpoints = {
+        pdf: `/api/programs/${program.id}/export/pdf`,
+        excel: `/api/programs/${program.id}/export/excel`,
+        json: `/api/programs/${program.id}/export/json`,
+      };
+
+      const formatLabels = {
+        pdf: "PDF",
+        excel: "Excel",
+        json: "JSON",
+      };
+
+      toast.loading(`Генериране на ${formatLabels[format]} файл...`);
+
+      const response = await fetch(formatEndpoints[format]);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Export error response:`, errorText);
+        throw new Error(`Failed to export: ${response.statusText}. ${errorText}`);
+      }
+
+      // Get filename from Content-Disposition header or create default
+      const contentDisposition = response.headers.get("Content-Disposition");
+      let filename = `${program.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_program.${format === "excel" ? "xlsx" : format}`;
+
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+        if (filenameMatch) {
+          filename = filenameMatch[1].replace(/"/g, "");
+        }
+      }
+
+      // Download file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.dismiss();
+      toast.success(`${formatLabels[format]} файлът е изтеглен успешно!`);
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.dismiss();
+      toast.error("Грешка при експортиране на програмата");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <Card className={`p-6 hover:shadow-md transition-shadow ${!program.is_active ? 'opacity-60' : ''}`}>
@@ -209,6 +275,34 @@ function ProgramCard({ program, userRole }: { program: WorkoutProgram; userRole:
               Детайли
             </Link>
           </Button>
+
+          {/* Export Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isExporting}
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Експорт
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                <FileText className="h-4 w-4 mr-2" />
+                Експорт като PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("excel")}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Експорт като Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("json")}>
+                <FileJson className="h-4 w-4 mr-2" />
+                Експорт като JSON
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {userRole === "trainer" && (
             <>

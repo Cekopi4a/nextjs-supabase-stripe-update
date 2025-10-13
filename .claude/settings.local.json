@@ -30,7 +30,8 @@
       "Bash(npx supabase db diff:*)",
       "Bash(npx supabase migration:*)",
       "Bash(timeout 30 npm run dev)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(timeout 10 bash -c 'until curl -s http://localhost:3000 > /dev/null; do sleep 1; done')"
     ],
     "deny": []
   }

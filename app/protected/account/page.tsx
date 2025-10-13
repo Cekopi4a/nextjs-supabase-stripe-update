@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield, User as UserIcon, Mail, Key, CheckCircle, XCircle, Camera } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { CalendarIntegration } from "@/components/account/CalendarIntegration";
 
 
 export default function AccountPage() {
@@ -351,6 +352,9 @@ export default function AccountPage() {
           </p>
         )}
       </Card>
+
+      {/* Calendar Integration */}
+      <CalendarIntegration />
 
       <Separator />
 

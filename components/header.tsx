@@ -315,19 +315,27 @@ export default function Header() {
           /* Guest user header */
           <>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="border-blue-600/50 dark:border-blue-500/50 hover:border-blue-600 dark:hover:border-blue-400 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white font-medium transition-all duration-200 hover:shadow-lg rounded-xl"
+              className="relative overflow-hidden group border border-transparent hover:border-blue-200 dark:hover:border-blue-800 font-semibold transition-all duration-300 rounded-xl px-5 hover:shadow-lg hover:scale-[1.02] active:scale-95"
               asChild
             >
-              <Link href="/sign-in">Вход</Link>
+              <Link href="/sign-in" className="relative z-10">
+                <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent group-hover:from-blue-700 group-hover:to-cyan-600 transition-all duration-300">
+                  Вход
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 rounded-xl" />
+              </Link>
             </Button>
             <Button
               size="sm"
-              className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-lg hover:shadow-xl font-semibold transition-all duration-200 hover:scale-105 active:scale-95 rounded-xl"
+              className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-600 to-cyan-500 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-600 shadow-lg hover:shadow-xl hover:shadow-blue-500/50 dark:hover:shadow-blue-500/30 font-semibold transition-all duration-300 hover:scale-105 active:scale-95 rounded-xl group"
               asChild
             >
-              <Link href="/sign-up">Регистрация</Link>
+              <Link href="/sign-up" className="relative z-10">
+                Регистрация
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
+              </Link>
             </Button>
           </>
         )}
