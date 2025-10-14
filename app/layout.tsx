@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "sonner";
 import { NotificationProvider } from "@/contexts/notification-context";
+import CookieConsentBanner from "@/components/cookie-consent-banner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,6 +41,7 @@ export default function RootLayout({
               </main>
             </div>
             <Toaster richColors />
+            <CookieConsentBanner />
           </NotificationProvider>
         </ThemeProvider>
       </body>

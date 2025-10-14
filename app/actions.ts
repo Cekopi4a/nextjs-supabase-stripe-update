@@ -2,6 +2,7 @@
 
 import { createSupabaseClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { encodedRedirect } from "@/utils/redirect";
 import { checkRateLimit } from "@/utils/rate-limit";
 import { validatePasswordStrength } from "@/utils/password-validation";
@@ -53,17 +54,33 @@ export const signInAction = async (formData: FormData) => {
     user_agent: userAgent,
   });
 
+  // Revalidate all pages to update auth state
+  revalidatePath("/", "layout");
+
   return redirect("/protected");
 };
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const fullName = formData.get("full_name") as string;
+  const phone = formData.get("phone") as string;
+  const city = formData.get("city") as string;
+  const dateOfBirth = formData.get("date_of_birth") as string;
 
   // Get request metadata
   const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "unknown";
   const ip = headersList.get("x-forwarded-for") || "unknown";
+
+  // Validate required fields
+  if (!email || !password || !fullName || !phone || !city) {
+    return encodedRedirect(
+      "error",
+      "/sign-up",
+      "Моля попълнете всички задължителни полета."
+    );
+  }
 
   // Validate password strength
   const passwordError = validatePasswordStrength(password);
@@ -94,6 +111,13 @@ export const signUpAction = async (formData: FormData) => {
     password,
     options: {
       emailRedirectTo: url,
+      data: {
+        full_name: fullName,
+        phone: phone,
+        city: city,
+        date_of_birth: dateOfBirth || null,
+        country: "Bulgaria",
+      },
     },
   });
 
@@ -108,11 +132,33 @@ export const signUpAction = async (formData: FormData) => {
     return encodedRedirect("error", "/sign-up", error.message);
   }
 
+  // Update the profile with additional data
+  if (data.user) {
+    const { error: profileError } = await client
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        phone: phone,
+        city: city,
+        date_of_birth: dateOfBirth || null,
+        country: "Bulgaria",
+        role: "trainer", // По подразбиране новите регистрации са треньори
+      })
+      .eq("id", data.user.id);
+
+    if (profileError) {
+      console.error("Error updating profile:", profileError);
+    }
+  }
+
   // Log successful sign-up
   await logAuthEvent(data.user?.id || null, "sign_up_success", {
     ip_address: ip,
     user_agent: userAgent,
   });
+
+  // Revalidate all pages to update auth state
+  revalidatePath("/", "layout");
 
   return redirect("/protected");
 };
@@ -161,6 +207,9 @@ export const resetPasswordAction = async (formData: FormData) => {
   if (error) {
     return encodedRedirect("error", "/reset-password", error.message);
   }
+
+  // Revalidate all pages to update auth state
+  revalidatePath("/", "layout");
 
   return redirect("/protected");
 };

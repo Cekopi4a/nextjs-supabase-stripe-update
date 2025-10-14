@@ -6,7 +6,7 @@ import { Logo } from "@/components/ui/logo";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { User, LogOut, Settings, UserCircle, ChevronDown, Menu, X, MessageCircle } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useNotifications } from "@/contexts/notification-context";
 import { NotificationsDropdown } from "@/components/notifications-dropdown";
@@ -20,6 +20,7 @@ export default function Header() {
   const menuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createSupabaseClient();
   const { unreadMessagesCount } = useNotifications();
 
@@ -52,7 +53,7 @@ export default function Header() {
           setUser(null);
           setProfile(null);
           setLoading(false);
-        } else if (session?.user) {
+        } else if (event === 'SIGNED_IN' || session?.user) {
           setUser(session.user);
           setLoading(false);
           // Fetch profile for the new user
@@ -70,8 +71,46 @@ export default function Header() {
       }
     );
 
-    return () => subscription.unsubscribe();
+    // Listen for route changes to refresh user state
+    const handleRouteChange = () => {
+      getUser();
+    };
+
+    window.addEventListener('focus', handleRouteChange);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('focus', handleRouteChange);
+    };
   }, []);
+
+  // Re-check user when pathname changes (after navigation)
+  useEffect(() => {
+    const checkUser = async () => {
+      setLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+          setProfile(profile);
+        } else {
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Error checking user on route change:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+  }, [pathname]);
 
   // Handle clicking outside the user menu
   useEffect(() => {

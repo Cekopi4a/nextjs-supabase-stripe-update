@@ -1,5 +1,6 @@
 import { createSupabaseClient } from "@/utils/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -40,6 +41,9 @@ export async function GET(request: NextRequest) {
           console.log('Profile created successfully');
         }
       }
+
+      // Revalidate all pages to update auth state
+      revalidatePath("/", "layout");
 
       // Redirect to protected area
       return NextResponse.redirect(`${origin}/protected`);

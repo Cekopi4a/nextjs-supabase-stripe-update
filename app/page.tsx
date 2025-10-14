@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import Footer from "@/components/footer";
+import HeroShowcase from "@/components/landing/HeroShowcase";
 
 export default function Home() {
 
@@ -150,44 +151,52 @@ export default function Home() {
   return (
     <div className="flex-1">
       {/* Hero Section */}
-      <section className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-black overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}></div>
+      <section className="relative min-h-screen overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+            alt="Fitness trainer working"
+            fill
+            className="object-cover object-center"
+            priority
+            quality={90}
+          />
+          {/* Gradient overlays for better text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-900/95 via-gray-900/85 to-blue-900/90 dark:from-black/95 dark:via-black/85 dark:to-blue-950/90"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-900/50 dark:to-black/50"></div>
         </div>
 
         {/* Decorative gradient orbs */}
-        <div className="absolute top-20 -left-20 w-96 h-96 bg-gradient-to-br from-blue-400/30 to-cyan-400/30 dark:from-blue-600/20 dark:to-cyan-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 -right-20 w-96 h-96 bg-gradient-to-br from-cyan-400/30 to-blue-400/30 dark:from-cyan-600/20 dark:to-blue-600/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-blue-300/10 to-cyan-300/10 dark:from-blue-500/10 dark:to-cyan-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 -left-20 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 -right-20 w-96 h-96 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-blue-400/10 to-cyan-400/10 rounded-full blur-3xl"></div>
 
         <div className="relative max-w-7xl mx-auto px-4 pt-32 pb-24 min-h-screen flex items-center">
           <div className="grid lg:grid-cols-2 gap-16 items-center w-full">
             {/* Left Content */}
             <div className="z-10">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-700 dark:text-blue-300 px-5 py-2.5 rounded-full text-sm font-semibold mb-8 border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-white px-5 py-2.5 rounded-full text-sm font-semibold mb-8 shadow-2xl">
                 <Dumbbell className="h-4 w-4" />
                 Станете по-добрата версия на себе си
               </div>
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] text-gray-900 dark:text-white">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] text-white drop-shadow-2xl">
                 ПОСТИГНЕТЕ ВАШАТА
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 animate-gradient">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 animate-gradient drop-shadow-lg">
                   МЕЧТАНА ФОРМА
                 </span>
               </h1>
 
-              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-10 leading-relaxed max-w-xl font-medium">
+              <p className="text-lg md:text-xl text-gray-100 mb-10 leading-relaxed max-w-xl font-medium drop-shadow-lg">
                 Персонализирани програми и професионална подкрепа за трансформиране към най-добрата версия на себе си.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-16">
                 <Button
                   size="lg"
-                  className="px-8 py-6 text-base font-bold h-auto bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border-0 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1"
+                  className="px-8 py-6 text-base font-bold h-auto bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border-0 rounded-2xl shadow-2xl hover:shadow-[0_20px_60px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-105 hover:-translate-y-1"
                   asChild
                 >
                   <Link href="/sign-up">
@@ -198,7 +207,7 @@ export default function Home() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="px-8 py-6 text-base font-bold h-auto border-2 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 dark:hover:bg-blue-600 dark:hover:border-blue-600 rounded-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 shadow-lg"
+                  className="px-8 py-6 text-base font-bold h-auto border-2 border-white/30 bg-white/10 backdrop-blur-md text-white hover:bg-white hover:text-blue-600 hover:border-white rounded-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-1 shadow-2xl"
                   asChild
                 >
                   <Link href="#demo">
@@ -211,86 +220,25 @@ export default function Home() {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-8 max-w-xl">
                 <div className="text-left group cursor-default">
-                  <div className="text-4xl md:text-5xl font-black bg-gradient-to-br from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">80</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-semibold uppercase tracking-wider">Тренировъчни<br />програми</div>
+                  <div className="text-4xl md:text-5xl font-black text-white drop-shadow-lg mb-1 group-hover:scale-110 transition-transform">80</div>
+                  <div className="text-sm text-gray-200 font-semibold uppercase tracking-wider drop-shadow-md">Тренировъчни<br />програми</div>
                 </div>
                 <div className="text-left group cursor-default">
-                  <div className="text-4xl md:text-5xl font-black bg-gradient-to-br from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">872+</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-semibold uppercase tracking-wider">Активни<br />клиенти</div>
+                  <div className="text-4xl md:text-5xl font-black text-white drop-shadow-lg mb-1 group-hover:scale-110 transition-transform">872+</div>
+                  <div className="text-sm text-gray-200 font-semibold uppercase tracking-wider drop-shadow-md">Активни<br />клиенти</div>
                 </div>
                 <div className="text-left group cursor-default">
-                  <div className="text-4xl md:text-5xl font-black bg-gradient-to-br from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-1 group-hover:scale-110 transition-transform">120+</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 font-semibold uppercase tracking-wider">Професионални<br />треньори</div>
+                  <div className="text-4xl md:text-5xl font-black text-white drop-shadow-lg mb-1 group-hover:scale-110 transition-transform">120+</div>
+                  <div className="text-sm text-gray-200 font-semibold uppercase tracking-wider drop-shadow-md">Професионални<br />треньори</div>
                 </div>
               </div>
             </div>
 
-            {/* Right Cards */}
-            <div className="relative hidden lg:block h-[600px]">
-              {/* Trainer Image Card - централна */}
-              <div className="absolute top-1/2 -translate-y-1/2 right-10 w-80 h-[420px] bg-white dark:bg-gray-900/90 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-2xl animate-float">
-                <Image
-                  src="https://media.istockphoto.com/id/1401908975/photo/gym-man-and-phone-mockup-with-fitness-app-for-workout-tracking-health-data-or-exercise.jpg?s=612x612&w=0&k=20&c=FZGq8dx_CPY8L0DqCI8FJlE2qzUnFQGvMqq7mNEeZjw="
-                  alt="Треньор с мобилно приложение"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <div className="text-white font-bold text-lg mb-1">Управлявайте клиенти</div>
-                  <div className="text-gray-200 text-sm">Всичко на едно място</div>
-                </div>
-              </div>
-
-              {/* Heart Rate Card */}
-              <div className="absolute top-0 right-0 w-64 bg-white dark:bg-gray-900/90 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-2xl animate-float hover:scale-105 transition-transform" style={{ animationDelay: '0.2s' }}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold">Сърдечен ритъм</div>
-                  </div>
-                </div>
-                <div className="text-4xl font-black text-gray-900 dark:text-white mb-1">145 <span className="text-xl text-gray-500 dark:text-gray-400">bpm</span></div>
-              </div>
-
-              {/* Calories Card */}
-              <div className="absolute bottom-0 right-20 w-72 bg-white dark:bg-gray-900/90 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-2xl animate-float hover:scale-105 transition-transform" style={{ animationDelay: '0.5s' }}>
-                <div className="text-sm text-gray-500 dark:text-gray-400 font-semibold mb-2">Изгорени калории днес</div>
-                <div className="text-3xl font-black text-gray-900 dark:text-white mb-4">420 <span className="text-lg text-gray-500 dark:text-gray-400">cal</span></div>
-                <div className="flex gap-1.5 h-20 items-end">
-                  <div className="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-lg shadow-lg" style={{ height: '60%' }}></div>
-                  <div className="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-lg shadow-lg" style={{ height: '80%' }}></div>
-                  <div className="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-lg shadow-lg" style={{ height: '45%' }}></div>
-                  <div className="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-lg shadow-lg" style={{ height: '90%' }}></div>
-                  <div className="w-full bg-gradient-to-t from-yellow-500 to-yellow-400 rounded-lg shadow-lg" style={{ height: '70%' }}></div>
-                  <div className="w-full bg-gradient-to-t from-yellow-400 to-yellow-300 rounded-lg shadow-lg opacity-60" style={{ height: '50%' }}></div>
-                </div>
-              </div>
-
-              {/* Decorative gradient blobs */}
-              <div className="absolute top-20 right-0 w-72 h-72 bg-gradient-to-br from-blue-400/20 to-cyan-400/20 dark:from-blue-500/20 dark:to-cyan-500/20 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 dark:from-cyan-500/20 dark:to-blue-500/20 rounded-full blur-3xl"></div>
-            </div>
+            {/* Hero Showcase - Right Side */}
+            <HeroShowcase />
           </div>
         </div>
 
-        <style jsx>{`
-          @keyframes float {
-            0%, 100% {
-              transform: translateY(0px);
-            }
-            50% {
-              transform: translateY(-20px);
-            }
-          }
-          .animate-float {
-            animation: float 3s ease-in-out infinite;
-          }
-        `}</style>
       </section>
 
       {/* Target Audience Section */}

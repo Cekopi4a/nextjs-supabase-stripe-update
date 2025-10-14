@@ -24,7 +24,7 @@ export default function Footer() {
     legal: [
       { name: 'Поверителност', href: '/privacy' },
       { name: 'Условия', href: '/terms' },
-      { name: 'Бисквитки', href: '#' },
+      { name: 'Бисквитки', href: '/cookies' },
       { name: 'Лицензи', href: '#' },
     ],
     social: [

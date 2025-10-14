@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Политика за поверителност | Fitness Training App",
@@ -47,7 +48,11 @@ export default function PrivacyPolicyPage() {
               <div className="border-l-4 border-primary pl-4 py-2">
                 <h3 className="font-semibold text-foreground mb-2">Лична информация</h3>
                 <ul className="list-disc list-inside space-y-1 text-foreground/90 ml-4">
-                  <li>Име и имейл адрес</li>
+                  <li>Име и фамилия</li>
+                  <li>Имейл адрес</li>
+                  <li>Телефонен номер</li>
+                  <li>Град и държава</li>
+                  <li>Дата на раждане (опционално)</li>
                   <li>Профилна снимка (опционално)</li>
                   <li>Платежна информация (обработена чрез Stripe)</li>
                 </ul>
@@ -60,7 +65,22 @@ export default function PrivacyPolicyPage() {
                   <li>Хранителни планове и макроси</li>
                   <li>Цели и прогрес</li>
                   <li>Календар с тренировки</li>
+                  <li>Телесни измервания (тегло, височина, обиколки)</li>
+                  <li>Снимки на прогреса (с явно съгласие)</li>
                 </ul>
+              </div>
+
+              <div className="border-l-4 border-amber-500 pl-4 py-2">
+                <h3 className="font-semibold text-foreground mb-2">Здравна информация (с явно съгласие)</h3>
+                <ul className="list-disc list-inside space-y-1 text-foreground/90 ml-4">
+                  <li>Наранявания и медицински състояния</li>
+                  <li>Медикаменти</li>
+                  <li>Алергии (хранителни)</li>
+                  <li>Ниво на физическа активност</li>
+                </ul>
+                <p className="text-xs text-foreground/70 mt-2 italic">
+                  Здравната информация се събира само с ваше явно съгласие и се използва единствено за създаване на безопасни и ефективни тренировъчни програми.
+                </p>
               </div>
 
               <div className="border-l-4 border-accent pl-4 py-2">
@@ -183,10 +203,23 @@ export default function PrivacyPolicyPage() {
               <li>Запазване на сесията ви (автентикация)</li>
               <li>Запомняне на предпочитанията ви (тема, език)</li>
               <li>Анализ на използването (анонимни данни)</li>
+              <li>Подобряване на потребителското изживяване</li>
             </ul>
             <p className="text-foreground/90 leading-relaxed mt-3">
-              Можете да контролирате cookies чрез настройките на браузъра си.
+              Можете да контролирате cookies чрез настройките на браузъра си или от нашата{" "}
+              <Link href="/cookies" className="text-primary hover:underline font-semibold">
+                страница за управление на бисквитки
+              </Link>.
             </p>
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mt-4">
+              <p className="text-sm text-foreground/90">
+                За детайлна информация относно какви видове бисквитки използваме и как можете да ги управлявате,
+                моля прегледайте нашата{" "}
+                <Link href="/cookies" className="text-primary hover:underline font-semibold">
+                  Политика за бисквитки
+                </Link>.
+              </p>
+            </div>
           </section>
 
           {/* Your Rights */}

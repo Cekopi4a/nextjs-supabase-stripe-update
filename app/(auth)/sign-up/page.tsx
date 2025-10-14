@@ -73,8 +73,8 @@ export default async function SignUp(props: {
       </div>
 
       {/* Right side - Form */}
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+      <div className="lg:p-8 overflow-y-auto">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px] py-8">
           <div className="flex flex-col space-y-2 text-center">
             <div className="lg:hidden w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Dumbbell className="h-6 w-6 text-white" />
@@ -103,32 +103,92 @@ export default async function SignUp(props: {
 
             <form action={signUpAction}>
               <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">
-                    Имейл
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    placeholder="name@example.com"
-                    type="email"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    autoCorrect="off"
-                    required
-                  />
+                {/* Personal Information */}
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="full_name">
+                      Име и Фамилия <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="full_name"
+                      name="full_name"
+                      placeholder="Иван Петров"
+                      type="text"
+                      autoComplete="name"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">
+                      Имейл <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      placeholder="name@example.com"
+                      type="email"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      autoCorrect="off"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">
+                      Телефон <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      placeholder="+359 88 123 4567"
+                      type="tel"
+                      autoComplete="tel"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">
+                      Парола <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="new-password"
+                      required
+                      placeholder="Минимум 8 символа"
+                    />
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Парола</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    placeholder="Минимум 8 символа"
-                  />
+
+                {/* Location & Additional Info */}
+                <div className="space-y-4 pt-2 border-t">
+                  <div className="grid gap-2">
+                    <Label htmlFor="city">
+                      Град <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="city"
+                      name="city"
+                      placeholder="София"
+                      type="text"
+                      autoComplete="address-level2"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="date_of_birth">
+                      Дата на раждане <span className="text-muted-foreground text-xs">(опционално)</span>
+                    </Label>
+                    <Input
+                      id="date_of_birth"
+                      name="date_of_birth"
+                      type="date"
+                      autoComplete="bday"
+                    />
+                  </div>
                 </div>
+
                 <FormMessage message={searchParams} />
                 <AuthSubmitButton />
               </div>
