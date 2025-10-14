@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       sodium_per_100g,
       category,
       allergens,
+      image_url,
     } = body;
 
     // Validate required fields
@@ -112,6 +113,7 @@ export async function POST(request: NextRequest) {
         sodium_per_100g: sodium_per_100g || 0,
         category,
         allergens: allergens || [],
+        image_url: image_url || null,
         is_verified: false,
         created_by: user.id,
       })

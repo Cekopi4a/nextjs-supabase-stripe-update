@@ -604,7 +604,7 @@ function ChatPageContent() {
   };
 
   return (
-    <div className="-m-3 sm:-m-4 lg:-m-6 h-[calc(100vh-0px)] flex flex-col bg-background">
+    <div className="-m-3 sm:-m-4 lg:-m-6 h-[calc(100vh-4rem)] flex flex-col bg-background">
       {/* Offline Queue Indicator */}
       {offlineQueueLength > 0 && (
         <div className="bg-amber-500 text-amber-900 px-4 py-2 text-sm text-center border-b border-amber-600 flex-shrink-0">

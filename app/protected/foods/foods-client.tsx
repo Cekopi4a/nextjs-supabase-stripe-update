@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Apple, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Apple, Edit, Trash2, Search, Upload, X, ImageIcon } from "lucide-react";
 
 interface Food {
   id: string;
@@ -26,6 +26,7 @@ interface Food {
   allergens?: string[];
   is_verified?: boolean;
   created_by?: string;
+  image_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -85,8 +86,29 @@ export default function FoodsPageClient({
     sugar_per_100g: 0,
     sodium_per_100g: 0,
     category: "protein",
-    allergens: [] as string[]
+    allergens: [] as string[],
+    image_url: ""
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setFormData(prev => ({ ...prev, image_url: "" }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,6 +116,26 @@ export default function FoodsPageClient({
 
     try {
       const isEditing = editingFood !== null;
+      let imageUrl = formData.image_url;
+
+      // Upload image if a new file is selected
+      if (imageFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', imageFile);
+
+        const uploadResponse = await fetch('/api/upload/food-image', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Грешка при качване на снимката');
+        }
+
+        const { url } = await uploadResponse.json();
+        imageUrl = url;
+      }
+
       const url = isEditing ? `/api/foods/${editingFood.id}` : "/api/foods";
       const method = isEditing ? "PUT" : "POST";
 
@@ -107,6 +149,7 @@ export default function FoodsPageClient({
         fiber_per_100g: Number(formData.fiber_per_100g) || 0,
         sugar_per_100g: Number(formData.sugar_per_100g) || 0,
         sodium_per_100g: Number(formData.sodium_per_100g) || 0,
+        image_url: imageUrl,
       };
 
       console.log('Sending data:', sanitizedData);
@@ -159,8 +202,11 @@ export default function FoodsPageClient({
       sugar_per_100g: 0,
       sodium_per_100g: 0,
       category: "protein",
-      allergens: []
+      allergens: [],
+      image_url: ""
     });
+    setImageFile(null);
+    setImagePreview("");
   };
 
   const handleAllergenToggle = (allergen: string) => {
@@ -186,8 +232,11 @@ export default function FoodsPageClient({
       sugar_per_100g: food.sugar_per_100g || 0,
       sodium_per_100g: food.sodium_per_100g || 0,
       category: food.category,
-      allergens: food.allergens || []
+      allergens: food.allergens || [],
+      image_url: food.image_url || ""
     });
+    setImagePreview(food.image_url || "");
+    setImageFile(null);
     setIsEditDialogOpen(true);
   };
 
@@ -251,6 +300,53 @@ export default function FoodsPageClient({
 
   const renderForm = () => (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Image Upload */}
+      <div>
+        <Label>Снимка на храната</Label>
+        <div className="mt-2">
+          {imagePreview ? (
+            <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200">
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="absolute top-2 right-2"
+                onClick={handleRemoveImage}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center w-full">
+              <label
+                htmlFor="image-upload"
+                className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                  <p className="mb-2 text-sm text-gray-500">
+                    <span className="font-semibold">Кликнете за качване</span> или влачете и пуснете
+                  </p>
+                  <p className="text-xs text-gray-500">PNG, JPG или WEBP (MAX. 5MB)</p>
+                </div>
+                <input
+                  id="image-upload"
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </label>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Name */}
       <div>
         <Label htmlFor="name">Име на храната *</Label>
@@ -476,18 +572,33 @@ export default function FoodsPageClient({
             filteredAndSortedFoods.map((food) => (
               <Card
                 key={food.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
+                className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden"
                 onClick={() => handleFoodClick(food)}
               >
+                {/* Food Image */}
+                {food.image_url ? (
+                  <div className="w-full h-48 overflow-hidden bg-gray-100">
+                    <img
+                      src={food.image_url}
+                      alt={food.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+                    <ImageIcon className="h-16 w-16 text-gray-300" />
+                  </div>
+                )}
+
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{food.name}</CardTitle>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-lg truncate">{food.name}</CardTitle>
                       {food.brand && (
-                        <p className="text-sm text-gray-600">{food.brand}</p>
+                        <p className="text-sm text-gray-600 truncate">{food.brand}</p>
                       )}
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <Badge variant="secondary" className="text-xs">
                           {FOOD_CATEGORIES.find(c => c.value === food.category)?.label}
                         </Badge>
                         {food.is_verified && (
@@ -526,11 +637,16 @@ export default function FoodsPageClient({
                       <div className="mt-2">
                         <p className="text-xs text-gray-500 mb-1">Алергени:</p>
                         <div className="flex flex-wrap gap-1">
-                          {food.allergens.map((allergen, index) => (
+                          {food.allergens.slice(0, 3).map((allergen, index) => (
                             <Badge key={index} variant="destructive" className="text-xs">
                               {allergen}
                             </Badge>
                           ))}
+                          {food.allergens.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{food.allergens.length - 3}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     )}
@@ -759,18 +875,33 @@ export default function FoodsPageClient({
                   .map((food) => (
             <Card
               key={food.id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
+              className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden"
               onClick={() => handleFoodClick(food)}
             >
+              {/* Food Image */}
+              {food.image_url ? (
+                <div className="w-full h-48 overflow-hidden bg-gray-100">
+                  <img
+                    src={food.image_url}
+                    alt={food.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+                  <ImageIcon className="h-16 w-16 text-gray-300" />
+                </div>
+              )}
+
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{food.name}</CardTitle>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg truncate">{food.name}</CardTitle>
                     {food.brand && (
-                      <p className="text-sm text-gray-600">{food.brand}</p>
+                      <p className="text-sm text-gray-600 truncate">{food.brand}</p>
                     )}
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="secondary">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <Badge variant="secondary" className="text-xs">
                         {FOOD_CATEGORIES.find(c => c.value === food.category)?.label}
                       </Badge>
                       {food.created_by && (
@@ -787,7 +918,7 @@ export default function FoodsPageClient({
                   </div>
 
                   {canEdit(food) && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 ml-2">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -875,18 +1006,33 @@ export default function FoodsPageClient({
                   .map((food) => (
             <Card
               key={food.id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
+              className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden"
               onClick={() => handleFoodClick(food)}
             >
+              {/* Food Image */}
+              {food.image_url ? (
+                <div className="w-full h-48 overflow-hidden bg-gray-100">
+                  <img
+                    src={food.image_url}
+                    alt={food.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+                  <ImageIcon className="h-16 w-16 text-gray-300" />
+                </div>
+              )}
+
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{food.name}</CardTitle>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg truncate">{food.name}</CardTitle>
                     {food.brand && (
-                      <p className="text-sm text-gray-600">{food.brand}</p>
+                      <p className="text-sm text-gray-600 truncate">{food.brand}</p>
                     )}
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="secondary">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <Badge variant="secondary" className="text-xs">
                         {FOOD_CATEGORIES.find(c => c.value === food.category)?.label}
                       </Badge>
                       {food.is_verified && (

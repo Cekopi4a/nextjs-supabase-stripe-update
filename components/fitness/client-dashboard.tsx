@@ -236,40 +236,39 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
                   currentDate.getHours() < 18 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {greeting}, {profile.full_name}! 💪
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold truncate">
+            {greeting}, {profile.full_name?.split(' ')[0]}! 💪
           </h1>
-          <p className="text-muted-foreground">
-            {currentDate.toLocaleDateString('bg-BG', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
+          <p className="text-muted-foreground text-xs sm:text-sm">
+            {currentDate.toLocaleDateString('bg-BG', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'short'
             })}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild size="sm" className="flex-1 sm:flex-initial">
             <Link href="/protected/progress">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Progress
+              <BarChart3 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Progress</span>
             </Link>
           </Button>
-          <Button asChild>
+          <Button asChild size="sm" className="flex-1 sm:flex-initial">
             <Link href="/protected/workouts/log">
-              <Plus className="h-4 w-4 mr-2" />
-              Quick Log
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Quick Log</span>
             </Link>
           </Button>
         </div>
       </div>
 
       {/* Quick Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Today's Workouts"
           value={data?.todayWorkouts?.length || 0}
@@ -311,21 +310,22 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         
         {/* Left Column - Today's Activities */}
-        <div className="lg:col-span-2 space-y-6">
-          
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+
           {/* Today's Workouts */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center">
-                <Dumbbell className="h-5 w-5 mr-2" />
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center">
+                <Dumbbell className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Today's Workouts
               </h3>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm">
                 <Link href="/protected/workouts">
-                  View Calendar
+                  <span className="hidden sm:inline">View Calendar</span>
+                  <span className="sm:hidden">Calendar</span>
                 </Link>
               </Button>
             </div>
@@ -350,15 +350,16 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           </Card>
 
           {/* Today's Nutrition */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center">
-                <Utensils className="h-5 w-5 mr-2" />
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center">
+                <Utensils className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Today's Nutrition
               </h3>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm">
                 <Link href="/protected/nutrition">
-                  View Plans
+                  <span className="hidden sm:inline">View Plans</span>
+                  <span className="sm:hidden">Plans</span>
                 </Link>
               </Button>
             </div>
@@ -381,15 +382,16 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           </Card>
 
           {/* Active Goals */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center">
-                <Target className="h-5 w-5 mr-2" />
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Active Goals
               </h3>
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm">
                 <Link href="/protected/goals">
-                  Manage Goals
+                  <span className="hidden sm:inline">Manage Goals</span>
+                  <span className="sm:hidden">Manage</span>
                 </Link>
               </Button>
             </div>
@@ -415,25 +417,25 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
         </div>
 
         {/* Right Column - Summary & Quick Actions */}
-        <div className="space-y-6">
-          
+        <div className="space-y-4 sm:space-y-6">
+
           {/* Quick Actions */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <Button className="w-full justify-start" asChild>
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Quick Actions</h3>
+            <div className="space-y-2 sm:space-y-3">
+              <Button className="w-full justify-start text-sm" asChild size="sm">
                 <Link href="/protected/workouts/log">
                   <Play className="h-4 w-4 mr-2" />
                   Log Workout
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
+              <Button variant="outline" className="w-full justify-start text-sm" asChild size="sm">
                 <Link href="/protected/nutrition/log">
                   <Utensils className="h-4 w-4 mr-2" />
                   Log Meal
                 </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
+              <Button variant="outline" className="w-full justify-start text-sm" asChild size="sm">
                 <Link href="/protected/progress">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Update Progress
@@ -443,12 +445,12 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           </Card>
 
           {/* Active Programs */}
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">My Programs</h3>
-              <Button variant="outline" size="sm" asChild>
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold">My Programs</h3>
+              <Button variant="outline" size="sm" asChild className="text-xs">
                 <Link href="/protected/programs">
-                  <Eye className="h-4 w-4 mr-1" />
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                   All
                 </Link>
               </Button>
@@ -484,8 +486,8 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           </Card>
 
           {/* Upcoming Workouts */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">This Week</h3>
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">This Week</h3>
             
             {data?.upcomingWorkouts && data.upcomingWorkouts.length > 0 ? (
               <div className="space-y-2">
@@ -505,15 +507,15 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
   );
 }
 
-function StatsCard({ 
-  title, 
-  value, 
-  subtitle, 
-  icon, 
-  color = "blue", 
-  trend, 
-  actionText, 
-  actionHref 
+function StatsCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  color = "blue",
+  trend,
+  actionText,
+  actionHref
 }: {
   title: string;
   value: string | number;
@@ -526,33 +528,33 @@ function StatsCard({
 }) {
   const colorClasses = {
     blue: "text-blue-600 bg-blue-50",
-    green: "text-green-600 bg-green-50", 
+    green: "text-green-600 bg-green-50",
     orange: "text-orange-600 bg-orange-50",
     purple: "text-purple-600 bg-purple-50"
   };
 
   return (
-    <Card className="p-4">
+    <Card className="p-3 sm:p-4">
       <div className="flex items-center justify-between mb-2">
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+        <div className={`p-1.5 sm:p-2 rounded-lg ${colorClasses[color]} flex-shrink-0`}>
           {icon}
         </div>
         {actionText && actionHref && (
-          <Button size="sm" variant="ghost" asChild>
-            <Link href={actionHref} className="text-xs">
+          <Button size="sm" variant="ghost" asChild className="h-auto p-1 text-[10px] sm:text-xs">
+            <Link href={actionHref}>
               {actionText}
             </Link>
           </Button>
         )}
       </div>
       <div>
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
         <div className="flex items-baseline gap-1">
-          <p className="text-2xl font-bold">{value}</p>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="text-xl sm:text-2xl font-bold">{value}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{subtitle}</p>
         </div>
         {trend && (
-          <p className="text-xs text-muted-foreground mt-1">{trend}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">{trend}</p>
         )}
       </div>
     </Card>
@@ -562,42 +564,43 @@ function StatsCard({
 function TodayWorkoutCard({ workout }: { workout: any }) {
   const duration = workout.planned_duration_minutes || 45;
   const isCompleted = workout.status === 'completed';
-  
+
   return (
-    <div className={`border rounded-lg p-4 ${isCompleted ? 'bg-green-50 border-green-200' : ''}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
+    <div className={`border rounded-lg p-3 sm:p-4 ${isCompleted ? 'bg-green-50 border-green-200' : ''}`}>
+      <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-medium">{workout.name}</h4>
-            {isCompleted && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+            <h4 className="font-medium text-sm sm:text-base truncate">{workout.name}</h4>
+            {isCompleted && <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 flex-shrink-0" />}
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">
             {workout.workout_programs?.name}
           </p>
-          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 sm:gap-4 mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
+              <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               {duration} min
             </span>
             <span className="flex items-center gap-1">
-              <Activity className="h-3 w-3" />
+              <Activity className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               {workout.difficulty_rating ? `${workout.difficulty_rating}/10` : 'Medium'}
             </span>
           </div>
         </div>
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           variant={isCompleted ? "outline" : "default"}
           asChild
+          className="flex-shrink-0 text-xs sm:text-sm"
         >
           <Link href={`/protected/workouts`}>
             {isCompleted ? "Review" : "Start"}
           </Link>
         </Button>
       </div>
-      
+
       {workout.description && (
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
           {workout.description}
         </p>
       )}
@@ -686,7 +689,7 @@ function TodayNutritionCard({ nutrition }: { nutrition: any }) {
   let totalProtein = 0;
   let totalCarbs = 0;
   let totalFat = 0;
-  
+
   if (nutrition?.nutrition_plan_meals) {
     nutrition.nutrition_plan_meals.forEach((meal: any) => {
       if (meal.nutrition_plan_meal_items) {
@@ -699,24 +702,24 @@ function TodayNutritionCard({ nutrition }: { nutrition: any }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Nutrition Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="text-center p-3 bg-blue-50 rounded-lg">
-          <p className="text-lg font-bold text-blue-600">{Math.round(totalCalories)}</p>
-          <p className="text-xs text-blue-600">Calories</p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+        <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
+          <p className="text-base sm:text-lg font-bold text-blue-600">{Math.round(totalCalories)}</p>
+          <p className="text-[10px] sm:text-xs text-blue-600">Calories</p>
         </div>
-        <div className="text-center p-3 bg-green-50 rounded-lg">
-          <p className="text-lg font-bold text-green-600">{Math.round(totalProtein)}g</p>
-          <p className="text-xs text-green-600">Protein</p>
+        <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg">
+          <p className="text-base sm:text-lg font-bold text-green-600">{Math.round(totalProtein)}g</p>
+          <p className="text-[10px] sm:text-xs text-green-600">Protein</p>
         </div>
-        <div className="text-center p-3 bg-orange-50 rounded-lg">
-          <p className="text-lg font-bold text-orange-600">{Math.round(totalCarbs)}g</p>
-          <p className="text-xs text-orange-600">Carbs</p>
+        <div className="text-center p-2 sm:p-3 bg-orange-50 rounded-lg">
+          <p className="text-base sm:text-lg font-bold text-orange-600">{Math.round(totalCarbs)}g</p>
+          <p className="text-[10px] sm:text-xs text-orange-600">Carbs</p>
         </div>
-        <div className="text-center p-3 bg-purple-50 rounded-lg">
-          <p className="text-lg font-bold text-purple-600">{Math.round(totalFat)}g</p>
-          <p className="text-xs text-purple-600">Fat</p>
+        <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
+          <p className="text-base sm:text-lg font-bold text-purple-600">{Math.round(totalFat)}g</p>
+          <p className="text-[10px] sm:text-xs text-purple-600">Fat</p>
         </div>
       </div>
 

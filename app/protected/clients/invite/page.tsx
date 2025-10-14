@@ -325,28 +325,29 @@ export default function InviteClientPage() {
     subscription.client_limit - subscription.current_clients : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
+      <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+        <div className="space-y-3 sm:flex sm:items-center sm:gap-4 sm:space-y-0">
+          <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
             <Link href="/protected/clients">
               <ChevronLeft className="h-4 w-4 mr-1" />
               Назад
             </Link>
           </Button>
-          
+
           <div>
-            <h1 className="text-2xl font-bold">Покани клиенти</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold">Покани клиенти</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Изпратете покани на нови клиенти за да започнат да работят с вас
             </p>
           </div>
         </div>
-        
-        <Button variant="outline" asChild>
+
+        <Button variant="outline" asChild className="w-full sm:w-auto">
           <Link href="/protected/subscription">
-            Управление на абонамента
+            <span className="hidden sm:inline">Управление на абонамента</span>
+            <span className="sm:hidden">Абонамент</span>
           </Link>
         </Button>
       </div>
@@ -354,24 +355,22 @@ export default function InviteClientPage() {
       {/* Subscription Info */}
       {subscription && (
         <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold">Текущ план: </h3>
-                  <Badge variant={subscription.plan_type === 'free' ? 'secondary' : 'default'}>
-                    {subscription.plan_type.toUpperCase()}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {subscription.current_clients} / {subscription.client_limit} клиента
-                </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-sm sm:text-base">Текущ план:</h3>
+                <Badge variant={subscription.plan_type === 'free' ? 'secondary' : 'default'}>
+                  {subscription.plan_type.toUpperCase()}
+                </Badge>
               </div>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                {subscription.current_clients} / {subscription.client_limit} клиента
+              </p>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">
+              <span className="text-xs sm:text-sm">
                 {remainingSlots} свободни места
               </span>
               {!canSendMoreInvitations && (
@@ -379,11 +378,11 @@ export default function InviteClientPage() {
               )}
             </div>
           </div>
-          
+
           {!canSendMoreInvitations && (
-            <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded">
-              <p className="text-sm text-orange-800">
-                Достигнахте лимита от {subscription.client_limit} клиента. 
+            <div className="mt-3 p-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded">
+              <p className="text-xs sm:text-sm text-orange-800 dark:text-orange-400">
+                Достигнахте лимита от {subscription.client_limit} клиента.
                 <Link href="/protected/subscription" className="underline ml-1">
                   Надстройте абонамента си
                 </Link> за да добавите повече клиенти.
@@ -393,14 +392,14 @@ export default function InviteClientPage() {
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Send Invitation Form */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Изпрати нова покана</h2>
-          
+        <Card className="p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold mb-4">Изпрати нова покана</h2>
+
           <div className="space-y-4">
             <div>
-              <Label htmlFor="email">Имейл адрес *</Label>
+              <Label htmlFor="email" className="text-sm">Имейл адрес *</Label>
               <Input
                 id="email"
                 type="email"
@@ -408,22 +407,24 @@ export default function InviteClientPage() {
                 onChange={(e) => setInviteForm({...inviteForm, email: e.target.value})}
                 placeholder="client@example.com"
                 disabled={!canSendMoreInvitations}
+                className="text-sm sm:text-base"
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="first_name">Име (опционално)</Label>
+              <Label htmlFor="first_name" className="text-sm">Име (опционално)</Label>
               <Input
                 id="first_name"
                 value={inviteForm.first_name}
                 onChange={(e) => setInviteForm({...inviteForm, first_name: e.target.value})}
                 placeholder="Георги"
                 disabled={!canSendMoreInvitations}
+                className="text-sm sm:text-base"
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="message">Лично съобщение (опционално)</Label>
+              <Label htmlFor="message" className="text-sm">Лично съобщение (опционално)</Label>
               <Textarea
                 id="message"
                 value={inviteForm.personal_message}
@@ -431,16 +432,17 @@ export default function InviteClientPage() {
                 placeholder="Здравей! Радвам се да работя с теб като твой персонален треньор..."
                 rows={4}
                 disabled={!canSendMoreInvitations}
+                className="text-sm sm:text-base resize-none"
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Това съобщение ще бъде включено в имейла с поканата
               </p>
             </div>
-            
-            <Button 
-              onClick={sendInvitation} 
+
+            <Button
+              onClick={sendInvitation}
               disabled={sending || !canSendMoreInvitations}
-              className="w-full"
+              className="w-full text-sm sm:text-base"
             >
               {sending ? (
                 <>
@@ -458,15 +460,15 @@ export default function InviteClientPage() {
         </Card>
 
         {/* Invitations List */}
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Изпратени покани</h2>
-            <Button variant="outline" size="sm" onClick={fetchInvitations}>
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Обнови
+            <h2 className="text-base sm:text-lg font-semibold">Изпратени покани</h2>
+            <Button variant="outline" size="sm" onClick={fetchInvitations} className="h-8 sm:h-9">
+              <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Обнови</span>
             </Button>
           </div>
-          
+
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -477,15 +479,15 @@ export default function InviteClientPage() {
               ))}
             </div>
           ) : invitations.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Няма изпратени покани още</p>
-              <p className="text-sm">Изпратете първата си покана за да започнете</p>
+            <div className="text-center py-6 sm:py-8 text-muted-foreground">
+              <Mail className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 opacity-50" />
+              <p className="text-sm sm:text-base">Няма изпратени покани още</p>
+              <p className="text-xs sm:text-sm mt-1">Изпратете първата си покана за да започнете</p>
             </div>
           ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-3 max-h-[400px] sm:max-h-96 overflow-y-auto pr-1">
               {invitations.map((invitation) => (
-                <InvitationCard 
+                <InvitationCard
                   key={invitation.id}
                   invitation={invitation}
                   onCopyLink={copyInvitationLink}
@@ -551,53 +553,52 @@ function InvitationCard({
 
   return (
     <div className="border rounded-lg p-3">
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="font-medium truncate">{invitation.email}</p>
-            <Badge className={`text-xs ${config.color}`}>
-              {config.icon}
-              <span className="ml-1">{config.text}</span>
-            </Badge>
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm sm:text-base truncate">{invitation.email}</p>
+            {invitation.first_name && (
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Име: {invitation.first_name}
+              </p>
+            )}
           </div>
-          
-          {invitation.first_name && (
-            <p className="text-sm text-muted-foreground">
-              Име: {invitation.first_name}
-            </p>
-          )}
-          
-          <p className="text-xs text-muted-foreground">
-            Изпратена: {new Date(invitation.created_at).toLocaleDateString('bg-BG')}
-          </p>
-          
+          <Badge className={`text-xs shrink-0 ${config.color}`}>
+            {config.icon}
+            <span className="ml-1">{config.text}</span>
+          </Badge>
+        </div>
+
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span>Изпратена: {new Date(invitation.created_at).toLocaleDateString('bg-BG')}</span>
+
           {isPending && (
-            <p className="text-xs text-muted-foreground">
+            <span className="text-blue-600 dark:text-blue-400">
               Изтича след {daysUntilExpiry} дни
-            </p>
+            </span>
           )}
-          
+
           {isAccepted && invitation.accepted_at && (
-            <p className="text-xs text-green-600">
+            <span className="text-green-600 dark:text-green-400">
               Приета: {new Date(invitation.accepted_at).toLocaleDateString('bg-BG')}
-            </p>
+            </span>
           )}
         </div>
       </div>
-      
+
       {invitation.personal_message && (
-        <div className="text-xs text-muted-foreground mb-2 p-2 bg-muted/30 rounded">
-          <p className="italic">"{invitation.personal_message}"</p>
+        <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/30 rounded">
+          <p className="italic line-clamp-2">"{invitation.personal_message}"</p>
         </div>
       )}
-      
-      <div className="flex gap-2">
+
+      <div className="flex flex-col sm:flex-row gap-2 mt-3">
         {(isPending || isExpired) && (
           <Button
             size="sm"
             variant="outline"
             onClick={() => onCopyLink(invitation.token)}
-            className="flex-1"
+            className="flex-1 h-8 text-xs sm:text-sm"
           >
             {copiedToken === invitation.token ? (
               <>
@@ -607,30 +608,32 @@ function InvitationCard({
             ) : (
               <>
                 <Copy className="h-3 w-3 mr-1" />
-                Копирай линк
+                <span className="hidden sm:inline">Копирай линк</span>
+                <span className="sm:hidden">Копирай</span>
               </>
             )}
           </Button>
         )}
-        
+
         {isExpired && (
           <Button
             size="sm"
             variant="outline"
             onClick={() => onResend(invitation.id)}
-            className="flex-1"
+            className="flex-1 h-8 text-xs sm:text-sm"
           >
             <RefreshCw className="h-3 w-3 mr-1" />
-            Изпрати отново
+            <span className="hidden sm:inline">Изпрати отново</span>
+            <span className="sm:hidden">Изпрати</span>
           </Button>
         )}
-        
+
         {isPending && (
           <Button
             size="sm"
             variant="outline"
             onClick={() => onCancel(invitation.id)}
-            className="text-red-600 hover:text-red-700"
+            className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 h-8 text-xs sm:text-sm"
           >
             <Trash2 className="h-3 w-3 mr-1" />
             Отмени

@@ -71,6 +71,7 @@ export async function PUT(
       sodium_per_100g,
       category,
       allergens,
+      image_url,
     } = body;
 
     // Validate required fields
@@ -97,6 +98,7 @@ export async function PUT(
         sodium_per_100g: sodium_per_100g || 0,
         category,
         allergens: allergens || [],
+        image_url: image_url || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

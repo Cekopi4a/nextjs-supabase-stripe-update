@@ -52,10 +52,26 @@ export function ChatWindow({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
 
-  // Auto-scroll to bottom on new messages
+  // Scroll to bottom when messages load or conversation changes
   useEffect(() => {
-    if (autoScroll && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (conversationId && messages.length > 0) {
+      // Use setTimeout to ensure DOM is rendered
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "auto", block: "end" });
+        }
+      }, 100);
+    }
+  }, [conversationId, messages.length]);
+
+  // Auto-scroll to bottom on new messages (smooth scroll)
+  useEffect(() => {
+    if (autoScroll && messages.length > 0) {
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+      }, 50);
     }
   }, [messages, autoScroll]);
 
