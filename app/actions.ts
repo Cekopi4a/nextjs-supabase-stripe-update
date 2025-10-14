@@ -3,20 +3,55 @@
 import { createSupabaseClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { encodedRedirect } from "@/utils/redirect";
+import { checkRateLimit } from "@/utils/rate-limit";
+import { validatePasswordStrength } from "@/utils/password-validation";
+import { logAuthEvent } from "@/utils/audit-log";
+import { headers } from "next/headers";
 
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+
+  // Get request metadata
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") || "unknown";
+  const ip = headersList.get("x-forwarded-for") || "unknown";
+
+  // Rate limiting - 5 attempts per minute per email
+  const { allowed, resetAt } = await checkRateLimit(email, 5, 60 * 1000);
+
+  if (!allowed) {
+    const resetIn = Math.ceil((resetAt - Date.now()) / 1000);
+    return encodedRedirect(
+      "error",
+      "/sign-in",
+      `Твърде много опити. Моля, изчакайте ${resetIn} секунди.`
+    );
+  }
+
   const client = await createSupabaseClient();
 
-  const { error } = await client.auth.signInWithPassword({
+  const { data, error } = await client.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
+    // Log failed sign-in attempt
+    await logAuthEvent(null, "sign_in_failed", {
+      ip_address: ip,
+      user_agent: userAgent,
+      error_message: error.message,
+    });
+
     return encodedRedirect("error", "/sign-in", error.message);
   }
+
+  // Log successful sign-in
+  await logAuthEvent(data.user?.id || null, "sign_in_success", {
+    ip_address: ip,
+    user_agent: userAgent,
+  });
 
   return redirect("/protected");
 };
@@ -24,13 +59,37 @@ export const signInAction = async (formData: FormData) => {
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+
+  // Get request metadata
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") || "unknown";
+  const ip = headersList.get("x-forwarded-for") || "unknown";
+
+  // Validate password strength
+  const passwordError = validatePasswordStrength(password);
+  if (passwordError) {
+    return encodedRedirect("error", "/sign-up", passwordError);
+  }
+
+  // Rate limiting for sign-up
+  const { allowed, resetAt } = await checkRateLimit(email, 3, 60 * 1000);
+
+  if (!allowed) {
+    const resetIn = Math.ceil((resetAt - Date.now()) / 1000);
+    return encodedRedirect(
+      "error",
+      "/sign-up",
+      `Твърде много опити. Моля, изчакайте ${resetIn} секунди.`
+    );
+  }
+
   const client = await createSupabaseClient();
 
   const url = process.env.VERCEL_URL
     ? `${process.env.VERCEL_URL}/protected`
     : "http://localhost:3000/protected";
 
-  const { error } = await client.auth.signUp({
+  const { data, error } = await client.auth.signUp({
     email,
     password,
     options: {
@@ -39,8 +98,21 @@ export const signUpAction = async (formData: FormData) => {
   });
 
   if (error) {
+    // Log failed sign-up
+    await logAuthEvent(null, "sign_up_failed", {
+      ip_address: ip,
+      user_agent: userAgent,
+      error_message: error.message,
+    });
+
     return encodedRedirect("error", "/sign-up", error.message);
   }
+
+  // Log successful sign-up
+  await logAuthEvent(data.user?.id || null, "sign_up_success", {
+    ip_address: ip,
+    user_agent: userAgent,
+  });
 
   return redirect("/protected");
 };
@@ -72,6 +144,12 @@ export const resetPasswordAction = async (formData: FormData) => {
 
   if (password !== confirmPassword) {
     return encodedRedirect("error", "/reset-password", "Паролите не съвпадат.");
+  }
+
+  // Validate password strength
+  const passwordError = validatePasswordStrength(password);
+  if (passwordError) {
+    return encodedRedirect("error", "/reset-password", passwordError);
   }
 
   const client = await createSupabaseClient();

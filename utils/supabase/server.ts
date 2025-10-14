@@ -15,7 +15,11 @@ export async function createSupabaseClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, {
+                ...options,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+              })
             );
           } catch {
             // The `setAll` method was called from a Server Component.
