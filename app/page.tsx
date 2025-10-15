@@ -14,23 +14,59 @@ export default function Home() {
   const targetAudience = [
     {
       title: "Персонални треньори",
-      description: "Професионално управление на клиенти и програми",
-      image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      description: "Управлявайте клиенти професионално",
+      badge: "800+ упражнения",
+      image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+      features: [
+        "Управление на до 6+ клиента",
+        "Тренировъчни програми с календар",
+        "800+ упражнения в библиотека",
+        "Real-time чат с клиенти",
+        "Проследяване на прогрес и измервания",
+        "Export в PDF/Excel формат"
+      ]
     },
     {
       title: "Нутриционисти",
-      description: "Създавайте и управлявайте хранителни планове",
-      image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      description: "Създавайте хранителни планове лесно",
+      badge: "Авто макроси",
+      image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+      features: [
+        "Изготвяне на хранителни планове",
+        "Автоматично изчисляване на макроси",
+        "Библиотека с храни и рецепти",
+        "Проследяване на хранене",
+        "Персонализирани препоръки",
+        "Контрол на калории и макронутриенти"
+      ]
     },
     {
       title: "Йога и Пилатес инструктори",
-      description: "Планирайте сесии и следете прогреса на клиентите",
-      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      description: "Планирайте сесии ефективно",
+      badge: "Google Calendar",
+      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+      features: [
+        "Планиране на сесии в календар",
+        "Добавяне на собствени упражнения",
+        "Следене на присъствие",
+        "Комуникация през чат",
+        "Google Calendar интеграция",
+        "Мотивиращи цитати за клиенти"
+      ]
     },
     {
       title: "Фитнес коучове",
-      description: "Цялостна подкрепа за постигане на фитнес цели",
-      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+      description: "Всичко на едно място",
+      badge: "Всичко в 1",
+      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+      features: [
+        "Цялостно управление на клиенти",
+        "Тренировки + хранене + цели",
+        "Analytics и статистики",
+        "Export на програми",
+        "Спестяване на 10+ часа седмично",
+        "Централизирана платформа"
+      ]
     }
   ];
 
@@ -262,23 +298,119 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {targetAudience.map((audience, index) => (
-              <div key={index} className="group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                <div className="relative h-80">
-                  <Image
-                    src={audience.image}
-                    alt={audience.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h3 className="text-xl font-bold text-white mb-2">{audience.title}</h3>
-                    <p className="text-gray-200 text-sm leading-relaxed">{audience.description}</p>
+            {targetAudience.map((audience, index) => {
+              // Define unique colors for each card
+              const cardColors = [
+                {
+                  // Треньори - Blue/Cyan
+                  badge: 'from-blue-600 to-cyan-500',
+                  back: 'from-blue-600 via-blue-700 to-cyan-600',
+                  check: 'text-cyan-300',
+                  hint: 'text-blue-300',
+                  mobile: 'from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200 dark:border-blue-800',
+                  mobileCheck: 'text-blue-600 dark:text-blue-400'
+                },
+                {
+                  // Нутриционисти - Green/Emerald
+                  badge: 'from-green-600 to-emerald-500',
+                  back: 'from-green-600 via-emerald-600 to-teal-600',
+                  check: 'text-emerald-300',
+                  hint: 'text-green-300',
+                  mobile: 'from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800',
+                  mobileCheck: 'text-green-600 dark:text-green-400'
+                },
+                {
+                  // Йога/Пилатес - Purple/Pink
+                  badge: 'from-purple-600 to-pink-500',
+                  back: 'from-purple-600 via-fuchsia-600 to-pink-600',
+                  check: 'text-pink-300',
+                  hint: 'text-purple-300',
+                  mobile: 'from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800',
+                  mobileCheck: 'text-purple-600 dark:text-purple-400'
+                },
+                {
+                  // Фитнес коучове - Orange/Red
+                  badge: 'from-orange-600 to-red-500',
+                  back: 'from-orange-600 via-red-600 to-rose-600',
+                  check: 'text-orange-300',
+                  hint: 'text-orange-300',
+                  mobile: 'from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30 border-orange-200 dark:border-orange-800',
+                  mobileCheck: 'text-orange-600 dark:text-orange-400'
+                }
+              ];
+
+              const colors = cardColors[index];
+
+              return (
+                <div
+                  key={index}
+                  className="group relative h-[400px] [perspective:1000px] cursor-default"
+                  style={{
+                    animationDelay: `${index * 100}ms`
+                  }}
+                >
+                  <div className="relative h-full w-full transition-all duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+                    {/* Front of card */}
+                    <div className="absolute inset-0 h-full w-full rounded-2xl [backface-visibility:hidden]">
+                      <div className="relative h-full overflow-hidden rounded-2xl shadow-lg group-hover:shadow-2xl transition-shadow duration-300">
+                        <Image
+                          src={audience.image}
+                          alt={audience.title}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
+
+                        {/* Badge */}
+                        <div className="absolute top-4 right-4">
+                          <span className={`inline-block bg-gradient-to-r ${colors.badge} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg`}>
+                            {audience.badge}
+                          </span>
+                        </div>
+
+                        {/* Content */}
+                        <div className="absolute bottom-0 left-0 right-0 p-6">
+                          <h3 className="text-xl font-bold text-white mb-2">{audience.title}</h3>
+                          <p className="text-gray-200 text-sm leading-relaxed">{audience.description}</p>
+
+                          {/* Hover hint - only visible on desktop */}
+                          <div className={`hidden md:block mt-4 ${colors.hint} text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity`}>
+                            Задръжте курсора за повече →
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Back of card */}
+                    <div className="absolute inset-0 h-full w-full rounded-2xl [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                      <div className={`h-full w-full rounded-2xl bg-gradient-to-br ${colors.back} p-6 shadow-2xl flex flex-col justify-center`}>
+                        <h3 className="text-xl font-bold text-white mb-6 text-center">{audience.title}</h3>
+                        <ul className="space-y-3">
+                          {audience.features.map((feature, featureIndex) => (
+                            <li key={featureIndex} className="flex items-start gap-2 text-white">
+                              <Check className={`h-5 w-5 flex-shrink-0 mt-0.5 ${colors.check}`} />
+                              <span className="text-sm leading-relaxed">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile: Show features below card */}
+                  <div className={`md:hidden mt-4 bg-gradient-to-br ${colors.mobile} rounded-xl p-4 border`}>
+                    <ul className="space-y-2">
+                      {audience.features.slice(0, 3).map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                          <Check className={`h-4 w-4 flex-shrink-0 mt-0.5 ${colors.mobileCheck}`} />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -384,139 +516,223 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Problems & Savings Section */}
-      <section className="relative px-4 py-24 bg-white dark:bg-gray-900 overflow-hidden">
+      {/* From Chaos to Order Section */}
+      <section className="relative px-4 py-24 bg-gradient-to-br from-gray-50 via-white to-blue-50/20 dark:from-gray-950 dark:via-gray-900 dark:to-blue-950/20 overflow-hidden">
         {/* Background decorations */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/5 to-cyan-400/5 dark:from-blue-600/5 dark:to-cyan-600/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-cyan-400/5 to-blue-400/5 dark:from-cyan-600/5 dark:to-blue-600/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-blue-400/5 to-cyan-400/5 dark:from-blue-600/5 dark:to-cyan-600/5 rounded-full blur-3xl"></div>
 
         <div className="relative max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-950/50 dark:to-cyan-950/50 text-blue-700 dark:text-blue-300 px-5 py-2.5 rounded-full text-sm font-semibold mb-6 border border-blue-200/50 dark:border-blue-800/50 shadow-lg">
-              <DollarSign className="h-4 w-4" />
-              Проблеми и спестявания
+              <TrendingUp className="h-4 w-4" />
+              Трансформацията
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6">
-              Решения които <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">оптимизират</span> вашата работа
+              От хаос към <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">организация и контрол</span>
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto font-medium">
-              Спестете време, пари и усилия с нашата автоматизирана платформа
+              Вижте как платформата трансформира начина, по който работите с клиенти
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-start">
-            {/* Problems Column */}
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+            {/* LEFT: Problems */}
             <div className="space-y-6">
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-8">
-                ❌ Проблеми които решаваме
-              </h3>
-
-              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 hover:shadow-xl transition-all">
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  Хаос в управлението на клиенти
-                </h4>
-                <p className="text-gray-700 dark:text-gray-300 text-sm">
-                  Разпръснати файлове, Excel таблици и бележки. Губите часове в организация.
-                </p>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                  ❌
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+                  Познати проблеми?
+                </h3>
               </div>
 
-              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 hover:shadow-xl transition-all">
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  Време за ръчно създаване на планове
-                </h4>
-                <p className="text-gray-700 dark:text-gray-300 text-sm">
-                  Прекарвате 2-3 часа на седмица в създаване и актуализиране на индивидуални програми.
-                </p>
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border-2 border-red-200 dark:border-red-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">💬</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Комуникационен хаос
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      WhatsApp, Viber, SMS - всичко разпръснато. Губите важни съобщения и време в търсене.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 hover:shadow-xl transition-all">
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  Липса на проследяване
-                </h4>
-                <p className="text-gray-700 dark:text-gray-300 text-sm">
-                  Трудно проследявате напредъка на клиентите. Не знаете кой се справя добре и кой се нуждае от помощ.
-                </p>
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border-2 border-red-200 dark:border-red-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">📄</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Хаос с програми
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      Excel, Google Sheets, Notion, хвърчащи листчета. Прекарвате часове в организация и актуализация.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border border-red-200 dark:border-red-800 hover:shadow-xl transition-all">
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  Непрофесионално представяне
-                </h4>
-                <p className="text-gray-700 dark:text-gray-300 text-sm">
-                  Клиентите получават PDF файлове или WhatsApp съобщения вместо професионална цифрова платформа.
-                </p>
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border-2 border-red-200 dark:border-red-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">📊</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Липса на проследяване
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      Не знаете кой какво е тренирал и ял. Трудно е да видите напредък и да реагирате навреме.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border-2 border-red-200 dark:border-red-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">⏰</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Губене на време
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      5-10 часа седмично за организация, ръчно създаване на планове и комуникация с клиенти.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-6 rounded-2xl border-2 border-red-200 dark:border-red-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">👎</span>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Непрофесионално впечатление
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      PDF файлове и WhatsApp съобщения вместо модерна професионална дигитална платформа.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Savings Column */}
+            {/* RIGHT: Solutions */}
             <div className="space-y-6">
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-8">
-                ✅ Спестявания с нашата платформа
-              </h3>
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                  ✅
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+                  С нашата платформа
+                </h3>
+              </div>
 
-              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 hover:shadow-xl transition-all">
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Централизирана комуникация
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      Вграден real-time чат на едно място. Цялата комуникация с клиенти организирана и достъпна.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                    <Target className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Всичко на едно място
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      Тренировки, хранене, прогрес, календар, комуникация - единна платформа за всички аспекти.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      Автоматично проследяване
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      Виждате какво прави всеки клиент в реално време. Пълна визуализация на напредък и цели.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white shadow-lg flex-shrink-0">
                     <Clock className="h-6 w-6" />
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                       Спестете 10+ часа седмично
                     </h4>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Автоматизирано създаване на планове и централизирано управление на всички клиенти.
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      Автоматизация и централизация освобождават време за това, което наистина е важно - вашите клиенти.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 hover:shadow-xl transition-all">
+              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border-2 border-green-200 dark:border-green-800 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
-                    <DollarSign className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                      Увеличете приходите с 30%
-                    </h4>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Управлявайте повече клиенти едновременно без да жертвате качеството на услугата.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 hover:shadow-xl transition-all">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
-                    <TrendingUp className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                      По-добро задържане на клиенти
-                    </h4>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Професионалната платформа и лесното проследяване повишават удовлетвореността с 40%.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="group bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-6 rounded-2xl border border-green-200 dark:border-green-800 hover:shadow-xl transition-all">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white shadow-lg flex-shrink-0">
                     <Star className="h-6 w-6" />
                   </div>
                   <div>
                     <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                       Професионален имидж
                     </h4>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm">
-                      Изградете доверие с модерна, професионална платформа за управление на клиенти.
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      Модерна платформа впечатлява клиентите. Удовлетворени клиенти = повече препоръки = повече печалба.
                     </p>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="mt-16 text-center">
+            <div className="inline-flex flex-col items-center bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 p-8 rounded-3xl border border-blue-200 dark:border-blue-800 shadow-xl">
+              <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500 mb-4">
+                10+ часа
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 font-semibold text-lg mb-2">
+                средно спестени седмично
+              </p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm max-w-md">
+                Повече време за клиенти = повече клиенти = повече приходи
+              </p>
             </div>
           </div>
         </div>
