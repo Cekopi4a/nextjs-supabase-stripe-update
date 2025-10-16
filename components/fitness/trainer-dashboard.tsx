@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createSupabaseClient } from "@/utils/supabase/client";
+import DailyQuoteCard from "@/components/fitness/daily-quote-card";
 
 interface TrainerDashboardProps {
   user: any;
@@ -260,6 +261,9 @@ export default function TrainerDashboard({ user, profile }: TrainerDashboardProp
             </CardContent>
           </Card>
         </div>
+
+        {/* Daily Quote */}
+        <DailyQuoteCard />
 
         {/* Quick Actions */}
         <Card className="shadow-lg border-border/50">

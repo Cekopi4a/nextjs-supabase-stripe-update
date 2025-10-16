@@ -29,6 +29,7 @@ import {
 import { useState, useEffect } from "react";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import Link from "next/link";
+import DailyQuoteCard from "@/components/fitness/daily-quote-card";
 
 interface ClientDashboardProps {
   user: any;
@@ -46,6 +47,7 @@ interface DashboardData {
   todayDailyMeals: any[];
   workoutStreak: number;
   totalWorkoutsCompleted: number;
+  todayHabits: any[];
 }
 
 export default function ClientDashboard({ user, profile }: ClientDashboardProps) {
@@ -73,7 +75,8 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
         { data: activePrograms },
         { data: workoutLogs },
         { data: nutritionPlan },
-        { data: dailyMeals }
+        { data: dailyMeals },
+        { data: habits }
       ] = await Promise.all([
         // Today's scheduled workouts - try simple query first
         supabase
@@ -157,7 +160,20 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           .select("*")
           .eq("client_id", user.id)
           .eq("scheduled_date", today)
-          .order("meal_type")
+          .order("meal_type"),
+
+        // Today's habits with logs
+        supabase
+          .from("client_habits")
+          .select(`
+            *,
+            habit_logs!left(*)
+          `)
+          .eq("client_id", user.id)
+          .eq("is_active", true)
+          .eq("habit_logs.log_date", today)
+          .order("created_at", { ascending: false })
+          .limit(5)
       ]);
 
       if (todayWorkoutsError) {
@@ -196,7 +212,8 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
         todayNutrition: nutritionPlan?.[0] || null,
         todayDailyMeals: dailyMeals || [],
         workoutStreak: streak,
-        totalWorkoutsCompleted: totalCompleted || 0
+        totalWorkoutsCompleted: totalCompleted || 0,
+        todayHabits: habits || []
       });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -266,6 +283,9 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
           </Button>
         </div>
       </div>
+
+      {/* Daily Quote */}
+      <DailyQuoteCard />
 
       {/* Quick Stats Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
@@ -381,6 +401,40 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
             )}
           </Card>
 
+          {/* Today's Habits */}
+          <Card className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold flex items-center">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                Днешни навици
+              </h3>
+              <Button variant="outline" size="sm" asChild className="text-xs sm:text-sm">
+                <Link href="/protected/habits">
+                  <span className="hidden sm:inline">Виж всички</span>
+                  <span className="sm:hidden">Всички</span>
+                </Link>
+              </Button>
+            </div>
+
+            {data?.todayHabits && data.todayHabits.length > 0 ? (
+              <div className="space-y-2">
+                {data.todayHabits.map((habit) => (
+                  <TodayHabitCard key={habit.id} habit={habit} onToggle={fetchDashboardData} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle2 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Няма добавени навици</p>
+                <Button variant="outline" size="sm" className="mt-2" asChild>
+                  <Link href="/protected/habits">
+                    Добави навици
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </Card>
+
           {/* Active Goals */}
           <Card className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -395,7 +449,7 @@ export default function ClientDashboard({ user, profile }: ClientDashboardProps)
                 </Link>
               </Button>
             </div>
-            
+
             {data?.activeGoals && data.activeGoals.length > 0 ? (
               <div className="space-y-4">
                 {data.activeGoals.map((goal) => (
@@ -798,6 +852,73 @@ function TodayDailyMealsCard({ meals }: { meals: any[] }) {
   );
 }
 
+function TodayHabitCard({ habit, onToggle }: { habit: any; onToggle: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const todayLog = habit.habit_logs?.[0];
+  const isCompleted = todayLog?.completed || false;
+
+  const toggleHabit = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const today = new Date().toISOString().split("T")[0];
+
+    try {
+      const response = await fetch("/api/habit-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          habit_id: habit.id,
+          log_date: today,
+          completed: !isCompleted,
+          actual_value: habit.target_value,
+        })
+      });
+
+      if (response.ok) {
+        onToggle();
+      }
+    } catch (error) {
+      console.error("Error toggling habit:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div
+      className={`flex items-center justify-between p-3 rounded-lg border transition cursor-pointer hover:shadow-sm ${
+        isCompleted ? "bg-green-50 border-green-200" : "hover:bg-muted/50"
+      }`}
+      onClick={toggleHabit}
+    >
+      <div className="flex items-center gap-3 flex-1">
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+          isCompleted ? "bg-green-600 text-white" : "border-2 border-muted-foreground"
+        }`}>
+          {isCompleted && <CheckCircle2 className="h-4 w-4" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            {habit.icon && <span className="text-lg">{habit.icon}</span>}
+            <span className={`text-sm font-medium truncate ${isCompleted ? "line-through opacity-70" : ""}`}>
+              {habit.title}
+            </span>
+          </div>
+          {habit.target_value && (
+            <p className="text-xs text-muted-foreground">
+              {habit.target_value} {habit.unit}
+            </p>
+          )}
+        </div>
+      </div>
+      {loading && (
+        <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      )}
+    </div>
+  );
+}
+
 function LoadingDashboard({ profile }: { profile: any }) {
   return (
     <div className="space-y-6">
@@ -807,7 +928,7 @@ function LoadingDashboard({ profile }: { profile: any }) {
           <div className="h-4 bg-muted rounded w-48 mt-1 animate-pulse"></div>
         </div>
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="p-4">
@@ -819,7 +940,7 @@ function LoadingDashboard({ profile }: { profile: any }) {
           </Card>
         ))}
       </div>
-      
+
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           {[1, 2].map((i) => (
