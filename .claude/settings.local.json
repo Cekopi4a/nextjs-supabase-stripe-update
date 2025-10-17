@@ -37,7 +37,9 @@
       "Bash(powershell:*)",
       "Bash(chcp:*)",
       "Bash(findstr:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(dir /s /b supabasemigrations*.sql)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }

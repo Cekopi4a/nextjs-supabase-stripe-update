@@ -143,7 +143,7 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
                   <div className="font-medium">{relatedUser.full_name}</div>
                   <div className="text-sm text-muted-foreground">{relatedUser.email}</div>
                   <div className="text-xs text-muted-foreground">
-                    {profile.role === "trainer" ? "Client" : "Trainer"}
+                    {profile.role === "trainer" ? "Клиент" : "Треньор"}
                   </div>
                 </div>
               </div>

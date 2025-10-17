@@ -10,6 +10,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useNotifications } from "@/contexts/notification-context";
 import { NotificationsDropdown } from "@/components/notifications-dropdown";
+import { Avatar } from "@/components/ui/avatar";
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
@@ -272,12 +273,15 @@ export default function Header() {
                     {profile?.full_name || "Потребител"}
                   </p>
                   <p className="text-xs text-muted-foreground leading-tight capitalize font-medium">
-                    {profile?.role || "client"}
+                    {profile?.role === "trainer" ? "Треньор" : profile?.role === "client" ? "Клиент" : profile?.role || "Клиент"}
                   </p>
                 </div>
-                <div className="h-10 w-10 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-background group-hover:ring-blue-200 dark:group-hover:ring-blue-800 transition-all duration-200 group-hover:scale-105">
-                  <User className="h-5 w-5 text-white" />
-                </div>
+                <Avatar
+                  src={profile?.avatar_url}
+                  alt={profile?.full_name || "Потребител"}
+                  size="md"
+                  className="shadow-lg ring-2 ring-background group-hover:ring-blue-200 dark:group-hover:ring-blue-800 transition-all duration-200 group-hover:scale-105"
+                />
                 <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-300" style={{ transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </button>
 
@@ -287,11 +291,12 @@ export default function Header() {
                   {/* User info in dropdown */}
                   <div className="px-4 py-4 border-b border-border/50">
                     <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-blue-200 dark:ring-blue-800">
-                        <span className="text-white font-bold text-lg">
-                          {profile?.full_name?.charAt(0).toUpperCase() || "П"}
-                        </span>
-                      </div>
+                      <Avatar
+                        src={profile?.avatar_url}
+                        alt={profile?.full_name || "Потребител"}
+                        size="lg"
+                        className="shadow-lg ring-2 ring-blue-200 dark:ring-blue-800"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-foreground text-sm truncate">
                           {profile?.full_name || "Потребител"}
@@ -299,7 +304,7 @@ export default function Header() {
                         <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                         <div className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 border border-blue-200/50 dark:border-blue-800/50">
                           <p className="text-xs font-medium text-blue-700 dark:text-blue-400 capitalize">
-                            {profile?.role || "client"}
+                            {profile?.role === "trainer" ? "Треньор" : profile?.role === "client" ? "Клиент" : profile?.role || "Клиент"}
                           </p>
                         </div>
                       </div>

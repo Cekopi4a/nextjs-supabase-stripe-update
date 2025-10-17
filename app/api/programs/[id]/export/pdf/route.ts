@@ -45,12 +45,12 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Fetch workout sessions
+    // Fetch workout sessions - check for both program_id and client_id
     const { data: sessions, error: sessionsError } = await supabase
       .from("workout_sessions")
       .select("*")
-      .eq("program_id", id)
-      .order("created_at", { ascending: true });
+      .or(`program_id.eq.${id},and(client_id.eq.${program.client_id},program_id.eq.${id})`)
+      .order("scheduled_date", { ascending: true });
 
     if (sessionsError) {
       console.error("Sessions fetch error:", sessionsError);
@@ -60,9 +60,48 @@ export async function GET(
       );
     }
 
+    console.log(`Found ${sessions?.length || 0} sessions for program ${id}`);
+
     // Fetch exercises for each session
+    // First, check if exercises are stored in the JSONB column
     const sessionsWithExercises = await Promise.all(
       (sessions || []).map(async (session) => {
+        // If session has exercises in JSONB format, expand them with full exercise data
+        if (session.exercises && Array.isArray(session.exercises) && session.exercises.length > 0) {
+          const exercisesWithDetails = await Promise.all(
+            session.exercises.map(async (ex: any) => {
+              const { data: exerciseData } = await supabase
+                .from("exercises")
+                .select("*")
+                .eq("id", ex.exercise_id)
+                .single();
+
+              return {
+                exercise_id: ex.exercise_id,
+                sets: ex.planned_sets || ex.sets || 3,
+                reps_min: null,
+                reps_max: null,
+                reps: ex.planned_reps || ex.reps || null,
+                weight_kg: ex.planned_weight || ex.weight || null,
+                rest_seconds: ex.rest_time || 60,
+                notes: ex.notes || "",
+                exercise: exerciseData,
+              };
+            })
+          );
+
+          return {
+            id: session.id,
+            session_name: session.name || session.session_name || "Тренировка",
+            day_of_week: session.day_of_week || 1,
+            estimated_duration: session.planned_duration_minutes || session.estimated_duration || 60,
+            rest_between_sets: session.rest_between_sets || 60,
+            notes: session.notes || session.description || "",
+            exercises: exercisesWithDetails,
+          };
+        }
+
+        // Otherwise, try to fetch from workout_exercises table (old format)
         const { data: exercises } = await supabase
           .from("workout_exercises")
           .select(`
@@ -72,7 +111,15 @@ export async function GET(
           .eq("session_id", session.id)
           .order("exercise_order", { ascending: true });
 
-        return { ...session, exercises: exercises || [] };
+        return {
+          id: session.id,
+          session_name: session.name || session.session_name || "Тренировка",
+          day_of_week: session.day_of_week || 1,
+          estimated_duration: session.planned_duration_minutes || session.estimated_duration || 60,
+          rest_between_sets: session.rest_between_sets || 60,
+          notes: session.notes || session.description || "",
+          exercises: exercises || [],
+        };
       })
     );
 
