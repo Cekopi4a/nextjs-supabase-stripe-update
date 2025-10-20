@@ -19,12 +19,21 @@ import {
   Coffee,
   UtensilsCrossed,
   Sunset,
-  MessageSquare
+  MessageSquare,
+  StickyNote,
+  Save,
+  Plus,
+  Pencil,
+  Trash2,
+  X
 } from "lucide-react";
 import { createSupabaseClient } from "@/utils/supabase/client";
 import { formatScheduledDate, getTodayDateString } from "@/utils/date-utils";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface Client {
   id: string;
@@ -52,6 +61,16 @@ interface MealPlan {
   status: 'planned' | 'completed' | 'skipped';
 }
 
+interface ClientNote {
+  id: string;
+  trainer_id: string;
+  client_id: string;
+  title: string | null;
+  note: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export default function ClientProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -64,6 +83,12 @@ export default function ClientProfilePage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [creatingChat, setCreatingChat] = useState(false);
+  const [clientNotes, setClientNotes] = useState<ClientNote[]>([]);
+  const [editingNote, setEditingNote] = useState<ClientNote | null>(null);
+  const [showNoteForm, setShowNoteForm] = useState(false);
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteText, setNoteText] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
 
   const supabase = createSupabaseClient();
 
@@ -75,6 +100,7 @@ export default function ClientProfilePage() {
     if (client) {
       loadRecentSessions();
       loadTodayData();
+      loadClientNotes();
     }
   }, [client]);
 
@@ -140,15 +166,15 @@ export default function ClientProfilePage() {
         .eq("client_id", clientId)
         .eq("scheduled_date", today)
         .single();
-      
+
       if (workoutError && workoutError.code !== 'PGRST116') {
         console.error("Error loading workout:", workoutError);
       }
-      
+
       if (workoutData) {
         setTodayWorkout(workoutData);
       }
-      
+
       // Load today's meals
       const { data: mealsData, error: mealsError } = await supabase
         .from("daily_meals")
@@ -156,16 +182,127 @@ export default function ClientProfilePage() {
         .eq("client_id", clientId)
         .eq("scheduled_date", today)
         .order("meal_type");
-      
+
       if (mealsError) {
         console.error("Error loading meals:", mealsError);
       }
-      
+
       if (mealsData && mealsData.length > 0) {
         setTodayMeals(mealsData);
       }
     } catch (error) {
       console.error("Error loading today's data:", error);
+    }
+  };
+
+  const loadClientNotes = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("client_notes")
+        .select("*")
+        .eq("trainer_id", user.id)
+        .eq("client_id", clientId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error loading notes:", error);
+        return;
+      }
+
+      setClientNotes(data || []);
+    } catch (error) {
+      console.error("Error loading client notes:", error);
+    }
+  };
+
+  const handleAddNote = () => {
+    setEditingNote(null);
+    setNoteTitle("");
+    setNoteText("");
+    setShowNoteForm(true);
+  };
+
+  const handleEditNote = (note: ClientNote) => {
+    setEditingNote(note);
+    setNoteTitle(note.title || "");
+    setNoteText(note.note);
+    setShowNoteForm(true);
+  };
+
+  const handleCancelNote = () => {
+    setShowNoteForm(false);
+    setEditingNote(null);
+    setNoteTitle("");
+    setNoteText("");
+  };
+
+  const handleSaveNote = async () => {
+    if (!noteText.trim()) {
+      toast.error("Моля, въведете текст за бележката");
+      return;
+    }
+
+    try {
+      setNoteSaving(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (editingNote) {
+        // Update existing note
+        const { error } = await supabase
+          .from("client_notes")
+          .update({
+            title: noteTitle.trim() || null,
+            note: noteText.trim()
+          })
+          .eq("id", editingNote.id);
+
+        if (error) throw error;
+        toast.success("Бележката е обновена успешно");
+      } else {
+        // Create new note
+        const { error } = await supabase
+          .from("client_notes")
+          .insert({
+            trainer_id: user.id,
+            client_id: clientId,
+            title: noteTitle.trim() || null,
+            note: noteText.trim()
+          });
+
+        if (error) throw error;
+        toast.success("Бележката е добавена успешно");
+      }
+
+      await loadClientNotes();
+      handleCancelNote();
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast.error("Грешка при запазване на бележката");
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm("Сигурни ли сте, че искате да изтриете тази бележка?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("client_notes")
+        .delete()
+        .eq("id", noteId);
+
+      if (error) throw error;
+
+      toast.success("Бележката е изтрита успешно");
+      await loadClientNotes();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast.error("Грешка при изтриване на бележката");
     }
   };
 
@@ -468,45 +605,148 @@ export default function ClientProfilePage() {
         </Button>
       </div>
 
-      <div className="max-w-3xl">
-        {/* Recent Sessions */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Последни тренировки
-            </h2>
-            <Link href={`/protected/clients/${clientId}/calendar`}>
-              <Button size="sm" variant="outline">
-                Виж всички
-              </Button>
-            </Link>
-          </div>
-          
-          {recentSessions.length === 0 ? (
-            <div className="text-center py-8">
-              <Clock className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-              <h3 className="text-lg font-medium text-foreground mb-2">Няма тренировки</h3>
-              <p className="text-gray-500">Планираните тренировки ще се появят тук</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          {/* Recent Sessions */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Последни тренировки
+              </h2>
+              <Link href={`/protected/clients/${clientId}/calendar`}>
+                <Button size="sm" variant="outline">
+                  Виж всички
+                </Button>
+              </Link>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {recentSessions.map((session) => (
-                <Card key={session.id} className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{session.name}</h4>
-                      <p className="text-sm text-gray-500">
-                        {formatScheduledDate(session.scheduled_date)}
-                      </p>
+
+            {recentSessions.length === 0 ? (
+              <div className="text-center py-8">
+                <Clock className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                <h3 className="text-lg font-medium text-foreground mb-2">Няма тренировки</h3>
+                <p className="text-gray-500">Планираните тренировки ще се появят тук</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentSessions.map((session) => (
+                  <Card key={session.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">{session.name}</h4>
+                        <p className="text-sm text-gray-500">
+                          {formatScheduledDate(session.scheduled_date)}
+                        </p>
+                      </div>
+                      {getStatusBadge(session.status)}
                     </div>
-                    {getStatusBadge(session.status)}
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Client Notes */}
+        <div className="lg:col-span-1">
+          <Card className="p-6 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <StickyNote className="h-5 w-5 text-yellow-600" />
+                Бележки
+              </h2>
+              {!showNoteForm && (
+                <Button size="sm" onClick={handleAddNote}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Добави
+                </Button>
+              )}
             </div>
-          )}
-        </Card>
+
+            {showNoteForm ? (
+              <div className="space-y-3">
+                <Input
+                  placeholder="Заглавие (по избор)"
+                  value={noteTitle}
+                  onChange={(e) => setNoteTitle(e.target.value)}
+                />
+                <Textarea
+                  placeholder="Текст на бележката..."
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  className="min-h-[150px] resize-none"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSaveNote}
+                    disabled={noteSaving}
+                    className="flex-1"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {noteSaving ? 'Запазване...' : editingNote ? 'Обнови' : 'Запази'}
+                  </Button>
+                  <Button
+                    onClick={handleCancelNote}
+                    variant="outline"
+                    disabled={noteSaving}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto space-y-2">
+                {clientNotes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <StickyNote className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">Няма бележки</h3>
+                    <p className="text-gray-500">Добавете бележки за клиента</p>
+                  </div>
+                ) : (
+                  clientNotes.map((note) => (
+                    <Card key={note.id} className="p-3 hover:bg-muted/50 transition-colors">
+                      <div className="space-y-2">
+                        {note.title && (
+                          <h4 className="font-semibold text-sm">{note.title}</h4>
+                        )}
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {note.note}
+                        </p>
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(note.created_at).toLocaleDateString('bg-BG', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </span>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditNote(note)}
+                              className="h-7 w-7 p-0"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteNote(note.id)}
+                              className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
+          </Card>
+        </div>
       </div>
     </div>
   );

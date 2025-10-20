@@ -461,41 +461,6 @@ export default function LeftSidebar({
         </div>
       )}
 
-      {/* User info - само за треньори */}
-      {userRole === "trainer" && (
-        <div className={cn(
-          "border-t border-border bg-muted/30 relative",
-          isCollapsed && !isMobile ? "p-2" : "p-3",
-          isMobile && "bg-gradient-to-r from-muted/20 to-muted/40 border-t-primary/10"
-        )}>
-          {(!isCollapsed || isMobile) ? (
-            <div className="flex items-center gap-3">
-              <Avatar
-                src={userProfile?.avatar_url}
-                alt={userProfile?.full_name || "Потребител"}
-                size="sm"
-                className="flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {userProfile?.full_name || "Треньор"}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {userProfile?.email || "Потребител"}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <Avatar
-                src={userProfile?.avatar_url}
-                alt={userProfile?.full_name || "Потребител"}
-                size="sm"
-              />
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 
