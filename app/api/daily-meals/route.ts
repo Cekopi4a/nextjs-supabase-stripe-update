@@ -17,16 +17,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify trainer has access to this client
-    const { data: relationship } = await supabase
-      .from("trainer_clients")
-      .select("*")
-      .eq("trainer_id", user.id)
-      .eq("client_id", clientId)
-      .single();
+    // Check if user is fetching own meals OR has trainer access to the client
+    const isOwnMeals = clientId === user.id;
 
-    if (!relationship) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (!isOwnMeals) {
+      // Verify trainer has access to this client
+      const { data: relationship } = await supabase
+        .from("trainer_clients")
+        .select("*")
+        .eq("trainer_id", user.id)
+        .eq("client_id", clientId)
+        .single();
+
+      if (!relationship) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
     }
 
     // Get meals for specific date
@@ -50,22 +55,27 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createSupabaseClient();
     const body = await req.json();
-    
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify trainer has access to this client
-    const { data: relationship } = await supabase
-      .from("trainer_clients")
-      .select("*")
-      .eq("trainer_id", user.id)
-      .eq("client_id", body.client_id)
-      .single();
+    // Check if user is adding meal for themselves OR has trainer access to the client
+    const isOwnMeal = body.client_id === user.id;
 
-    if (!relationship) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (!isOwnMeal) {
+      // Verify trainer has access to this client
+      const { data: relationship } = await supabase
+        .from("trainer_clients")
+        .select("*")
+        .eq("trainer_id", user.id)
+        .eq("client_id", body.client_id)
+        .single();
+
+      if (!relationship) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
     }
 
     // Insert new meal

@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dumbbell, Star, ArrowRight, Check, Target, Plus, Minus, Users, Calendar, TrendingUp, Clock, DollarSign } from "lucide-react";
+import { Dumbbell, Star, ArrowRight, Check, Target, Plus, Minus, Users, Calendar, TrendingUp, Clock, RotateCw } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Footer from "@/components/footer";
 import HeroShowcase from "@/components/landing/HeroShowcase";
 
@@ -96,6 +96,30 @@ export default function Home() {
 
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+  const [flippedCards, setFlippedCards] = useState<number[]>([]);
+
+  const toggleFlip = (index: number) => {
+    setFlippedCards(prev =>
+      prev.includes(index)
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
+  };
+
+  // Демонстрационен flip при зареждане на страницата - показва на потребителя как работи
+  useEffect(() => {
+    const demoTimer = setTimeout(() => {
+      // Flip първата карта автоматично
+      setFlippedCards([0]);
+
+      // След 2 секунди я върни обратно
+      setTimeout(() => {
+        setFlippedCards([]);
+      }, 2000);
+    }, 1500); // Изчакай 1.5 секунди след зареждане
+
+    return () => clearTimeout(demoTimer);
+  }, []);
 
   const faqs = [
     {
@@ -344,12 +368,13 @@ export default function Home() {
               return (
                 <div
                   key={index}
-                  className="group relative h-[400px] [perspective:1000px] cursor-default"
+                  className="group relative h-[400px] [perspective:1000px] cursor-pointer"
                   style={{
                     animationDelay: `${index * 100}ms`
                   }}
+                  onClick={() => toggleFlip(index)}
                 >
-                  <div className="relative h-full w-full transition-all duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+                  <div className={`relative h-full w-full transition-all duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] ${flippedCards.includes(index) ? '[transform:rotateY(180deg)]' : ''}`}>
                     {/* Front of card */}
                     <div className="absolute inset-0 h-full w-full rounded-2xl [backface-visibility:hidden]">
                       <div className="relative h-full overflow-hidden rounded-2xl shadow-lg group-hover:shadow-2xl transition-shadow duration-300">
@@ -373,9 +398,11 @@ export default function Home() {
                           <h3 className="text-xl font-bold text-white mb-2">{audience.title}</h3>
                           <p className="text-gray-200 text-sm leading-relaxed">{audience.description}</p>
 
-                          {/* Hover hint - only visible on desktop */}
-                          <div className={`hidden md:block mt-4 ${colors.hint} text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity`}>
-                            Задръжте курсора за повече →
+                          {/* Interaction hint - улучшен с анимация и икона */}
+                          <div className={`mt-4 flex items-center gap-2 ${colors.hint} text-xs font-semibold transition-all duration-300 ${flippedCards.includes(index) ? 'opacity-0' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100'}`}>
+                            <RotateCw className="h-3.5 w-3.5 animate-spin-slow" />
+                            <span className="md:hidden animate-pulse">Докоснете за повече →</span>
+                            <span className="hidden md:inline animate-pulse">Задръжте курсора за повече →</span>
                           </div>
                         </div>
                       </div>
@@ -395,18 +422,6 @@ export default function Home() {
                         </ul>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Mobile: Show features below card */}
-                  <div className={`md:hidden mt-4 bg-gradient-to-br ${colors.mobile} rounded-xl p-4 border`}>
-                    <ul className="space-y-2">
-                      {audience.features.slice(0, 3).map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                          <Check className={`h-4 w-4 flex-shrink-0 mt-0.5 ${colors.mobileCheck}`} />
-                          <span className="text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 </div>
               );

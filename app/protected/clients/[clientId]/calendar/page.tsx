@@ -798,33 +798,35 @@ export default function ClientCalendarPage() {
       </div>
 
       {/* Calendar */}
-      <Card className="p-3 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6">
-          <div className="flex items-center gap-2 sm:gap-4">
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between mb-5 sm:mb-6">
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
             <Button
               variant="outline"
-              size="sm"
+              size="default"
               onClick={() => navigateMonth('prev')}
+              className="h-10 w-10 p-0"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </Button>
 
-            <h2 className="text-lg sm:text-xl font-semibold">
+            <h2 className="text-lg sm:text-xl font-bold min-w-[200px] text-center">
               {BULGARIAN_MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h2>
 
             <Button
               variant="outline"
-              size="sm"
+              size="default"
               onClick={() => navigateMonth('next')}
+              className="h-10 w-10 p-0"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
+          <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1">
             {WORKOUT_TYPES.slice(0, 3).map((type) => (
-              <Badge key={type.value} className={`${type.color} text-xs whitespace-nowrap`}>
+              <Badge key={type.value} className={`${type.color} text-xs whitespace-nowrap px-2 py-1`}>
                 {type.label}
               </Badge>
             ))}
@@ -832,10 +834,10 @@ export default function ClientCalendarPage() {
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {/* Week headers */}
           {BULGARIAN_DAYS.map((day) => (
-            <div key={day} className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-muted-foreground">
+            <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
               {day}
             </div>
           ))}
@@ -937,14 +939,14 @@ function CalendarDayCell({
 
   return (
     <div className={`
-      min-h-[80px] sm:min-h-[120px] p-1 sm:p-2 border border-border transition-colors hover:bg-muted/30 group
+      min-h-[100px] sm:min-h-[120px] p-2 sm:p-3 border border-border rounded-lg transition-colors hover:bg-muted/30 group
       ${!day.isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : ''}
-      ${day.isToday ? 'bg-blue-50 border-blue-300' : ''}
-      ${copySourceDate && dateToLocalDateString(day.date) === dateToLocalDateString(copySourceDate) ? 'bg-yellow-50 border-yellow-300' : ''}
+      ${day.isToday ? 'bg-blue-50 dark:bg-blue-950 border-blue-300 dark:border-blue-700' : ''}
+      ${copySourceDate && dateToLocalDateString(day.date) === dateToLocalDateString(copySourceDate) ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700' : ''}
       ${copyWorkoutId ? 'cursor-copy' : ''}
     `}>
-      <div className="flex items-center justify-between mb-1 sm:mb-2">
-        <span className={`text-xs sm:text-sm font-medium ${day.isToday ? 'text-blue-600' : ''}`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className={`text-sm sm:text-base font-semibold ${day.isToday ? 'text-blue-600 dark:text-blue-400' : ''}`}>
           {dayNumber}
         </span>
         <DropdownMenu>
@@ -952,9 +954,9 @@ function CalendarDayCell({
             <Button
               size="sm"
               variant="ghost"
-              className="h-5 w-5 sm:h-6 sm:w-6 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+              className="h-6 w-6 sm:h-7 sm:w-7 p-0 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100"
             >
-              <Plus className="h-2 w-2 sm:h-3 sm:w-3" />
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -1010,11 +1012,10 @@ function CalendarDayCell({
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full h-6 sm:h-8 text-[10px] sm:text-xs text-muted-foreground border-dashed border"
+                className="w-full h-8 sm:h-9 text-xs text-muted-foreground border-dashed border"
               >
-                <Plus className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
-                <span className="hidden sm:inline">Добави</span>
-                <span className="sm:hidden">+</span>
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                <span>Добави</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-56">
@@ -1066,52 +1067,52 @@ function WorkoutItem({
     <div
       onClick={onEdit}
       className={`
-        text-[10px] sm:text-xs p-1 sm:p-2 rounded border cursor-pointer transition-all hover:shadow-sm group
-        ${isRestDay ? 'bg-gray-50 border-gray-300 text-gray-700' :
-          isCompleted ? 'bg-green-50 border-green-200 text-green-800' :
-          isPlanned ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-muted text-muted-foreground'}
+        text-xs p-2 rounded-lg border cursor-pointer transition-all hover:shadow-md group
+        ${isRestDay ? 'bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300' :
+          isCompleted ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' :
+          isPlanned ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300' : 'bg-muted text-muted-foreground'}
       `}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-0.5 sm:gap-1 min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
           {isRestDay ? (
-            <Bed className="h-2 w-2 sm:h-3 sm:w-3 text-gray-600 flex-shrink-0" />
+            <Bed className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400 flex-shrink-0" />
           ) : isCompleted ? (
-            <CheckCircle2 className="h-2 w-2 sm:h-3 sm:w-3 text-green-600 flex-shrink-0" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400 flex-shrink-0" />
           ) : (
-            <Dumbbell className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
+            <Dumbbell className="h-3.5 w-3.5 flex-shrink-0" />
           )}
           <span className="font-medium truncate">{workout.name}</span>
         </div>
 
-        <div className="flex items-center gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100">
+        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100">
           <Button
             size="sm"
             variant="ghost"
-            className="h-3 w-3 sm:h-4 sm:w-4 p-0"
+            className="h-6 w-6 p-0"
             onClick={(e) => {
               e.stopPropagation();
               onCopy();
             }}
           >
-            <Copy className="h-2 w-2 sm:h-3 sm:w-3" />
+            <Copy className="h-3 w-3" />
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            className="h-3 w-3 sm:h-4 sm:w-4 p-0 text-red-600 hover:text-red-700"
+            className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
           >
-            <Trash2 className="h-2 w-2 sm:h-3 sm:w-3" />
+            <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
-        <span className="text-[8px] sm:text-[10px] opacity-75 truncate">
+      <div className="flex items-center gap-2 mt-1">
+        <span className="text-[10px] opacity-75 truncate">
           {isRestDay ? 'Почивен ден' : (workout.workout_programs?.name || 'Тренировка')}
         </span>
       </div>
@@ -1155,9 +1156,9 @@ function WorkoutModal({
   if (!isOpen || !selectedDate) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-      <Card className="w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-        <div className="p-4 sm:p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">
               {isEditing ? 'Редактирай тренировка' : 'Създай тренировка'}
@@ -1328,9 +1329,9 @@ function RestDayModal({
   if (!isOpen || !selectedDate) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md">
-        <div className="p-4 sm:p-6">
+        <div className="p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Bed className="h-5 w-5 text-gray-600" />
@@ -1438,9 +1439,9 @@ function TemplateSelectModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-4 sm:p-6">
+        <div className="p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold">Избери готова тренировка</h3>
