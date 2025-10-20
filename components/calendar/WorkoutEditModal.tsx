@@ -205,7 +205,7 @@ export function WorkoutEditModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           <DialogHeader>
             <DialogTitle>Редактиране на тренировка</DialogTitle>
           </DialogHeader>
@@ -283,7 +283,7 @@ export function WorkoutEditModal({
                         </div>
 
                         {/* Exercise Parameters */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                           <div>
                             <Label>Серии</Label>
                             <Input
@@ -358,7 +358,7 @@ export function WorkoutEditModal({
 
       {/* Exercise Selector Modal */}
       <Dialog open={showExerciseSelector} onOpenChange={setShowExerciseSelector}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
           <DialogHeader>
             <DialogTitle>Избери упражнение</DialogTitle>
           </DialogHeader>

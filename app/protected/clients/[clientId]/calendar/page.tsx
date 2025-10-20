@@ -1,7 +1,7 @@
 // app/protected/clients/[clientId]/calendar/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -129,6 +129,11 @@ export default function ClientCalendarPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [copySourceDate, setCopySourceDate] = useState<Date | null>(null);
   const [copyWorkoutId, setCopyWorkoutId] = useState<string | null>(null);
+  
+  // Mobile list view state
+  const [currentListDate, setCurrentListDate] = useState<Date>(new Date());
+  const [showDayModal, setShowDayModal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
 
   // Form states
   const [workoutForm, setWorkoutForm] = useState({
@@ -312,6 +317,44 @@ export default function ClientCalendarPage() {
       newDate.setMonth(newDate.getMonth() + 1);
     }
     setCurrentDate(newDate);
+  };
+
+  // Mobile list navigation functions
+  const navigateList = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentListDate);
+    if (direction === 'prev') {
+      newDate.setDate(newDate.getDate() - 1);
+    } else {
+      newDate.setDate(newDate.getDate() + 1);
+    }
+    setCurrentListDate(newDate);
+  };
+
+  const getListDays = () => {
+    const days: CalendarDay[] = [];
+    const start = new Date(currentListDate);
+    
+    // Показваме 7 дни - 3 преди, текущия, 3 след
+    for (let i = -3; i <= 3; i++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + i);
+      const dateStr = dateToLocalDateString(date);
+      const dayWorkouts = workouts.filter(w => w.scheduled_date === dateStr);
+      
+      days.push({
+        date: new Date(date),
+        isCurrentMonth: true,
+        isToday: date.toDateString() === new Date().toDateString(),
+        workouts: dayWorkouts
+      });
+    }
+    
+    return days;
+  };
+
+  const openDayModal = (day: CalendarDay) => {
+    setSelectedDay(day);
+    setShowDayModal(true);
   };
 
   const openCreateModal = (date: Date, workoutType: string = 'strength', name: string = '') => {
@@ -756,51 +799,133 @@ export default function ClientCalendarPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between sm:hidden">
           <Button variant="outline" size="sm" asChild>
             <Link href="/protected/clients">
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">Назад</span>
+              <ChevronLeft className="h-4 w-4" />
             </Link>
           </Button>
+          <h1 className="text-lg font-bold flex items-center">
+            <CalendarIcon className="h-5 w-5 mr-2" />
+            Календар
+          </h1>
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+            {client.full_name.charAt(0).toUpperCase()}
+          </div>
+        </div>
 
+        {/* Desktop Header */}
+        <div className="hidden sm:flex sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/protected/clients">
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Назад
+              </Link>
+            </Button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-base">
+                {client.full_name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold flex items-center">
+                  <CalendarIcon className="h-6 w-6 mr-2" />
+                  Календар - {client.full_name}
+                </h1>
+                <p className="text-muted-foreground text-sm truncate">{client.email}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/protected/clients/${clientId}/programs`}>
+                <Dumbbell className="h-4 w-4 mr-2" />
+                Програми
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/protected/clients/${clientId}/progress`}>
+                <Target className="h-4 w-4 mr-2" />
+                Прогрес
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Client Info for Mobile */}
+        <div className="sm:hidden bg-muted/30 rounded-lg p-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm sm:text-base">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-base">
               {client.full_name.charAt(0).toUpperCase()}
             </div>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-2xl font-bold flex items-center">
-                <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
-                <span className="hidden sm:inline">Календар - </span>{client.full_name}
-              </h1>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold text-base">{client.full_name}</h2>
               <p className="text-muted-foreground text-sm truncate">{client.email}</p>
             </div>
           </div>
         </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/protected/clients/${clientId}/programs`}>
-              <Dumbbell className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Програми</span>
-            </Link>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/protected/clients/${clientId}/progress`}>
-              <Target className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Прогрес</span>
-            </Link>
-          </Button>
-        </div>
       </div>
 
       {/* Calendar */}
-      <Card className="p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between mb-5 sm:mb-6">
-          <div className="flex items-center justify-center gap-3 sm:gap-4">
+      <Card className="p-3 sm:p-6">
+        {/* Mobile List View */}
+        <div className="sm:hidden">
+          {/* Date Navigation */}
+          <div className="flex items-center justify-between mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateList('prev')}
+              className="h-10 w-10 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <div className="text-center">
+              <div className="font-bold text-lg">
+                {currentListDate.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {currentListDate.toLocaleDateString('bg-BG', { weekday: 'long' })}
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateList('next')}
+              className="h-10 w-10 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Days List */}
+          <div className="space-y-3">
+            {getListDays().map((day, index) => (
+              <MobileDayCard 
+                key={index} 
+                day={day} 
+                onClick={() => openDayModal(day)}
+                onEditWorkout={openEditModal}
+                onDeleteWorkout={deleteWorkout}
+                onQuickAction={handleQuickAction}
+                copySourceDate={copySourceDate}
+                copyWorkoutId={copyWorkoutId}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop Calendar Header */}
+        <div className="hidden sm:flex sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="flex items-center justify-center gap-4">
             <Button
               variant="outline"
               size="default"
@@ -810,7 +935,7 @@ export default function ClientCalendarPage() {
               <ChevronLeft className="h-5 w-5" />
             </Button>
 
-            <h2 className="text-lg sm:text-xl font-bold min-w-[200px] text-center">
+            <h2 className="text-xl font-bold min-w-[200px] text-center">
               {BULGARIAN_MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h2>
 
@@ -833,8 +958,8 @@ export default function ClientCalendarPage() {
           </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+        {/* Desktop Calendar Grid */}
+        <div className="hidden sm:grid sm:grid-cols-7 sm:gap-2">
           {/* Week headers */}
           {BULGARIAN_DAYS.map((day) => (
             <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
@@ -910,6 +1035,16 @@ export default function ClientCalendarPage() {
         />
       )}
 
+      {/* Day Details Modal */}
+      <DayDetailsModal
+        day={selectedDay}
+        isOpen={showDayModal}
+        onClose={() => setShowDayModal(false)}
+        onEditWorkout={openEditModal}
+        onDeleteWorkout={deleteWorkout}
+        onQuickAction={handleQuickAction}
+      />
+
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-8">
@@ -939,14 +1074,14 @@ function CalendarDayCell({
 
   return (
     <div className={`
-      min-h-[100px] sm:min-h-[120px] p-2 sm:p-3 border border-border rounded-lg transition-colors hover:bg-muted/30 group
+      min-h-[80px] sm:min-h-[120px] p-1 sm:p-3 border border-border rounded-md sm:rounded-lg transition-colors hover:bg-muted/30 group
       ${!day.isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : ''}
       ${day.isToday ? 'bg-blue-50 dark:bg-blue-950 border-blue-300 dark:border-blue-700' : ''}
       ${copySourceDate && dateToLocalDateString(day.date) === dateToLocalDateString(copySourceDate) ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700' : ''}
       ${copyWorkoutId ? 'cursor-copy' : ''}
     `}>
-      <div className="flex items-center justify-between mb-2">
-        <span className={`text-sm sm:text-base font-semibold ${day.isToday ? 'text-blue-600 dark:text-blue-400' : ''}`}>
+      <div className="flex items-center justify-between mb-1 sm:mb-2">
+        <span className={`text-xs sm:text-base font-semibold ${day.isToday ? 'text-blue-600 dark:text-blue-400' : ''}`}>
           {dayNumber}
         </span>
         <DropdownMenu>
@@ -954,9 +1089,9 @@ function CalendarDayCell({
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 sm:h-7 sm:w-7 p-0 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100"
+              className="h-5 w-5 sm:h-7 sm:w-7 p-0 sm:opacity-0 sm:group-hover:opacity-100 hover:opacity-100"
             >
-              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -1067,52 +1202,52 @@ function WorkoutItem({
     <div
       onClick={onEdit}
       className={`
-        text-xs p-2 rounded-lg border cursor-pointer transition-all hover:shadow-md group
+        text-[10px] sm:text-xs p-1.5 sm:p-2 rounded-md sm:rounded-lg border cursor-pointer transition-all hover:shadow-md group
         ${isRestDay ? 'bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300' :
           isCompleted ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300' :
           isPlanned ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300' : 'bg-muted text-muted-foreground'}
       `}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 flex-1">
           {isRestDay ? (
-            <Bed className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+            <Bed className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-600 dark:text-gray-400 flex-shrink-0" />
           ) : isCompleted ? (
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400 flex-shrink-0" />
+            <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600 dark:text-green-400 flex-shrink-0" />
           ) : (
-            <Dumbbell className="h-3.5 w-3.5 flex-shrink-0" />
+            <Dumbbell className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
           )}
-          <span className="font-medium truncate">{workout.name}</span>
+          <span className="font-medium truncate text-[10px] sm:text-xs">{workout.name}</span>
         </div>
 
-        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100">
+        <div className="flex items-center gap-0.5 sm:gap-1 sm:opacity-0 sm:group-hover:opacity-100">
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0"
+            className="h-5 w-5 sm:h-6 sm:w-6 p-0"
             onClick={(e) => {
               e.stopPropagation();
               onCopy();
             }}
           >
-            <Copy className="h-3 w-3" />
+            <Copy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+            className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-red-600 hover:text-red-700"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mt-1">
-        <span className="text-[10px] opacity-75 truncate">
+      <div className="flex items-center gap-2 mt-0.5 sm:mt-1">
+        <span className="text-[9px] sm:text-[10px] opacity-75 truncate">
           {isRestDay ? 'Почивен ден' : (workout.workout_programs?.name || 'Тренировка')}
         </span>
       </div>
@@ -1156,9 +1291,9 @@ function WorkoutModal({
   if (!isOpen || !selectedDate) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="p-5 sm:p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <Card className="w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">
               {isEditing ? 'Редактирай тренировка' : 'Създай тренировка'}
@@ -1329,9 +1464,9 @@ function RestDayModal({
   if (!isOpen || !selectedDate) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md">
-        <div className="p-5 sm:p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <Card className="w-full max-w-md max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Bed className="h-5 w-5 text-gray-600" />
@@ -1413,6 +1548,334 @@ function RestDayModal({
   );
 }
 
+function MobileDayCard({ 
+  day, 
+  onClick,
+  onEditWorkout,
+  onDeleteWorkout,
+  onQuickAction,
+  copySourceDate,
+  copyWorkoutId
+}: { 
+  day: CalendarDay; 
+  onClick: () => void;
+  onEditWorkout: (workout: WorkoutSession) => void;
+  onDeleteWorkout: (workoutId: string) => void;
+  onQuickAction: (date: Date, action: string) => void;
+  copySourceDate: Date | null;
+  copyWorkoutId: string | null;
+}) {
+  const workoutCount = day.workouts.length;
+  const isToday = day.isToday;
+  const isCurrentDay = day.date.toDateString() === new Date().toDateString();
+  
+  return (
+    <Card 
+      className={`
+        p-4 transition-all hover:shadow-md group
+        ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}
+        ${isCurrentDay ? 'ring-2 ring-blue-500' : ''}
+      `}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 flex-1" onClick={onClick}>
+          {/* Date info */}
+          <div className="text-center min-w-[60px]">
+            <div className={`text-sm font-medium ${isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+              {BULGARIAN_DAYS[day.date.getDay() === 0 ? 6 : day.date.getDay() - 1]}
+            </div>
+            <div className={`text-xl font-bold ${isToday ? 'text-blue-600' : ''}`}>
+              {day.date.getDate()}
+            </div>
+          </div>
+          
+          {/* Workouts info */}
+          <div className="flex-1">
+            {workoutCount === 0 ? (
+              <div className="text-gray-400 text-sm">Няма тренировки</div>
+            ) : (
+              <div className="space-y-1">
+                {day.workouts.slice(0, 2).map((workout, index) => (
+                  <div key={workout.id} className="flex items-center gap-2">
+                    {workout.workout_type === 'rest' ? (
+                      <Bed className="h-4 w-4 text-gray-500" />
+                    ) : workout.status === 'completed' ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Dumbbell className="h-4 w-4 text-blue-500" />
+                    )}
+                    <span className="text-sm font-medium truncate">{workout.name}</span>
+                  </div>
+                ))}
+                {workoutCount > 2 && (
+                  <div className="text-xs text-gray-500">
+                    +{workoutCount - 2} още тренировки
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          {/* Workout count badge */}
+          {workoutCount > 0 && (
+            <div className="bg-blue-500 text-white text-sm font-semibold rounded-full w-8 h-8 flex items-center justify-center">
+              {workoutCount}
+            </div>
+          )}
+          
+          {/* Dropdown menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => onQuickAction(day.date, 'default')}>
+                <Plus className="h-4 w-4 mr-2" />
+                Създай нова тренировка
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_from_template')}>
+                <Dumbbell className="h-4 w-4 mr-2" />
+                Добави готова тренировка
+              </DropdownMenuItem>
+              {day.workouts.length === 0 && (
+                <DropdownMenuItem onClick={() => onQuickAction(day.date, 'add_rest')}>
+                  <Bed className="h-4 w-4 mr-2" />
+                  Добави почивка
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onQuickAction(day.date, 'copy_day')}>
+                <Copy className="h-4 w-4 mr-2" />
+                {copySourceDate ? 'Постави ден' : 'Копирай ден'}
+              </DropdownMenuItem>
+              {copyWorkoutId && (
+                <DropdownMenuItem onClick={() => onQuickAction(day.date, 'paste_workout')}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Постави тренировка тук
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      
+      {/* Individual workout actions */}
+      {day.workouts.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {day.workouts.map((workout) => (
+            <div key={workout.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0" onClick={() => onEditWorkout(workout)}>
+                {workout.workout_type === 'rest' ? (
+                  <Bed className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                ) : workout.status === 'completed' ? (
+                  <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
+                ) : (
+                  <Dumbbell className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                )}
+                <span className="text-xs font-medium truncate">{workout.name}</span>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onQuickAction(day.date, 'copy_workout_' + workout.id);
+                  }}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteWorkout(workout.id);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function DayDetailsModal({ 
+  day, 
+  isOpen, 
+  onClose, 
+  onEditWorkout, 
+  onDeleteWorkout,
+  onQuickAction 
+}: {
+  day: CalendarDay | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onEditWorkout: (workout: WorkoutSession) => void;
+  onDeleteWorkout: (workoutId: string) => void;
+  onQuickAction: (date: Date, action: string) => void;
+}) {
+  if (!isOpen || !day) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
+      <Card className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[85vh] overflow-y-auto">
+        <div className="p-4">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-bold">
+                {day.date.toLocaleDateString('bg-BG', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {day.workouts.length} тренировки
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          {/* Workouts List */}
+          {day.workouts.length === 0 ? (
+            <div className="text-center py-12">
+              <CalendarIcon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+              <p className="text-gray-500 mb-4">Няма тренировки за този ден</p>
+              <Button onClick={() => onQuickAction(day.date, 'default')} variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Добави първата тренировка
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4 mb-6">
+              {day.workouts.map((workout) => (
+                <WorkoutDetailCard 
+                  key={workout.id}
+                  workout={workout}
+                  onEdit={() => onEditWorkout(workout)}
+                  onDelete={() => onDeleteWorkout(workout.id)}
+                />
+              ))}
+            </div>
+          )}
+          
+          {/* Add Workout Button */}
+          {day.workouts.length > 0 && (
+            <Button onClick={() => onQuickAction(day.date, 'default')} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              Добави тренировка
+            </Button>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function WorkoutDetailCard({
+  workout,
+  onEdit,
+  onDelete
+}: {
+  workout: WorkoutSession;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const isCompleted = workout.status === 'completed';
+  const isPlanned = workout.status === 'planned';
+  const isRestDay = workout.workout_type === 'rest';
+
+  return (
+    <Card className={`
+      p-4 cursor-pointer transition-all hover:shadow-md
+      ${isRestDay ? 'bg-gray-50 border-gray-200' : 
+        isCompleted ? 'bg-green-50 border-green-200' : 
+        'bg-blue-50 border-blue-200'}
+    `}>
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-3 flex-1 min-w-0" onClick={onEdit}>
+          {/* Icon */}
+          <div className="flex-shrink-0 mt-1">
+            {isRestDay ? (
+              <Bed className="h-5 w-5 text-gray-600" />
+            ) : isCompleted ? (
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            ) : (
+              <Dumbbell className="h-5 w-5 text-blue-600" />
+            )}
+          </div>
+          
+          {/* Content */}
+          <div className="min-w-0 flex-1">
+            <h4 className="font-semibold text-base mb-1">{workout.name}</h4>
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">
+                {isRestDay ? 'Почивен ден' : (workout.workout_programs?.name || 'Тренировка')}
+              </p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className={`
+                  px-2 py-1 rounded-full text-xs font-medium
+                  ${isRestDay ? 'bg-gray-200 text-gray-700' : 
+                    isCompleted ? 'bg-green-200 text-green-700' : 
+                    'bg-blue-200 text-blue-700'}
+                `}>
+                  {isRestDay ? 'Почивка' : 
+                   isCompleted ? 'Завършена' : 
+                   'Планирана'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Actions */}
+        <div className="flex items-center gap-1 ml-3">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-9 w-9 p-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            title="Редактирай"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-9 w-9 p-0 text-red-600 hover:text-red-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            title="Изтрий"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function TemplateSelectModal({
   isOpen,
   selectedDate,
@@ -1439,9 +1902,9 @@ function TemplateSelectModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-5 sm:p-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <Card className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold">Избери готова тренировка</h3>
