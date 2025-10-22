@@ -763,7 +763,7 @@ function ExerciseCard({ exercise, onAdd }: { exercise: Exercise; onAdd: () => vo
         <Button
           size="sm"
           onClick={onAdd}
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
         >
           <Plus className="h-3 w-3" />
         </Button>
@@ -873,7 +873,7 @@ function WorkoutCard({
   onDelete: () => void;
 }) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow border-2 dark:border-slate-700 dark:bg-slate-800/50">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{workout.name}</CardTitle>

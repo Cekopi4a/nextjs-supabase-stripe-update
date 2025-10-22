@@ -81,54 +81,65 @@ export function ExerciseCard({
   if (compact) {
     return (
       <Card className={`
-        transition-all duration-200 hover:shadow-md cursor-pointer
-        ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50/50' : ''}
+        group transition-all duration-300 hover:shadow-lg cursor-pointer border-2
+        ${isSelected
+          ? 'ring-2 ring-blue-500 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950 border-blue-300 dark:border-blue-700'
+          : 'hover:border-blue-200 dark:hover:border-blue-800'
+        }
       `}>
-        <div className="flex gap-3 p-3">
+        <div className="flex gap-4 p-4">
           {/* Exercise Image */}
-          <div className="relative w-24 h-24 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-md border-2 border-border group-hover:shadow-xl transition-shadow duration-300">
             {firstImage && isValidImageUrl(firstImage) && !imageError ? (
               <Image
                 src={firstImage}
                 alt={exercise.name}
                 fill
-                className={`object-cover transition-opacity duration-200 ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
+                className={`object-cover transition-all duration-300 ${
+                  imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                } group-hover:scale-105`}
                 onLoad={() => setImageLoaded(true)}
                 onError={() => setImageError(true)}
-                sizes="96px"
+                sizes="128px"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <div className="text-2xl">💪</div>
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900 dark:to-cyan-900">
+                <div className="text-4xl">💪</div>
               </div>
             )}
           </div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0 flex flex-col">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <h3 className="font-semibold text-sm line-clamp-2 leading-tight">
+          <div className="flex-1 min-w-0 flex flex-col justify-between">
+            {/* Title and Category */}
+            <div className="space-y-2">
+              <h3 className="font-bold text-base sm:text-lg line-clamp-2 leading-tight text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {exercise.name}
               </h3>
-              <Badge variant={getLevelColor(exercise.level)} className="text-xs flex-shrink-0">
-                {exercise.level}
-              </Badge>
-            </div>
 
-            <div className="flex flex-wrap gap-1 mb-2">
-              <Badge variant={getCategoryColor(exercise.category)} className="text-xs">
-                {exercise.category}
-              </Badge>
-            </div>
+              <div className="flex flex-wrap gap-1.5">
+                <Badge variant={getCategoryColor(exercise.category)} className="text-xs font-medium">
+                  {exercise.category === 'strength' ? '💪 Strength' :
+                   exercise.category === 'cardio' ? '🏃 Cardio' :
+                   exercise.category === 'flexibility' ? '🧘 Flexibility' :
+                   exercise.category}
+                </Badge>
 
-            <div className="text-xs text-muted-foreground mb-2 line-clamp-1">
-              {formatEquipment(exercise.equipment)}
+                {primaryMuscles.length > 0 && (
+                  <Badge variant="outline" className="text-xs">
+                    🎯 {formatMuscle(primaryMuscles[0])}
+                  </Badge>
+                )}
+              </div>
+
+              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                <span className="font-medium">🏋️</span>
+                <span className="line-clamp-1">{formatEquipment(exercise.equipment)}</span>
+              </div>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-1 mt-auto">
+            <div className="flex gap-2 mt-3">
               {onSelect && (
                 <Button
                   variant={isSelected ? "default" : "outline"}
@@ -137,10 +148,23 @@ export function ExerciseCard({
                     e.stopPropagation();
                     onSelect(exercise);
                   }}
-                  className="flex-1 h-7 text-xs"
+                  className={`flex-1 h-9 text-sm font-semibold transition-all duration-200 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700'
+                      : 'hover:bg-blue-50 dark:hover:bg-blue-950'
+                  }`}
                 >
-                  {isSelected ? <Check className="h-3 w-3 mr-1" /> : <Plus className="h-3 w-3 mr-1" />}
-                  {isSelected ? 'Added' : 'Add'}
+                  {isSelected ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1.5" />
+                      Added
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-1.5" />
+                      Add
+                    </>
+                  )}
                 </Button>
               )}
 
@@ -152,9 +176,10 @@ export function ExerciseCard({
                     e.stopPropagation();
                     onDetails(exercise);
                   }}
-                  className="h-7 px-2"
+                  className="h-9 px-3 hover:bg-blue-50 dark:hover:bg-blue-950"
+                  title="View details"
                 >
-                  <Eye className="h-3 w-3" />
+                  <Eye className="h-4 w-4" />
                 </Button>
               )}
             </div>

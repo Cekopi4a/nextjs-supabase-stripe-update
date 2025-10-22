@@ -273,73 +273,93 @@ export function WorkoutEditModal({
                   {exercises.map((exercise, index) => (
                     <Card key={index} className="p-4">
                       <div className="space-y-4">
-                        {/* Exercise Name */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <Label>Упражнение</Label>
-                            <div className="flex items-center gap-3 p-3 border rounded-md bg-muted/30">
-                              <Dumbbell className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium text-foreground">
-                                {exercise.exercise?.name || 'Неизвестно упражнение'}
-                              </span>
+                        {/* Exercise Layout with Image */}
+                        <div className="flex gap-4">
+                          {/* Exercise Image */}
+                          <div className="flex-shrink-0">
+                            {exercise.exercise?.images?.[0] || exercise.exercise?.custom_images?.[0] ? (
+                              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-lg overflow-hidden bg-muted border-2 border-border shadow-sm">
+                                <img
+                                  src={exercise.exercise.images?.[0] || exercise.exercise.custom_images?.[0]}
+                                  alt={exercise.exercise.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ) : (
+                              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-lg bg-muted border-2 border-border flex items-center justify-center">
+                                <Dumbbell className="h-16 w-16 sm:h-20 sm:w-20 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Exercise Info and Parameters */}
+                          <div className="flex-1 space-y-4">
+                            {/* Exercise Name and Delete Button */}
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <Label>Упражнение</Label>
+                                <h4 className="text-lg font-semibold text-foreground mt-1">
+                                  {exercise.exercise?.name || 'Неизвестно упражнение'}
+                                </h4>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeExercise(index)}
+                                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            {/* Exercise Parameters */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                              <div>
+                                <Label>Серии</Label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={exercise.planned_sets || 1}
+                                  onChange={(e) => updateExercise(index, 'planned_sets', parseInt(e.target.value) || 1)}
+                                />
+                              </div>
+                              <div>
+                                <Label>Повторения</Label>
+                                <Input
+                                  value={exercise.planned_reps || ""}
+                                  onChange={(e) => updateExercise(index, 'planned_reps', e.target.value)}
+                                  placeholder="8-12"
+                                />
+                              </div>
+                              <div>
+                                <Label>Тежест (кг)</Label>
+                                <Input
+                                  value={exercise.planned_weight || ""}
+                                  onChange={(e) => updateExercise(index, 'planned_weight', e.target.value)}
+                                  placeholder="20"
+                                />
+                              </div>
+                              <div>
+                                <Label>Почивка (сек)</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  value={exercise.rest_time || 60}
+                                  onChange={(e) => updateExercise(index, 'rest_time', parseInt(e.target.value) || 0)}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Notes */}
+                            <div>
+                              <Label>Бележки</Label>
+                              <Input
+                                value={exercise.notes || ""}
+                                onChange={(e) => updateExercise(index, 'notes', e.target.value)}
+                                placeholder="Бележки за упражнението..."
+                              />
                             </div>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeExercise(index)}
-                            className="ml-4 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        {/* Exercise Parameters */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                          <div>
-                            <Label>Серии</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={exercise.planned_sets || 1}
-                              onChange={(e) => updateExercise(index, 'planned_sets', parseInt(e.target.value) || 1)}
-                            />
-                          </div>
-                          <div>
-                            <Label>Повторения</Label>
-                            <Input
-                              value={exercise.planned_reps || ""}
-                              onChange={(e) => updateExercise(index, 'planned_reps', e.target.value)}
-                              placeholder="8-12"
-                            />
-                          </div>
-                          <div>
-                            <Label>Тежест (кг)</Label>
-                            <Input
-                              value={exercise.planned_weight || ""}
-                              onChange={(e) => updateExercise(index, 'planned_weight', e.target.value)}
-                              placeholder="20"
-                            />
-                          </div>
-                          <div>
-                            <Label>Почивка (сек)</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={exercise.rest_time || 60}
-                              onChange={(e) => updateExercise(index, 'rest_time', parseInt(e.target.value) || 0)}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Notes */}
-                        <div>
-                          <Label>Бележки</Label>
-                          <Input
-                            value={exercise.notes || ""}
-                            onChange={(e) => updateExercise(index, 'notes', e.target.value)}
-                            placeholder="Бележки за упражнението..."
-                          />
                         </div>
                       </div>
                     </Card>
