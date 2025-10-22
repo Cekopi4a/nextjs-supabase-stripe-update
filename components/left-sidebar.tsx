@@ -182,6 +182,11 @@ export default function LeftSidebar({
           icon: Apple,
         },
         {
+          label: "Моят напредък",
+          href: "/progress",
+          icon: BarChart3,
+        },
+        {
           label: "Аналитика",
           href: "/analytics",
           icon: BarChart3,
@@ -231,6 +236,11 @@ export default function LeftSidebar({
           label: "Хранене",
           href: "/nutrition",
           icon: Apple,
+        },
+        {
+          label: "Напредък",
+          href: "/progress",
+          icon: BarChart3,
         },
         {
           label: "Цели",

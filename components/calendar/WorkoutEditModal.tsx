@@ -75,23 +75,35 @@ export function WorkoutEditModal({
   useEffect(() => {
     if (workout && isOpen) {
       setWorkoutName(workout.name);
-      setExercises(workout.exercises || []);
-      loadExercises();
+      loadExercises(workout.exercises || []);
     }
   }, [workout, isOpen]);
 
-  const loadExercises = async () => {
+  const loadExercises = async (workoutExercises: any[]) => {
     try {
       const response = await fetch('/api/exercises/search?limit=200');
       const result = await response.json();
-      
+
       if (result.success) {
         setAvailableExercises(result.data);
+
+        // Enrich workout exercises with full exercise data
+        const enrichedExercises = workoutExercises.map(ex => {
+          const fullExercise = result.data.find((e: Exercise) => e.id === ex.exercise_id);
+          return {
+            ...ex,
+            exercise: fullExercise || ex.exercise
+          };
+        });
+
+        setExercises(enrichedExercises);
       } else {
         console.error('Failed to load exercises:', result.error);
+        setExercises(workoutExercises);
       }
     } catch (error) {
       console.error("Error loading exercises:", error);
+      setExercises(workoutExercises);
     }
   };
 
@@ -223,15 +235,15 @@ export function WorkoutEditModal({
             </div>
 
             {/* Workout Info */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">
-                <p><strong>Дата:</strong> {formatScheduledDate(workout.scheduled_date)}</p>
-                <p><strong>Статус:</strong> {
+            <div className="bg-muted/50 p-4 rounded-lg border border-border">
+              <div className="text-sm text-muted-foreground">
+                <p><strong className="text-foreground">Дата:</strong> {formatScheduledDate(workout.scheduled_date)}</p>
+                <p><strong className="text-foreground">Статус:</strong> {
                   workout.status === 'planned' ? 'Планирана' :
                   workout.status === 'completed' ? 'Завършена' : 'Прескочена'
                 }</p>
                 {workout.workout_programs && (
-                  <p><strong>Програма:</strong> {workout.workout_programs.name}</p>
+                  <p><strong className="text-foreground">Програма:</strong> {workout.workout_programs.name}</p>
                 )}
               </div>
             </div>
@@ -250,7 +262,7 @@ export function WorkoutEditModal({
 
               {exercises.length === 0 ? (
                 <Card className="p-8 text-center">
-                  <p className="text-gray-500">Няма добавени упражнения</p>
+                  <p className="text-muted-foreground">Няма добавени упражнения</p>
                   <Button onClick={addExercise} className="mt-4">
                     <Plus className="h-4 w-4 mr-2" />
                     Добави първото упражнение
@@ -265,9 +277,9 @@ export function WorkoutEditModal({
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <Label>Упражнение</Label>
-                            <div className="flex items-center gap-3 p-3 border rounded-md bg-gray-50">
-                              <Dumbbell className="h-4 w-4 text-gray-600" />
-                              <span className="font-medium">
+                            <div className="flex items-center gap-3 p-3 border rounded-md bg-muted/30">
+                              <Dumbbell className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium text-foreground">
                                 {exercise.exercise?.name || 'Неизвестно упражнение'}
                               </span>
                             </div>
@@ -276,7 +288,7 @@ export function WorkoutEditModal({
                             variant="outline"
                             size="sm"
                             onClick={() => removeExercise(index)}
-                            className="ml-4 text-red-600 hover:text-red-700"
+                            className="ml-4 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

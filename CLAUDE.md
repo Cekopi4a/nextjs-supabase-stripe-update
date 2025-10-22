@@ -107,13 +107,15 @@ app/
 10. **Goals & Progress** - Проследяване на цели и напредък
 11. **Body Measurements** - Проследяване на тегло и всякакви измервания
 12. **Progress Photos** - Качване и съхранение на снимки
-13. **Real-time Chat** - Мгновена комуникация между треньори и клиенти
-14. **Notifications System** - Система за уведомления и известия
-15. **Billing** - Subscription management via Stripe (Free/Pro/Beast plans)
-16. **Authentication** - Multi-provider auth
-17. **Account Settings** - Управление на профил и настройки
-18. **Google Calendar Integration** - Синхронизация с Google Calendar
-19. **Export Functionality** - Export на програми в PDF, Excel, CSV формати
+13. **Progress Tracking** - Визуализация на напредъка с графики (тренировки, навици, тегло, измервания)
+14. **Habit Tracking** - Проследяване на дневни навици
+15. **Real-time Chat** - Мгновена комуникация между треньори и клиенти
+16. **Notifications System** - Система за уведомления и известия
+17. **Billing** - Subscription management via Stripe (Free/Pro/Beast plans)
+18. **Authentication** - Multi-provider auth
+19. **Account Settings** - Управление на профил и настройки
+20. **Google Calendar Integration** - Синхронизация с Google Calendar
+21. **Export Functionality** - Export на програми в PDF, Excel, CSV формати
 
 ## 🔧 Development правила
 
@@ -268,7 +270,17 @@ STRIPE_SECRET_KEY=...
 - Hot reload enabled
 - TypeScript strict mode
 
-## 🆕 Ново в проекта (Декември 2024)
+## 🆕 Ново в проекта
+
+### Януари 2025
+- ✅ **Progress Tracking System** - Пълна система за визуализация на напредъка с Recharts
+  - Графики за тегло, тренировки, навици и телесни измервания
+  - Автоматично изчисляване на streak и completion rate
+  - Прогрес към цели с "On track" индикатор
+  - API endpoint `/api/progress-stats` с comprehensive data
+  - Database функции за агрегиране на данни
+
+### Декември 2024
 
 ### Реализирани функционалности:
 - ✅ **Real-time Chat System** - Мгновена комуникация с Supabase Broadcast
@@ -283,10 +295,14 @@ STRIPE_SECRET_KEY=...
 - ✅ **Export Functionality** - Export на програми в множество формати
 
 ### Ключови файлове за разбиране:
+- `PROGRESS_TRACKING_README.md` - Документация за progress tracking системата
 - `CHAT_SYSTEM_README.md` - Документация за chat системата
-- `app/protected/goals/page.tsx` - Goals и progress tracking
+- `app/protected/progress/page.tsx` - Progress tracking с графики
+- `app/protected/goals/page.tsx` - Goals и measurements
+- `app/protected/habits/page.tsx` - Habit tracking
 - `components/chat/` - Chat компоненти
 - `app/protected/workout-builder/` - Workout builder
+- `app/api/progress-stats/` - Progress tracking API
 - `app/api/chat/` - Chat API endpoints
 
 ---

@@ -317,6 +317,8 @@ export default function ClientCalendarPage() {
       newDate.setMonth(newDate.getMonth() + 1);
     }
     setCurrentDate(newDate);
+    // Sync list date with month navigation
+    setCurrentListDate(new Date(newDate));
   };
 
   // Mobile list navigation functions
@@ -876,31 +878,60 @@ export default function ClientCalendarPage() {
       <Card className="p-3 sm:p-6">
         {/* Mobile List View */}
         <div className="sm:hidden">
-          {/* Date Navigation */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Month Navigation */}
+          <div className="flex items-center justify-between mb-3">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigateList('prev')}
-              className="h-10 w-10 p-0"
+              onClick={() => navigateMonth('prev')}
+              className="h-9 px-3"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              <span className="text-xs">Месец</span>
             </Button>
 
             <div className="text-center">
-              <div className="font-bold text-lg">
-                {currentListDate.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {currentListDate.toLocaleDateString('bg-BG', { weekday: 'long' })}
+              <div className="font-bold text-base">
+                {BULGARIAN_MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
               </div>
             </div>
 
             <Button
               variant="outline"
               size="sm"
+              onClick={() => navigateMonth('next')}
+              className="h-9 px-3"
+            >
+              <span className="text-xs">Месец</span>
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+
+          {/* Day Navigation */}
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigateList('prev')}
+              className="h-9 w-9 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <div className="text-center">
+              <div className="font-semibold text-sm">
+                {currentListDate.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long' })}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {currentListDate.toLocaleDateString('bg-BG', { weekday: 'long' })}
+              </div>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => navigateList('next')}
-              className="h-10 w-10 p-0"
+              className="h-9 w-9 p-0"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -977,6 +1008,7 @@ export default function ClientCalendarPage() {
               onQuickAction={handleQuickAction}
               copySourceDate={copySourceDate}
               copyWorkoutId={copyWorkoutId}
+              onOpenDayDetails={openDayModal}
             />
           ))}
         </div>
@@ -1061,7 +1093,8 @@ function CalendarDayCell({
   onDeleteWorkout,
   onQuickAction,
   copySourceDate,
-  copyWorkoutId
+  copyWorkoutId,
+  onOpenDayDetails
 }: {
   day: CalendarDay;
   onEditWorkout: (workout: WorkoutSession) => void;
@@ -1069,15 +1102,16 @@ function CalendarDayCell({
   onQuickAction: (date: Date, action: string) => void;
   copySourceDate: Date | null;
   copyWorkoutId: string | null;
+  onOpenDayDetails: (day: CalendarDay) => void;
 }) {
   const dayNumber = day.date.getDate();
 
   return (
     <div className={`
-      min-h-[80px] sm:min-h-[120px] p-1 sm:p-3 border border-border rounded-md sm:rounded-lg transition-colors hover:bg-muted/30 group
-      ${!day.isCurrentMonth ? 'bg-muted/30 text-muted-foreground' : ''}
-      ${day.isToday ? 'bg-blue-50 dark:bg-blue-950 border-blue-300 dark:border-blue-700' : ''}
-      ${copySourceDate && dateToLocalDateString(day.date) === dateToLocalDateString(copySourceDate) ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-300 dark:border-yellow-700' : ''}
+      min-h-[80px] sm:min-h-[120px] p-1 sm:p-3 border-2 rounded-md sm:rounded-lg transition-colors hover:bg-muted/30 group
+      ${!day.isCurrentMonth ? 'bg-muted/30 text-muted-foreground border-slate-300 dark:border-slate-700' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900'}
+      ${day.isToday ? 'bg-blue-50 dark:bg-blue-950 border-blue-400 dark:border-blue-600' : ''}
+      ${copySourceDate && dateToLocalDateString(day.date) === dateToLocalDateString(copySourceDate) ? 'bg-yellow-50 dark:bg-yellow-950 border-yellow-400 dark:border-yellow-600' : ''}
       ${copyWorkoutId ? 'cursor-copy' : ''}
     `}>
       <div className="flex items-center justify-between mb-1 sm:mb-2">
@@ -1123,7 +1157,7 @@ function CalendarDayCell({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      
+
       <div className="space-y-1">
         {day.workouts.slice(0, 2).map((workout) => (
           <WorkoutItem
@@ -1134,13 +1168,16 @@ function CalendarDayCell({
             onCopy={() => onQuickAction(day.date, 'copy_workout_' + workout.id)}
           />
         ))}
-        
+
         {day.workouts.length > 2 && (
-          <div className="text-xs text-muted-foreground text-center py-1">
+          <button
+            onClick={() => onOpenDayDetails(day)}
+            className="w-full text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-center py-1 hover:bg-blue-50 dark:hover:bg-blue-950 rounded transition-colors font-medium"
+          >
             +{day.workouts.length - 2} още
-          </div>
+          </button>
         )}
-        
+
         {day.workouts.length === 0 && day.isCurrentMonth && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -1469,7 +1506,7 @@ function RestDayModal({
         <div className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Bed className="h-5 w-5 text-gray-600" />
+              <Bed className="h-5 w-5 text-muted-foreground" />
               <h3 className="text-lg font-semibold">
                 {isEditing ? 'Редактирай почивен ден' : 'Добави почивен ден'}
               </h3>
@@ -1512,8 +1549,8 @@ function RestDayModal({
               />
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-              <p className="text-sm text-gray-600">
+            <div className="bg-muted/50 border border-border rounded-lg p-3">
+              <p className="text-sm text-muted-foreground">
                 Почивните дни са важна част от тренировъчния процес. Използвайте ги за възстановяване и регенерация.
               </p>
             </div>
@@ -1537,7 +1574,7 @@ function RestDayModal({
             <Button variant="outline" onClick={onClose} className="flex-1">
               Отказ
             </Button>
-            <Button onClick={onSave} className="flex-1 bg-gray-600 hover:bg-gray-700">
+            <Button onClick={onSave} className="flex-1" variant="default">
               <Save className="h-4 w-4 mr-2" />
               {isEditing ? 'Запази промените' : 'Добави почивка'}
             </Button>
@@ -1570,21 +1607,21 @@ function MobileDayCard({
   const isCurrentDay = day.date.toDateString() === new Date().toDateString();
   
   return (
-    <Card 
+    <Card
       className={`
-        p-4 transition-all hover:shadow-md group
-        ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'}
-        ${isCurrentDay ? 'ring-2 ring-blue-500' : ''}
+        p-4 transition-all hover:shadow-md group border-2
+        ${isToday ? 'bg-blue-50 dark:bg-blue-950 border-blue-400 dark:border-blue-600' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700'}
+        ${isCurrentDay ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
       `}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1" onClick={onClick}>
           {/* Date info */}
           <div className="text-center min-w-[60px]">
-            <div className={`text-sm font-medium ${isToday ? 'text-blue-600' : 'text-gray-500'}`}>
+            <div className={`text-sm font-medium ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}>
               {BULGARIAN_DAYS[day.date.getDay() === 0 ? 6 : day.date.getDay() - 1]}
             </div>
-            <div className={`text-xl font-bold ${isToday ? 'text-blue-600' : ''}`}>
+            <div className={`text-xl font-bold ${isToday ? 'text-blue-600 dark:text-blue-400' : ''}`}>
               {day.date.getDate()}
             </div>
           </div>
@@ -1592,23 +1629,23 @@ function MobileDayCard({
           {/* Workouts info */}
           <div className="flex-1">
             {workoutCount === 0 ? (
-              <div className="text-gray-400 text-sm">Няма тренировки</div>
+              <div className="text-muted-foreground text-sm">Няма тренировки</div>
             ) : (
               <div className="space-y-1">
                 {day.workouts.slice(0, 2).map((workout, index) => (
                   <div key={workout.id} className="flex items-center gap-2">
                     {workout.workout_type === 'rest' ? (
-                      <Bed className="h-4 w-4 text-gray-500" />
+                      <Bed className="h-4 w-4 text-muted-foreground" />
                     ) : workout.status === 'completed' ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <CheckCircle2 className="h-4 w-4 text-green-500 dark:text-green-400" />
                     ) : (
-                      <Dumbbell className="h-4 w-4 text-blue-500" />
+                      <Dumbbell className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                     )}
                     <span className="text-sm font-medium truncate">{workout.name}</span>
                   </div>
                 ))}
                 {workoutCount > 2 && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-muted-foreground">
                     +{workoutCount - 2} още тренировки
                   </div>
                 )}
@@ -1621,18 +1658,18 @@ function MobileDayCard({
         <div className="flex items-center gap-2">
           {/* Workout count badge */}
           {workoutCount > 0 && (
-            <div className="bg-blue-500 text-white text-sm font-semibold rounded-full w-8 h-8 flex items-center justify-center">
+            <div className="bg-blue-500 dark:bg-blue-600 text-white text-sm font-semibold rounded-full w-8 h-8 flex items-center justify-center">
               {workoutCount}
             </div>
           )}
-          
-          {/* Dropdown menu */}
+
+          {/* Dropdown menu - always visible on mobile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+                className="h-8 w-8 p-0"
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -1672,14 +1709,14 @@ function MobileDayCard({
       {day.workouts.length > 0 && (
         <div className="mt-3 space-y-2">
           {day.workouts.map((workout) => (
-            <div key={workout.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-2">
-              <div className="flex items-center gap-2 flex-1 min-w-0" onClick={() => onEditWorkout(workout)}>
+            <div key={workout.id} className="flex items-center justify-between bg-muted/50 rounded-lg p-2 border border-border">
+              <div className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer" onClick={() => onEditWorkout(workout)}>
                 {workout.workout_type === 'rest' ? (
-                  <Bed className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                  <Bed className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 ) : workout.status === 'completed' ? (
-                  <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
+                  <CheckCircle2 className="h-3 w-3 text-green-500 dark:text-green-400 flex-shrink-0" />
                 ) : (
-                  <Dumbbell className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                  <Dumbbell className="h-3 w-3 text-blue-500 dark:text-blue-400 flex-shrink-0" />
                 )}
                 <span className="text-xs font-medium truncate">{workout.name}</span>
               </div>
@@ -1735,7 +1772,7 @@ function DayDetailsModal({
   
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
-      <Card className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[85vh] overflow-y-auto">
+      <Card className="w-full sm:max-w-md rounded-t-2xl sm:rounded-lg max-h-[85vh] overflow-y-auto bg-card border-border">
         <div className="p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -1751,12 +1788,12 @@ function DayDetailsModal({
               <X className="h-5 w-5" />
             </Button>
           </div>
-          
+
           {/* Workouts List */}
           {day.workouts.length === 0 ? (
             <div className="text-center py-12">
-              <CalendarIcon className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-4">Няма тренировки за този ден</p>
+              <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">Няма тренировки за този ден</p>
               <Button onClick={() => onQuickAction(day.date, 'default')} variant="outline">
                 <Plus className="h-4 w-4 mr-2" />
                 Добави първата тренировка
@@ -1775,13 +1812,51 @@ function DayDetailsModal({
             </div>
           )}
           
-          {/* Add Workout Button */}
-          {day.workouts.length > 0 && (
-            <Button onClick={() => onQuickAction(day.date, 'default')} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Добави тренировка
-            </Button>
-          )}
+          {/* Quick Actions - Full functionality */}
+          <div className="space-y-3">
+            {/* Add workout dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="w-full" size="lg">
+                  <Plus className="h-5 w-5 mr-2" />
+                  Добави тренировка
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-64">
+                <DropdownMenuItem onClick={() => {
+                  onQuickAction(day.date, 'default');
+                  onClose();
+                }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Създай нова тренировка
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  onQuickAction(day.date, 'add_from_template');
+                  onClose();
+                }}>
+                  <Dumbbell className="h-4 w-4 mr-2" />
+                  Добави готова тренировка
+                </DropdownMenuItem>
+                {day.workouts.length === 0 && (
+                  <DropdownMenuItem onClick={() => {
+                    onQuickAction(day.date, 'add_rest');
+                    onClose();
+                  }}>
+                    <Bed className="h-4 w-4 mr-2" />
+                    Добави почивка
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => {
+                  onQuickAction(day.date, 'copy_day');
+                  onClose();
+                }}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Копирай ден
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </Card>
     </div>
@@ -1803,24 +1878,24 @@ function WorkoutDetailCard({
 
   return (
     <Card className={`
-      p-4 cursor-pointer transition-all hover:shadow-md
-      ${isRestDay ? 'bg-gray-50 border-gray-200' : 
-        isCompleted ? 'bg-green-50 border-green-200' : 
-        'bg-blue-50 border-blue-200'}
+      p-4 cursor-pointer transition-all hover:shadow-md border
+      ${isRestDay ? 'bg-muted/50 border-border' :
+        isCompleted ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' :
+        'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800'}
     `}>
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-3 flex-1 min-w-0" onClick={onEdit}>
           {/* Icon */}
           <div className="flex-shrink-0 mt-1">
             {isRestDay ? (
-              <Bed className="h-5 w-5 text-gray-600" />
+              <Bed className="h-5 w-5 text-muted-foreground" />
             ) : isCompleted ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
             ) : (
-              <Dumbbell className="h-5 w-5 text-blue-600" />
+              <Dumbbell className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             )}
           </div>
-          
+
           {/* Content */}
           <div className="min-w-0 flex-1">
             <h4 className="font-semibold text-base mb-1">{workout.name}</h4>
@@ -1831,12 +1906,12 @@ function WorkoutDetailCard({
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className={`
                   px-2 py-1 rounded-full text-xs font-medium
-                  ${isRestDay ? 'bg-gray-200 text-gray-700' : 
-                    isCompleted ? 'bg-green-200 text-green-700' : 
-                    'bg-blue-200 text-blue-700'}
+                  ${isRestDay ? 'bg-muted text-muted-foreground' :
+                    isCompleted ? 'bg-green-200 dark:bg-green-900 text-green-700 dark:text-green-300' :
+                    'bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300'}
                 `}>
-                  {isRestDay ? 'Почивка' : 
-                   isCompleted ? 'Завършена' : 
+                  {isRestDay ? 'Почивка' :
+                   isCompleted ? 'Завършена' :
                    'Планирана'}
                 </span>
               </div>

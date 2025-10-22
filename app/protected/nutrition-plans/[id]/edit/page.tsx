@@ -400,7 +400,7 @@ function CalendarDayCell({
       className={`
         min-h-[100px] p-2 border border-border transition-colors hover:bg-muted/30 cursor-pointer
         ${!day.isCurrentMonth ? "bg-muted/30 text-muted-foreground" : ""}
-        ${day.isToday ? "bg-green-50 border-green-300" : ""}
+        ${day.isToday ? "bg-green-50 dark:bg-green-950 border-green-300 dark:border-green-700" : ""}
       `}
       onClick={() => day.isCurrentMonth && onDayClick(day.date)}
     >
@@ -426,7 +426,7 @@ function CalendarDayCell({
             return (
               <div
                 key={meal.id}
-                className="text-xs p-1 bg-blue-50 rounded truncate"
+                className="text-xs p-1 bg-blue-50 dark:bg-blue-950 rounded truncate"
               >
                 {mealType?.label}: {meal.meal_name}
               </div>
@@ -682,7 +682,7 @@ function DayMealsModal({
                       {typeMeals.map((meal) => (
                         <div
                           key={meal.id}
-                          className="text-sm p-3 rounded border bg-white hover:shadow-sm group transition-all"
+                          className="text-sm p-3 rounded border bg-card hover:shadow-sm group transition-all"
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -737,8 +737,8 @@ function DayMealsModal({
 
             {/* Daily totals */}
             {meals.length > 0 && (
-              <Card className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50">
-                <h4 className="font-semibold mb-3 text-green-800">Общо за деня</h4>
+              <Card className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
+                <h4 className="font-semibold mb-3 text-green-800 dark:text-green-100">Общо за деня</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
@@ -963,7 +963,7 @@ function MealModal({
                 placeholder="Търсете храна от базата данни..."
               />
               {selectedFood && (
-                <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Apple className="h-4 w-4 text-blue-600" />
@@ -1018,7 +1018,7 @@ function MealModal({
                 placeholder="Търсете рецепта от базата данни..."
               />
               {selectedRecipe && (
-                <div className="mt-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="mt-2 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <ChefHat className="h-4 w-4 text-green-600" />
@@ -1070,10 +1070,10 @@ function MealModal({
 
             {/* Selected Items List */}
             {selectedItems.length > 0 && (
-              <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 rounded-lg border border-purple-200 dark:border-purple-800">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-purple-900">Избрани храни/рецепти ({selectedItems.length})</h4>
-                  <div className="text-sm font-semibold text-purple-900">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100">Избрани храни/рецепти ({selectedItems.length})</h4>
+                  <div className="text-sm font-semibold text-purple-900 dark:text-purple-100">
                     Общо: {calculateTotals(selectedItems).calories} кал
                   </div>
                 </div>
@@ -1081,7 +1081,7 @@ function MealModal({
                   {selectedItems.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-2 bg-white rounded border border-purple-100"
+                      className="flex items-center justify-between p-2 bg-card rounded border border-purple-100 dark:border-purple-800"
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         {item.type === 'food' ? (
@@ -1110,7 +1110,7 @@ function MealModal({
                     </div>
                   ))}
                 </div>
-                <div className="mt-3 pt-3 border-t border-purple-200">
+                <div className="mt-3 pt-3 border-t border-purple-200 dark:border-purple-700">
                   <div className="grid grid-cols-4 gap-2 text-xs">
                     <div className="text-center">
                       <div className="font-semibold text-green-600">{calculateTotals(selectedItems).calories}</div>
