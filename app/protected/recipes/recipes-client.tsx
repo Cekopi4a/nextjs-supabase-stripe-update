@@ -446,15 +446,15 @@ export default function RecipesPageClient({
                 </button>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              <div className="border-2 border-dashed border-border rounded-lg p-6">
                 <div className="text-center">
-                  <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                  <Camera className="mx-auto h-12 w-12 text-muted-foreground" />
                   <div className="mt-4">
                     <label htmlFor="recipe-image" className="cursor-pointer">
-                      <span className="mt-2 block text-sm font-medium text-gray-900">
+                      <span className="mt-2 block text-sm font-medium text-foreground">
                         Качете снимка
                       </span>
-                      <span className="mt-1 block text-sm text-gray-500">
+                      <span className="mt-1 block text-sm text-muted-foreground">
                         PNG, JPG до 10MB
                       </span>
                     </label>
@@ -479,7 +479,7 @@ export default function RecipesPageClient({
                   </div>
                   {isUploadingImage && (
                     <div className="mt-2">
-                      <div className="text-sm text-gray-600">Качване...</div>
+                      <div className="text-sm text-muted-foreground">Качване...</div>
                     </div>
                   )}
                 </div>
@@ -620,7 +620,7 @@ export default function RecipesPageClient({
 
         {formData.instructions.map((instruction, index) => (
           <div key={index} className="flex gap-2 items-start">
-            <span className="text-sm font-medium text-gray-500 mt-3 min-w-[2rem]">
+            <span className="text-sm font-medium text-muted-foreground mt-3 min-w-[2rem]">
               {index + 1}.
             </span>
             <Textarea
@@ -917,7 +917,7 @@ export default function RecipesPageClient({
         {/* Header for clients */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">Рецепти</h1>
-          <p className="text-gray-600">Рецепти от вашия треньор</p>
+          <p className="text-muted-foreground">Рецепти от вашия треньор</p>
         </div>
 
         {/* Category Filters for clients */}
@@ -930,7 +930,7 @@ export default function RecipesPageClient({
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   selectedCategory === category.value
                     ? "bg-blue-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-muted text-foreground hover:bg-muted/80"
                 }`}
               >
                 <span className="text-base">{category.icon}</span>
@@ -940,7 +940,7 @@ export default function RecipesPageClient({
           </div>
 
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Търсене по име..."
               value={searchTerm}
@@ -955,9 +955,9 @@ export default function RecipesPageClient({
             <div className="col-span-full">
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <ChefHat className="h-12 w-12 text-gray-400 mb-4" />
+                  <ChefHat className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium text-foreground mb-2">Няма рецепти</h3>
-                  <p className="text-gray-600 text-center">
+                  <p className="text-muted-foreground text-center">
                     Вашият треньор още не е добавил рецепти.
                   </p>
                 </CardContent>
@@ -972,7 +972,7 @@ export default function RecipesPageClient({
               >
                 {/* Image Header */}
                 {recipe.images?.[0] ? (
-                  <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                  <div className="relative h-48 w-full overflow-hidden bg-muted">
                     <img
                       src={recipe.images[0]}
                       alt={recipe.name}
@@ -980,18 +980,18 @@ export default function RecipesPageClient({
                     />
                     <div className="absolute top-2 right-2 flex gap-1">
                       {recipe.difficulty_level && (
-                        <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm">
+                        <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
                           {DIFFICULTY_LEVELS.find(d => d.value === recipe.difficulty_level)?.label}
                         </Badge>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="relative h-48 w-full bg-gradient-to-br from-blue-100 via-cyan-50 to-sky-100 flex items-center justify-center">
-                    <ChefHat className="h-16 w-16 text-blue-300" />
+                  <div className="relative h-48 w-full bg-gradient-to-br from-blue-600/20 via-cyan-500/20 to-sky-400/20 dark:from-blue-600/30 dark:via-cyan-500/30 dark:to-sky-400/30 flex items-center justify-center">
+                    <ChefHat className="h-16 w-16 text-primary/40" />
                     <div className="absolute top-2 right-2 flex gap-1">
                       {recipe.difficulty_level && (
-                        <Badge variant="secondary" className="bg-white/90 backdrop-blur-sm">
+                        <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
                           {DIFFICULTY_LEVELS.find(d => d.value === recipe.difficulty_level)?.label}
                         </Badge>
                       )}
@@ -1004,7 +1004,7 @@ export default function RecipesPageClient({
                     <div className="flex-1">
                       <CardTitle className="text-lg line-clamp-1">{recipe.name}</CardTitle>
                       {recipe.description && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{recipe.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{recipe.description}</p>
                       )}
                       <div className="flex items-center gap-2 mt-2">
                         <Badge variant="secondary">
@@ -1017,11 +1017,11 @@ export default function RecipesPageClient({
 
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       {recipe.total_time_minutes && (
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          <span>{recipe.total_time_minutes} мин</span>
+                          <span>{recipe.total_time_minutes} мін</span>
                         </div>
                       )}
                       <div className="flex items-center gap-1">
@@ -1031,22 +1031,22 @@ export default function RecipesPageClient({
                     </div>
 
                     <div className="text-sm">
-                      <span className="font-medium">{recipe.calories_per_serving} kcal</span>
-                      <span className="text-gray-600"> на порция</span>
+                      <span className="font-medium text-foreground">{recipe.calories_per_serving} kcal</span>
+                      <span className="text-muted-foreground"> на порция</span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="text-center p-2 bg-blue-50 rounded">
-                        <div className="font-medium text-blue-700">{recipe.protein_per_serving}г</div>
-                        <div className="text-blue-600">Протеин</div>
+                      <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/30 rounded border border-blue-200 dark:border-blue-900">
+                        <div className="font-medium text-blue-700 dark:text-blue-400">{recipe.protein_per_serving}г</div>
+                        <div className="text-blue-600 dark:text-blue-500">Протеин</div>
                       </div>
-                      <div className="text-center p-2 bg-green-50 rounded">
-                        <div className="font-medium text-green-700">{recipe.carbs_per_serving}г</div>
-                        <div className="text-green-600">Въглехидрати</div>
+                      <div className="text-center p-2 bg-green-50 dark:bg-green-950/30 rounded border border-green-200 dark:border-green-900">
+                        <div className="font-medium text-green-700 dark:text-green-400">{recipe.carbs_per_serving}г</div>
+                        <div className="text-green-600 dark:text-green-500">Въглехидрати</div>
                       </div>
-                      <div className="text-center p-2 bg-yellow-50 rounded">
-                        <div className="font-medium text-yellow-700">{recipe.fat_per_serving}г</div>
-                        <div className="text-yellow-600">Мазнини</div>
+                      <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950/30 rounded border border-yellow-200 dark:border-yellow-900">
+                        <div className="font-medium text-yellow-700 dark:text-yellow-400">{recipe.fat_per_serving}г</div>
+                        <div className="text-yellow-600 dark:text-yellow-500">Мазнини</div>
                       </div>
                     </div>
                   </div>
@@ -1065,7 +1065,7 @@ export default function RecipesPageClient({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Рецепти</h1>
-          <p className="text-gray-600">Създавайте и управлявайте вашите рецепти</p>
+          <p className="text-muted-foreground">Създавайте и управлявайте вашите рецепти</p>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -1096,240 +1096,284 @@ export default function RecipesPageClient({
 
         {/* Recipe Details Dialog */}
         <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <ChefHat className="h-5 w-5" />
-                {selectedRecipe?.name}
-              </DialogTitle>
+          <DialogContent className="max-w-4xl max-h-[85vh] p-0 overflow-hidden">
+            <DialogHeader className="sr-only">
+              <DialogTitle>{selectedRecipe?.name || 'Детайли за рецептата'}</DialogTitle>
             </DialogHeader>
-
             {selectedRecipe && (
-              <div className="space-y-6">
-                {/* Media Gallery */}
-                {(selectedRecipe.images?.length > 0 || selectedRecipe.videos?.length > 0) && (
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-3">Снимки и видео</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {selectedRecipe.images?.map((imageUrl, index) => (
-                        <div key={`image-${index}`} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                          <img
-                            src={imageUrl}
-                            alt={`${selectedRecipe.name} - снимка ${index + 1}`}
-                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
-                            onClick={() => window.open(imageUrl, '_blank')}
-                          />
+              <>
+                {/* Hero Image Header */}
+                {selectedRecipe.images?.[0] ? (
+                  <div className="relative w-full h-56 flex-shrink-0 overflow-hidden rounded-t-lg">
+                    <img
+                      src={selectedRecipe.images[0]}
+                      alt={selectedRecipe.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-3xl font-bold text-white mb-2">{selectedRecipe.name}</h2>
+                          {selectedRecipe.description && (
+                            <p className="text-white/90 text-sm line-clamp-2">{selectedRecipe.description}</p>
+                          )}
                         </div>
-                      ))}
-                      {selectedRecipe.videos?.map((videoUrl, index) => (
-                        <div key={`video-${index}`} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                          <video
-                            src={videoUrl}
-                            className="w-full h-full object-cover"
-                            controls
-                            preload="metadata"
-                          />
+                        <div className="flex flex-col gap-2 flex-shrink-0">
+                          {selectedRecipe.is_verified && (
+                            <Badge className="bg-green-600 text-white border-0">
+                              <Star className="h-3 w-3 mr-1" />
+                              Проверена
+                            </Badge>
+                          )}
+                          {selectedRecipe.difficulty_level && (
+                            <Badge className="bg-white/90 text-gray-900 border-0">
+                              {DIFFICULTY_LEVELS.find(d => d.value === selectedRecipe.difficulty_level)?.label}
+                            </Badge>
+                          )}
                         </div>
-                      ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative w-full h-56 flex-shrink-0 bg-gradient-to-br from-blue-600 via-cyan-500 to-sky-400 flex items-center justify-center rounded-t-lg">
+                    <ChefHat className="h-24 w-24 text-white/30" />
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-3xl font-bold text-white mb-2">{selectedRecipe.name}</h2>
+                          {selectedRecipe.description && (
+                            <p className="text-white/90 text-sm line-clamp-2">{selectedRecipe.description}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2 flex-shrink-0">
+                          {selectedRecipe.is_verified && (
+                            <Badge className="bg-white/20 text-white border-white/30">
+                              <Star className="h-3 w-3 mr-1" />
+                              Проверена
+                            </Badge>
+                          )}
+                          {selectedRecipe.difficulty_level && (
+                            <Badge className="bg-white/90 text-gray-900 border-0">
+                              {DIFFICULTY_LEVELS.find(d => d.value === selectedRecipe.difficulty_level)?.label}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Nutrition cards */}
-                <div className="grid grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-gray-900">{selectedRecipe.calories_per_serving}</div>
-                    <div className="text-sm text-gray-600">Calories</div>
-                  </div>
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-700">{selectedRecipe.protein_per_serving}g</div>
-                    <div className="text-sm text-blue-600">Protein</div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-700">{selectedRecipe.carbs_per_serving}g</div>
-                    <div className="text-sm text-green-600">Carbs</div>
-                  </div>
-                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-700">{selectedRecipe.fat_per_serving}g</div>
-                    <div className="text-sm text-yellow-600">Fat</div>
-                  </div>
-                </div>
+                {/* Scrollable Content */}
+                <div className="overflow-y-auto p-6 custom-scrollbar" style={{ maxHeight: 'calc(85vh - 14rem)' }}>
+                  <div className="space-y-6">
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="text-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <div className="text-2xl font-bold text-foreground">{selectedRecipe.calories_per_serving}</div>
+                        <div className="text-xs text-muted-foreground mt-1">Калории</div>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-xl border border-blue-200 dark:border-blue-800">
+                        <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{selectedRecipe.protein_per_serving}г</div>
+                        <div className="text-xs text-blue-600 dark:text-blue-500 mt-1">Протеин</div>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 rounded-xl border border-green-200 dark:border-green-800">
+                        <div className="text-2xl font-bold text-green-700 dark:text-green-400">{selectedRecipe.carbs_per_serving}г</div>
+                        <div className="text-xs text-green-600 dark:text-green-500 mt-1">Въглехидрати</div>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 rounded-xl border border-yellow-200 dark:border-yellow-800">
+                        <div className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">{selectedRecipe.fat_per_serving}г</div>
+                        <div className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">Мазнини</div>
+                      </div>
+                    </div>
 
-                {/* Recipe Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-lg text-gray-800 mb-3">Основна информация</h4>
-                    <div className="space-y-3">
+                    {/* Meta Info */}
+                    <div className="flex flex-wrap items-center gap-4 p-4 bg-muted/50 rounded-xl border border-border">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Категория:</span>
-                        <Badge variant="secondary">
+                        <Badge variant="secondary" className="text-sm">
                           {RECIPE_CATEGORIES.find(c => c.value === selectedRecipe.category)?.label}
                         </Badge>
                       </div>
-                      {selectedRecipe.difficulty_level && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">Сложност:</span>
-                          <Badge variant="outline">
-                            {DIFFICULTY_LEVELS.find(d => d.value === selectedRecipe.difficulty_level)?.label}
-                          </Badge>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-600">Порции:</span>
-                        <span className="text-sm font-medium">{selectedRecipe.servings}</span>
+                      <div className="h-4 w-px bg-border" />
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span className="font-medium">{selectedRecipe.servings}</span>
+                        <span>порции</span>
                       </div>
                       {selectedRecipe.total_time_minutes && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">Общо време:</span>
-                          <span className="text-sm font-medium">{selectedRecipe.total_time_minutes} мин</span>
-                        </div>
+                        <>
+                          <div className="h-4 w-px bg-border" />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span className="font-medium">{selectedRecipe.total_time_minutes}</span>
+                            <span>минути</span>
+                          </div>
+                        </>
                       )}
                       {selectedRecipe.prep_time_minutes && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600 ml-6">Подготовка:</span>
-                          <span className="text-sm font-medium">{selectedRecipe.prep_time_minutes} мин</span>
-                        </div>
-                      )}
-                      {selectedRecipe.cook_time_minutes && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600 ml-6">Готвене:</span>
-                          <span className="text-sm font-medium">{selectedRecipe.cook_time_minutes} мин</span>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <span>(Подготовка: {selectedRecipe.prep_time_minutes} мин</span>
+                          {selectedRecipe.cook_time_minutes && (
+                            <span>, Готвене: {selectedRecipe.cook_time_minutes} мин)</span>
+                          )}
+                          {!selectedRecipe.cook_time_minutes && <span>)</span>}
                         </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* Nutrition details */}
-                  <div>
-                    <h4 className="font-semibold text-lg text-gray-800 mb-3">Детайлна хранителна стойност</h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-700">Калории:</span>
-                        <span className="font-semibold">{selectedRecipe.calories_per_serving} kcal</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-700">Протеини:</span>
-                        <span className="font-semibold text-blue-700">{selectedRecipe.protein_per_serving}г</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-700">Въглехидрати:</span>
-                        <span className="font-semibold text-green-700">{selectedRecipe.carbs_per_serving}г</span>
-                      </div>
-                      <div className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-700">Мазнини:</span>
-                        <span className="font-semibold text-yellow-700">{selectedRecipe.fat_per_serving}г</span>
-                      </div>
-                      {selectedRecipe.fiber_per_serving && selectedRecipe.fiber_per_serving > 0 && (
-                        <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-gray-700">Фибри:</span>
-                          <span className="font-semibold">{selectedRecipe.fiber_per_serving}г</span>
-                        </div>
-                      )}
-                      {selectedRecipe.sodium_per_serving && selectedRecipe.sodium_per_serving > 0 && (
-                        <div className="flex justify-between py-2 border-b border-gray-100">
-                          <span className="text-gray-700">Натрий:</span>
-                          <span className="font-semibold">{selectedRecipe.sodium_per_serving}мг</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                {selectedRecipe.description && (
-                  <div>
-                    <h4 className="font-semibold text-lg text-gray-800 mb-3">Описание</h4>
-                    <p className="text-gray-700 leading-relaxed">{selectedRecipe.description}</p>
-                  </div>
-                )}
-
-                {/* Ingredients */}
-                <div>
-                  <h4 className="font-semibold text-lg text-gray-800 mb-3">Съставки</h4>
-                  <div className="grid gap-3">
-                    {selectedRecipe.ingredients.map((ingredient, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-gray-800 font-medium">{ingredient.name}</span>
-                        <span className="text-gray-600 font-semibold">{ingredient.amount} {ingredient.unit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Instructions */}
-                <div>
-                  <h4 className="font-semibold text-lg text-gray-800 mb-3">Стъпки за приготвяне</h4>
-                  <div className="space-y-4">
-                    {selectedRecipe.instructions.map((instruction, index) => (
-                      <div key={index} className="flex gap-4">
-                        <div className="flex-shrink-0 w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                          {index + 1}
-                        </div>
-                        <p className="text-gray-700 leading-relaxed flex-1 pt-1">{instruction}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Allergens & Dietary Preferences */}
-                {(selectedRecipe.allergens?.length || selectedRecipe.dietary_preferences?.length) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {selectedRecipe.allergens && selectedRecipe.allergens.length > 0 && (
+                    {/* Additional Images/Videos Grid */}
+                    {(selectedRecipe.images?.length > 1 || selectedRecipe.videos?.length > 0) && (
                       <div>
-                        <h4 className="font-semibold text-lg text-gray-800 mb-3">Алергени</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedRecipe.allergens.map((allergen, index) => (
-                            <Badge key={index} variant="destructive" className="text-xs">
-                              {allergen}
-                            </Badge>
+                        <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <Camera className="h-5 w-5 text-primary" />
+                          Галерия
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {selectedRecipe.images?.slice(1).map((imageUrl, index) => (
+                            <div key={`image-${index}`} className="aspect-square bg-muted rounded-lg overflow-hidden border border-border group cursor-pointer">
+                              <img
+                                src={imageUrl}
+                                alt={`${selectedRecipe.name} - ${index + 2}`}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                onClick={() => window.open(imageUrl, '_blank')}
+                              />
+                            </div>
+                          ))}
+                          {selectedRecipe.videos?.map((videoUrl, index) => (
+                            <div key={`video-${index}`} className="aspect-square bg-muted rounded-lg overflow-hidden border border-border">
+                              <video
+                                src={videoUrl}
+                                className="w-full h-full object-cover"
+                                controls
+                                preload="metadata"
+                              />
+                            </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {selectedRecipe.dietary_preferences && selectedRecipe.dietary_preferences.length > 0 && (
+                    {/* Ingredients */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground mb-3">Съставки</h3>
+                      <div className="grid gap-2">
+                        {selectedRecipe.ingredients.map((ingredient, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border hover:bg-muted transition-colors"
+                          >
+                            <span className="text-foreground font-medium">{ingredient.name}</span>
+                            <span className="text-muted-foreground font-semibold text-sm bg-background px-3 py-1 rounded-full">
+                              {ingredient.amount} {ingredient.unit}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Instructions */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground mb-3">Стъпки за приготвяне</h3>
+                      <div className="space-y-4">
+                        {selectedRecipe.instructions.map((instruction, index) => (
+                          <div key={index} className="flex gap-4 group">
+                            <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1 pt-1">
+                              <p className="text-foreground leading-relaxed">{instruction}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Detailed Nutrition */}
+                    {(selectedRecipe.fiber_per_serving > 0 || selectedRecipe.sodium_per_serving > 0 || selectedRecipe.sugar_per_serving > 0) && (
                       <div>
-                        <h4 className="font-semibold text-lg text-gray-800 mb-3">Диетични предпочитания</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedRecipe.dietary_preferences.map((preference, index) => (
-                            <Badge key={index} variant="default" className="text-xs bg-green-100 text-green-800">
-                              {preference}
-                            </Badge>
-                          ))}
+                        <h3 className="text-lg font-semibold text-foreground mb-3">Допълнителни хранителни стойности</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {selectedRecipe.fiber_per_serving > 0 && (
+                            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border border-border">
+                              <span className="text-muted-foreground text-sm">Фибри</span>
+                              <span className="font-semibold text-foreground">{selectedRecipe.fiber_per_serving}г</span>
+                            </div>
+                          )}
+                          {selectedRecipe.sugar_per_serving > 0 && (
+                            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border border-border">
+                              <span className="text-muted-foreground text-sm">Захари</span>
+                              <span className="font-semibold text-foreground">{selectedRecipe.sugar_per_serving}г</span>
+                            </div>
+                          )}
+                          {selectedRecipe.sodium_per_serving > 0 && (
+                            <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg border border-border">
+                              <span className="text-muted-foreground text-sm">Натрий</span>
+                              <span className="font-semibold text-foreground">{selectedRecipe.sodium_per_serving}мг</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
 
-                {/* Actions for trainers */}
-                {canEdit(selectedRecipe) && (
-                  <div className="flex gap-2 pt-4 border-t">
-                    <Button
-                      variant="default"
-                      onClick={() => {
-                        handleEdit(selectedRecipe);
-                        setIsDetailDialogOpen(false);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Редактирай
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => {
-                        handleDelete(selectedRecipe.id);
-                        setIsDetailDialogOpen(false);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Изтрий
-                    </Button>
+                    {/* Allergens & Dietary */}
+                    {(selectedRecipe.allergens?.length > 0 || selectedRecipe.dietary_preferences?.length > 0) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {selectedRecipe.allergens && selectedRecipe.allergens.length > 0 && (
+                          <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-900">
+                            <h3 className="text-base font-semibold text-red-900 dark:text-red-400 mb-3">⚠️ Алергени</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedRecipe.allergens.map((allergen, index) => (
+                                <Badge key={index} variant="destructive" className="text-xs">
+                                  {allergen}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedRecipe.dietary_preferences && selectedRecipe.dietary_preferences.length > 0 && (
+                          <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-xl border border-green-200 dark:border-green-900">
+                            <h3 className="text-base font-semibold text-green-900 dark:text-green-400 mb-3">✓ Диетични предпочитания</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedRecipe.dietary_preferences.map((preference, index) => (
+                                <Badge key={index} className="text-xs bg-green-600 dark:bg-green-700 text-white border-0">
+                                  {preference}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    {canEdit(selectedRecipe) && (
+                      <div className="flex gap-2 pt-4 border-t border-border">
+                        <Button
+                          className="flex-1 bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            handleEdit(selectedRecipe);
+                            setIsDetailDialogOpen(false);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Редактирай
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          onClick={() => {
+                            handleDelete(selectedRecipe.id);
+                            setIsDetailDialogOpen(false);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Изтрий
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              </>
             )}
           </DialogContent>
         </Dialog>
@@ -1345,7 +1389,7 @@ export default function RecipesPageClient({
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedCategory === category.value
                   ? "bg-blue-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-muted text-foreground hover:bg-muted/80"
               }`}
             >
               <span className="text-base">{category.icon}</span>
@@ -1355,7 +1399,7 @@ export default function RecipesPageClient({
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Търсене по име..."
             value={searchTerm}
@@ -1370,11 +1414,11 @@ export default function RecipesPageClient({
         <div className="col-span-full">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <ChefHat className="h-12 w-12 text-gray-400 mb-4" />
+              <ChefHat className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
                 {searchTerm ? "Няма намерени рецепти" : "Няма рецепти"}
               </h3>
-              <p className="text-gray-600 text-center">
+              <p className="text-muted-foreground text-center">
                 {searchTerm
                   ? "Опитайте с друго търсене."
                   : "Създайте първата си рецепта, за да започнете да изграждате колекция."
@@ -1403,7 +1447,7 @@ export default function RecipesPageClient({
                     >
                       {/* Image Header */}
                       {recipe.images?.[0] ? (
-                        <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                        <div className="relative h-48 w-full overflow-hidden bg-muted">
                           <img
                             src={recipe.images[0]}
                             alt={recipe.name}
@@ -1445,8 +1489,8 @@ export default function RecipesPageClient({
                           </div>
                         </div>
                       ) : (
-                        <div className="relative h-48 w-full bg-gradient-to-br from-blue-100 via-cyan-50 to-sky-100 flex items-center justify-center">
-                          <ChefHat className="h-16 w-16 text-blue-300" />
+                        <div className="relative h-48 w-full bg-gradient-to-br from-blue-600/20 via-cyan-500/20 to-sky-400/20 dark:from-blue-600/30 dark:via-cyan-500/30 dark:to-sky-400/30 flex items-center justify-center">
+                          <ChefHat className="h-16 w-16 text-primary/40" />
                           <div className="absolute top-2 right-2 flex gap-1">
                             <Badge variant="default" className="bg-blue-600 text-white text-xs">
                               Собствена
@@ -1488,7 +1532,7 @@ export default function RecipesPageClient({
                           <div className="flex-1">
                             <CardTitle className="text-lg line-clamp-1">{recipe.name}</CardTitle>
                             {recipe.description && (
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{recipe.description}</p>
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{recipe.description}</p>
                             )}
                             <div className="flex items-center gap-2 mt-2">
                               <Badge variant="secondary">
@@ -1501,7 +1545,7 @@ export default function RecipesPageClient({
 
                       <CardContent>
                         <div className="space-y-3">
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             {recipe.total_time_minutes && (
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
@@ -1516,21 +1560,21 @@ export default function RecipesPageClient({
 
                           <div className="text-sm">
                             <span className="font-medium">{recipe.calories_per_serving} kcal</span>
-                            <span className="text-gray-600"> на порция</span>
+                            <span className="text-muted-foreground"> на порция</span>
                           </div>
 
                           <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div className="text-center p-2 bg-blue-50 rounded">
-                              <div className="font-medium text-blue-700">{recipe.protein_per_serving}г</div>
-                              <div className="text-blue-600">Протеин</div>
+                            <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/30 rounded border border-blue-200 dark:border-blue-900">
+                              <div className="font-medium text-blue-700 dark:text-blue-400">{recipe.protein_per_serving}г</div>
+                              <div className="text-blue-600 dark:text-blue-500">Протеин</div>
                             </div>
-                            <div className="text-center p-2 bg-green-50 rounded">
-                              <div className="font-medium text-green-700">{recipe.carbs_per_serving}г</div>
-                              <div className="text-green-600">Въглехидрати</div>
+                            <div className="text-center p-2 bg-green-50 dark:bg-green-950/30 rounded border border-green-200 dark:border-green-900">
+                              <div className="font-medium text-green-700 dark:text-green-400">{recipe.carbs_per_serving}г</div>
+                              <div className="text-green-600 dark:text-green-500">Въглехидрати</div>
                             </div>
-                            <div className="text-center p-2 bg-yellow-50 rounded">
-                              <div className="font-medium text-yellow-700">{recipe.fat_per_serving}г</div>
-                              <div className="text-yellow-600">Мазнини</div>
+                            <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950/30 rounded border border-yellow-200 dark:border-yellow-900">
+                              <div className="font-medium text-yellow-700 dark:text-yellow-400">{recipe.fat_per_serving}г</div>
+                              <div className="text-yellow-600 dark:text-yellow-500">Мазнини</div>
                             </div>
                           </div>
                         </div>
@@ -1559,7 +1603,7 @@ export default function RecipesPageClient({
                     >
                       {/* Image Header */}
                       {recipe.images?.[0] ? (
-                        <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                        <div className="relative h-48 w-full overflow-hidden bg-muted">
                           <img
                             src={recipe.images[0]}
                             alt={recipe.name}
@@ -1574,8 +1618,8 @@ export default function RecipesPageClient({
                           </div>
                         </div>
                       ) : (
-                        <div className="relative h-48 w-full bg-gradient-to-br from-blue-100 via-cyan-50 to-sky-100 flex items-center justify-center">
-                          <ChefHat className="h-16 w-16 text-blue-300" />
+                        <div className="relative h-48 w-full bg-gradient-to-br from-blue-600/20 via-cyan-500/20 to-sky-400/20 dark:from-blue-600/30 dark:via-cyan-500/30 dark:to-sky-400/30 flex items-center justify-center">
+                          <ChefHat className="h-16 w-16 text-primary/40" />
                           <div className="absolute top-2 right-2 flex gap-1">
                             {recipe.is_verified && (
                               <Badge variant="default" className="bg-green-600 text-white text-xs">
@@ -1591,7 +1635,7 @@ export default function RecipesPageClient({
                           <div className="flex-1">
                             <CardTitle className="text-lg line-clamp-1">{recipe.name}</CardTitle>
                             {recipe.description && (
-                              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{recipe.description}</p>
+                              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{recipe.description}</p>
                             )}
                             <div className="flex items-center gap-2 mt-2">
                               <Badge variant="secondary">
@@ -1604,7 +1648,7 @@ export default function RecipesPageClient({
 
                       <CardContent>
                         <div className="space-y-3">
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             {recipe.total_time_minutes && (
                               <div className="flex items-center gap-1">
                                 <Clock className="h-4 w-4" />
@@ -1619,21 +1663,21 @@ export default function RecipesPageClient({
 
                           <div className="text-sm">
                             <span className="font-medium">{recipe.calories_per_serving} kcal</span>
-                            <span className="text-gray-600"> на порция</span>
+                            <span className="text-muted-foreground"> на порция</span>
                           </div>
 
                           <div className="grid grid-cols-3 gap-2 text-xs">
-                            <div className="text-center p-2 bg-blue-50 rounded">
-                              <div className="font-medium text-blue-700">{recipe.protein_per_serving}г</div>
-                              <div className="text-blue-600">Протеин</div>
+                            <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/30 rounded border border-blue-200 dark:border-blue-900">
+                              <div className="font-medium text-blue-700 dark:text-blue-400">{recipe.protein_per_serving}г</div>
+                              <div className="text-blue-600 dark:text-blue-500">Протеин</div>
                             </div>
-                            <div className="text-center p-2 bg-green-50 rounded">
-                              <div className="font-medium text-green-700">{recipe.carbs_per_serving}г</div>
-                              <div className="text-green-600">Въглехидрати</div>
+                            <div className="text-center p-2 bg-green-50 dark:bg-green-950/30 rounded border border-green-200 dark:border-green-900">
+                              <div className="font-medium text-green-700 dark:text-green-400">{recipe.carbs_per_serving}г</div>
+                              <div className="text-green-600 dark:text-green-500">Въглехидрати</div>
                             </div>
-                            <div className="text-center p-2 bg-yellow-50 rounded">
-                              <div className="font-medium text-yellow-700">{recipe.fat_per_serving}г</div>
-                              <div className="text-yellow-600">Мазнини</div>
+                            <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950/30 rounded border border-yellow-200 dark:border-yellow-900">
+                              <div className="font-medium text-yellow-700 dark:text-yellow-400">{recipe.fat_per_serving}г</div>
+                              <div className="text-yellow-600 dark:text-yellow-500">Мазнини</div>
                             </div>
                           </div>
                         </div>

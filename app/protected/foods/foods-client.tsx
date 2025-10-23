@@ -74,6 +74,7 @@ export default function FoodsPageClient({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [selectedGrams, setSelectedGrams] = useState(100);
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
@@ -267,7 +268,22 @@ export default function FoodsPageClient({
 
   const handleFoodClick = (food: Food) => {
     setSelectedFood(food);
+    setSelectedGrams(100); // Reset to 100g when opening dialog
     setIsDetailDialogOpen(true);
+  };
+
+  // Calculate macros based on selected grams
+  const calculateMacros = (food: Food, grams: number) => {
+    const multiplier = grams / 100;
+    return {
+      calories: Math.round(food.calories_per_100g * multiplier),
+      protein: +(food.protein_per_100g * multiplier).toFixed(1),
+      carbs: +(food.carbs_per_100g * multiplier).toFixed(1),
+      fat: +(food.fat_per_100g * multiplier).toFixed(1),
+      fiber: food.fiber_per_100g ? +(food.fiber_per_100g * multiplier).toFixed(1) : 0,
+      sugar: food.sugar_per_100g ? +(food.sugar_per_100g * multiplier).toFixed(1) : 0,
+      sodium: food.sodium_per_100g ? Math.round(food.sodium_per_100g * multiplier) : 0,
+    };
   };
 
   // Filter and sort foods with useMemo for stable rendering
@@ -305,7 +321,7 @@ export default function FoodsPageClient({
         <Label>Снимка на храната</Label>
         <div className="mt-2">
           {imagePreview ? (
-            <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200">
+            <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
               <img
                 src={imagePreview}
                 alt="Preview"
@@ -325,14 +341,14 @@ export default function FoodsPageClient({
             <div className="flex items-center justify-center w-full">
               <label
                 htmlFor="image-upload"
-                className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 border-muted-foreground/20"
               >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Upload className="w-10 h-10 mb-3 text-gray-400" />
-                  <p className="mb-2 text-sm text-gray-500">
+                  <Upload className="w-10 h-10 mb-3 text-muted-foreground" />
+                  <p className="mb-2 text-sm text-muted-foreground">
                     <span className="font-semibold">Кликнете за качване</span> или влачете и пуснете
                   </p>
-                  <p className="text-xs text-gray-500">PNG, JPG или WEBP (MAX. 5MB)</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG или WEBP (MAX. 5MB)</p>
                 </div>
                 <input
                   id="image-upload"
@@ -499,7 +515,7 @@ export default function FoodsPageClient({
               onClick={() => handleAllergenToggle(allergen)}
               className={`px-3 py-1 rounded-md text-sm transition-colors ${
                 formData.allergens.includes(allergen)
-                  ? "bg-red-100 text-red-800 border border-red-200"
+                  ? "bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-900"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
@@ -539,13 +555,13 @@ export default function FoodsPageClient({
         {/* Foods List for clients */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-foreground">Храни</h1>
-          <p className="text-gray-600">Храни от вашия треньор</p>
+          <p className="text-muted-foreground">Храни от вашия треньор</p>
         </div>
 
         {/* Search Field for clients */}
         <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Търсене по име или марка..."
               value={searchTerm}
@@ -560,9 +576,9 @@ export default function FoodsPageClient({
             <div className="col-span-full">
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Apple className="h-12 w-12 text-gray-400 mb-4" />
+                  <Apple className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium text-foreground mb-2">Няма храни</h3>
-                  <p className="text-gray-600 text-center">
+                  <p className="text-muted-foreground text-center">
                     Вашият треньор още не е добавил храни.
                   </p>
                 </CardContent>
@@ -577,7 +593,7 @@ export default function FoodsPageClient({
               >
                 {/* Food Image */}
                 {food.image_url ? (
-                  <div className="w-full h-48 overflow-hidden bg-gray-100">
+                  <div className="w-full h-48 overflow-hidden bg-muted">
                     <img
                       src={food.image_url}
                       alt={food.name}
@@ -585,8 +601,8 @@ export default function FoodsPageClient({
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-                    <ImageIcon className="h-16 w-16 text-gray-300" />
+                  <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 flex items-center justify-center">
+                    <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
                   </div>
                 )}
 
@@ -595,7 +611,7 @@ export default function FoodsPageClient({
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-lg truncate">{food.name}</CardTitle>
                       {food.brand && (
-                        <p className="text-sm text-gray-600 truncate">{food.brand}</p>
+                        <p className="text-sm text-muted-foreground truncate">{food.brand}</p>
                       )}
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge variant="secondary" className="text-xs">
@@ -615,27 +631,27 @@ export default function FoodsPageClient({
                   <div className="space-y-2">
                     <div className="text-sm">
                       <span className="font-medium">{food.calories_per_100g} kcal</span>
-                      <span className="text-gray-600"> на 100г</span>
+                      <span className="text-muted-foreground"> на 100г</span>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="text-center p-2 bg-blue-50 rounded">
-                        <div className="font-medium text-blue-700">{food.protein_per_100g}г</div>
-                        <div className="text-blue-600">Протеин</div>
+                      <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/30 rounded">
+                        <div className="font-medium text-blue-700 dark:text-blue-400">{food.protein_per_100g}г</div>
+                        <div className="text-blue-600 dark:text-blue-300">Протеин</div>
                       </div>
-                      <div className="text-center p-2 bg-green-50 rounded">
-                        <div className="font-medium text-green-700">{food.carbs_per_100g}г</div>
-                        <div className="text-green-600">Въглехидрати</div>
+                      <div className="text-center p-2 bg-green-50 dark:bg-green-950/30 rounded">
+                        <div className="font-medium text-green-700 dark:text-green-400">{food.carbs_per_100g}г</div>
+                        <div className="text-green-600 dark:text-green-300">Въглехидрати</div>
                       </div>
-                      <div className="text-center p-2 bg-yellow-50 rounded">
-                        <div className="font-medium text-yellow-700">{food.fat_per_100g}г</div>
-                        <div className="text-yellow-600">Мазнини</div>
+                      <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950/30 rounded">
+                        <div className="font-medium text-yellow-700 dark:text-yellow-400">{food.fat_per_100g}г</div>
+                        <div className="text-yellow-600 dark:text-yellow-300">Мазнини</div>
                       </div>
                     </div>
 
                     {food.allergens && food.allergens.length > 0 && (
                       <div className="mt-2">
-                        <p className="text-xs text-gray-500 mb-1">Алергени:</p>
+                        <p className="text-xs text-muted-foreground mb-1">Алергени:</p>
                         <div className="flex flex-wrap gap-1">
                           {food.allergens.slice(0, 3).map((allergen, index) => (
                             <Badge key={index} variant="destructive" className="text-xs">
@@ -666,7 +682,7 @@ export default function FoodsPageClient({
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Храни</h1>
-          <p className="text-gray-600">Създавайте и управлявайте вашите храни</p>
+          <p className="text-muted-foreground">Създавайте и управлявайте вашите храни</p>
         </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -699,131 +715,207 @@ export default function FoodsPageClient({
 
         {/* Food Details Dialog */}
         <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Apple className="h-5 w-5" />
-                {selectedFood?.name}
-                {selectedFood?.brand && <span className="text-gray-600">- {selectedFood.brand}</span>}
-              </DialogTitle>
-            </DialogHeader>
-
+          <DialogContent className="max-w-3xl h-[85vh] overflow-hidden p-0 bg-background flex flex-col">
+            <DialogTitle className="sr-only">
+              {selectedFood?.name} - Детайли за храната
+            </DialogTitle>
             {selectedFood && (
-              <div className="space-y-6">
-                {/* Food Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Информация</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Категория:</span>
-                        <Badge variant="secondary">
-                          {FOOD_CATEGORIES.find(c => c.value === selectedFood.category)?.label}
-                        </Badge>
-                      </div>
-                      {selectedFood.barcode && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">Баркод:</span>
-                          <span className="text-sm font-mono">{selectedFood.barcode}</span>
-                        </div>
-                      )}
-                      {selectedFood.created_by && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">Тип:</span>
-                          <Badge variant="default">Собствена храна</Badge>
-                        </div>
-                      )}
-                      {selectedFood.is_verified && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">Статус:</span>
-                          <Badge variant="default">Проверена</Badge>
-                        </div>
+              <>
+                {/* Food Image Header - Fixed */}
+                {selectedFood.image_url ? (
+                  <div className="w-full h-48 overflow-hidden relative flex-shrink-0">
+                    <img
+                      src={selectedFood.image_url}
+                      alt={selectedFood.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent" />
+                    <div className="absolute bottom-4 left-6 right-6">
+                      <h2 className="text-2xl font-bold text-foreground mb-1">{selectedFood.name}</h2>
+                      {selectedFood.brand && (
+                        <p className="text-sm text-muted-foreground">{selectedFood.brand}</p>
                       )}
                     </div>
                   </div>
+                ) : (
+                  <div className="w-full h-48 bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 dark:from-blue-600 dark:via-cyan-600 dark:to-blue-700 flex items-center justify-center relative flex-shrink-0">
+                    <Apple className="h-20 w-20 text-white/30" />
+                    <div className="absolute bottom-4 left-6 right-6">
+                      <h2 className="text-2xl font-bold text-white mb-1">{selectedFood.name}</h2>
+                      {selectedFood.brand && (
+                        <p className="text-sm text-white/90">{selectedFood.brand}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-                  {/* Macros */}
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Хранителни стойности (на 100г)</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Калории:</span>
-                        <span className="text-sm font-medium">{selectedFood.calories_per_100g} kcal</span>
+                {/* Content - Scrollable */}
+                <div className="overflow-y-auto flex-1 p-6 space-y-6">
+                  {/* Portion Size Selector */}
+                  <div className="flex items-center justify-center gap-2">
+                    {[50, 100, 150, 200].map((grams) => (
+                      <button
+                        key={grams}
+                        onClick={() => setSelectedGrams(grams)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          selectedGrams === grams
+                            ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg scale-105"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {grams}г
+                      </button>
+                    ))}
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="9999"
+                        value={selectedGrams}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 100;
+                          setSelectedGrams(Math.max(1, Math.min(9999, value)));
+                        }}
+                        className="w-24 text-center font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Calories Highlight */}
+                  <div className="text-center p-6 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border border-blue-100 dark:border-blue-900">
+                    <div className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                      {calculateMacros(selectedFood, selectedGrams).calories}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">калории на {selectedGrams}г</div>
+                  </div>
+
+                  {/* Macros Grid */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 transition-all hover:scale-105">
+                      <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                        {calculateMacros(selectedFood, selectedGrams).protein}г
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Протеини:</span>
-                        <span className="text-sm font-medium">{selectedFood.protein_per_100g}г</span>
+                      <div className="text-xs text-blue-700 dark:text-blue-300 mt-1 font-medium">Протеини</div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        {Math.round((calculateMacros(selectedFood, selectedGrams).protein * 4 / calculateMacros(selectedFood, selectedGrams).calories) * 100)}%
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Въглехидрати:</span>
-                        <span className="text-sm font-medium">{selectedFood.carbs_per_100g}г</span>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-900 transition-all hover:scale-105">
+                      <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                        {calculateMacros(selectedFood, selectedGrams).carbs}г
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Мазнини:</span>
-                        <span className="text-sm font-medium">{selectedFood.fat_per_100g}г</span>
+                      <div className="text-xs text-green-700 dark:text-green-300 mt-1 font-medium">Въглехидрати</div>
+                      <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        {Math.round((calculateMacros(selectedFood, selectedGrams).carbs * 4 / calculateMacros(selectedFood, selectedGrams).calories) * 100)}%
                       </div>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-100 dark:border-yellow-900 transition-all hover:scale-105">
+                      <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                        {calculateMacros(selectedFood, selectedGrams).fat}г
+                      </div>
+                      <div className="text-xs text-yellow-700 dark:text-yellow-300 mt-1 font-medium">Мазнини</div>
+                      <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                        {Math.round((calculateMacros(selectedFood, selectedGrams).fat * 9 / calculateMacros(selectedFood, selectedGrams).calories) * 100)}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Nutrients */}
+                  {(selectedFood.fiber_per_100g || selectedFood.sugar_per_100g || selectedFood.sodium_per_100g) && (
+                    <div className="grid grid-cols-3 gap-3">
                       {selectedFood.fiber_per_100g !== null && selectedFood.fiber_per_100g > 0 && (
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Фибри:</span>
-                          <span className="text-sm font-medium">{selectedFood.fiber_per_100g}г</span>
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <div className="text-xl font-semibold text-foreground">{calculateMacros(selectedFood, selectedGrams).fiber}г</div>
+                          <div className="text-xs text-muted-foreground mt-1">Фибри</div>
                         </div>
                       )}
                       {selectedFood.sugar_per_100g !== null && selectedFood.sugar_per_100g > 0 && (
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Захари:</span>
-                          <span className="text-sm font-medium">{selectedFood.sugar_per_100g}г</span>
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <div className="text-xl font-semibold text-foreground">{calculateMacros(selectedFood, selectedGrams).sugar}г</div>
+                          <div className="text-xs text-muted-foreground mt-1">Захари</div>
                         </div>
                       )}
                       {selectedFood.sodium_per_100g !== null && selectedFood.sodium_per_100g > 0 && (
-                        <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Натрий:</span>
-                          <span className="text-sm font-medium">{selectedFood.sodium_per_100g}мг</span>
+                        <div className="text-center p-3 rounded-lg bg-muted/50">
+                          <div className="text-xl font-semibold text-foreground">{calculateMacros(selectedFood, selectedGrams).sodium}мг</div>
+                          <div className="text-xs text-muted-foreground mt-1">Натрий</div>
                         </div>
                       )}
                     </div>
-                  </div>
-                </div>
+                  )}
 
-                {/* Allergens */}
-                {selectedFood.allergens && selectedFood.allergens.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-2">Алергени</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedFood.allergens.map((allergen, index) => (
-                        <Badge key={index} variant="destructive" className="text-xs">
-                          {allergen}
-                        </Badge>
-                      ))}
+                  {/* Info Section */}
+                  <div className="space-y-3 p-4 rounded-lg bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Категория</span>
+                      <Badge variant="secondary" className="font-medium">
+                        {FOOD_CATEGORIES.find(c => c.value === selectedFood.category)?.label}
+                      </Badge>
                     </div>
+                    {selectedFood.barcode && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Баркод</span>
+                        <span className="text-sm font-mono text-foreground">{selectedFood.barcode}</span>
+                      </div>
+                    )}
+                    {selectedFood.created_by && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Тип</span>
+                        <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">Собствена храна</Badge>
+                      </div>
+                    )}
+                    {selectedFood.is_verified && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Статус</span>
+                        <Badge variant="default" className="bg-green-600 hover:bg-green-700">Проверена</Badge>
+                      </div>
+                    )}
                   </div>
-                )}
 
-                {/* Actions for trainers */}
-                {canEdit(selectedFood) && (
-                  <div className="flex gap-2 pt-4 border-t">
-                    <Button
-                      variant="default"
-                      onClick={() => {
-                        handleEdit(selectedFood);
-                        setIsDetailDialogOpen(false);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Редактирай
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => {
-                        handleDelete(selectedFood.id);
-                        setIsDetailDialogOpen(false);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Изтрий
-                    </Button>
-                  </div>
-                )}
-              </div>
+                  {/* Allergens */}
+                  {selectedFood.allergens && selectedFood.allergens.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <span className="text-red-600">⚠</span>
+                        Алергени
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedFood.allergens.map((allergen, index) => (
+                          <Badge key={index} variant="destructive" className="px-3 py-1">
+                            {allergen}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions for trainers */}
+                  {canEdit(selectedFood) && (
+                    <div className="flex gap-3 pt-4 border-t border-border">
+                      <Button
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                          handleEdit(selectedFood);
+                          setIsDetailDialogOpen(false);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Редактирай
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          handleDelete(selectedFood.id);
+                          setIsDetailDialogOpen(false);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Изтрий
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
           </DialogContent>
         </Dialog>
@@ -832,7 +924,7 @@ export default function FoodsPageClient({
       {/* Search Field for trainers */}
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Търсене по име или марка..."
             value={searchTerm}
@@ -847,11 +939,11 @@ export default function FoodsPageClient({
         <div className="col-span-full">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Apple className="h-12 w-12 text-gray-400 mb-4" />
+              <Apple className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
                 {searchTerm ? "Няма намерени храни" : "Няма храни"}
               </h3>
-              <p className="text-gray-600 text-center">
+              <p className="text-muted-foreground text-center">
                 {searchTerm
                   ? "Опитайте с друго търсене."
                   : "Създайте първата си храна, за да започнете да изграждате библиотека."
@@ -880,7 +972,7 @@ export default function FoodsPageClient({
             >
               {/* Food Image */}
               {food.image_url ? (
-                <div className="w-full h-48 overflow-hidden bg-gray-100">
+                <div className="w-full h-48 overflow-hidden bg-muted">
                   <img
                     src={food.image_url}
                     alt={food.name}
@@ -888,8 +980,8 @@ export default function FoodsPageClient({
                   />
                 </div>
               ) : (
-                <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-                  <ImageIcon className="h-16 w-16 text-gray-300" />
+                <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 flex items-center justify-center">
+                  <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
                 </div>
               )}
 
@@ -898,7 +990,7 @@ export default function FoodsPageClient({
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-lg truncate">{food.name}</CardTitle>
                     {food.brand && (
-                      <p className="text-sm text-gray-600 truncate">{food.brand}</p>
+                      <p className="text-sm text-muted-foreground truncate">{food.brand}</p>
                     )}
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <Badge variant="secondary" className="text-xs">
@@ -950,27 +1042,27 @@ export default function FoodsPageClient({
                 <div className="space-y-3">
                   <div className="text-sm">
                     <span className="font-medium">{food.calories_per_100g} kcal</span>
-                    <span className="text-gray-600"> на 100г</span>
+                    <span className="text-muted-foreground"> на 100г</span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="text-center p-2 bg-blue-50 rounded">
-                      <div className="font-medium text-blue-700">{food.protein_per_100g}г</div>
-                      <div className="text-blue-600">Протеин</div>
+                    <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/30 rounded">
+                      <div className="font-medium text-blue-700 dark:text-blue-400">{food.protein_per_100g}г</div>
+                      <div className="text-blue-600 dark:text-blue-300">Протеин</div>
                     </div>
-                    <div className="text-center p-2 bg-green-50 rounded">
-                      <div className="font-medium text-green-700">{food.carbs_per_100g}г</div>
-                      <div className="text-green-600">Въглехидрати</div>
+                    <div className="text-center p-2 bg-green-50 dark:bg-green-950/30 rounded">
+                      <div className="font-medium text-green-700 dark:text-green-400">{food.carbs_per_100g}г</div>
+                      <div className="text-green-600 dark:text-green-300">Въглехидрати</div>
                     </div>
-                    <div className="text-center p-2 bg-yellow-50 rounded">
-                      <div className="font-medium text-yellow-700">{food.fat_per_100g}г</div>
-                      <div className="text-yellow-600">Мазнини</div>
+                    <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950/30 rounded">
+                      <div className="font-medium text-yellow-700 dark:text-yellow-400">{food.fat_per_100g}г</div>
+                      <div className="text-yellow-600 dark:text-yellow-300">Мазнини</div>
                     </div>
                   </div>
 
                   {food.allergens && food.allergens.length > 0 && (
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Алергени:</p>
+                      <p className="text-xs text-muted-foreground mb-1">Алергени:</p>
                       <div className="flex flex-wrap gap-1">
                         {food.allergens.slice(0, 3).map((allergen, index) => (
                           <Badge key={index} variant="destructive" className="text-xs">
@@ -1011,7 +1103,7 @@ export default function FoodsPageClient({
             >
               {/* Food Image */}
               {food.image_url ? (
-                <div className="w-full h-48 overflow-hidden bg-gray-100">
+                <div className="w-full h-48 overflow-hidden bg-muted">
                   <img
                     src={food.image_url}
                     alt={food.name}
@@ -1019,8 +1111,8 @@ export default function FoodsPageClient({
                   />
                 </div>
               ) : (
-                <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-                  <ImageIcon className="h-16 w-16 text-gray-300" />
+                <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 flex items-center justify-center">
+                  <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
                 </div>
               )}
 
@@ -1029,7 +1121,7 @@ export default function FoodsPageClient({
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-lg truncate">{food.name}</CardTitle>
                     {food.brand && (
-                      <p className="text-sm text-gray-600 truncate">{food.brand}</p>
+                      <p className="text-sm text-muted-foreground truncate">{food.brand}</p>
                     )}
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <Badge variant="secondary" className="text-xs">
@@ -1049,27 +1141,27 @@ export default function FoodsPageClient({
                 <div className="space-y-3">
                   <div className="text-sm">
                     <span className="font-medium">{food.calories_per_100g} kcal</span>
-                    <span className="text-gray-600"> на 100г</span>
+                    <span className="text-muted-foreground"> на 100г</span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="text-center p-2 bg-blue-50 rounded">
-                      <div className="font-medium text-blue-700">{food.protein_per_100g}г</div>
-                      <div className="text-blue-600">Протеин</div>
+                    <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/30 rounded">
+                      <div className="font-medium text-blue-700 dark:text-blue-400">{food.protein_per_100g}г</div>
+                      <div className="text-blue-600 dark:text-blue-300">Протеин</div>
                     </div>
-                    <div className="text-center p-2 bg-green-50 rounded">
-                      <div className="font-medium text-green-700">{food.carbs_per_100g}г</div>
-                      <div className="text-green-600">Въглехидрати</div>
+                    <div className="text-center p-2 bg-green-50 dark:bg-green-950/30 rounded">
+                      <div className="font-medium text-green-700 dark:text-green-400">{food.carbs_per_100g}г</div>
+                      <div className="text-green-600 dark:text-green-300">Въглехидрати</div>
                     </div>
-                    <div className="text-center p-2 bg-yellow-50 rounded">
-                      <div className="font-medium text-yellow-700">{food.fat_per_100g}г</div>
-                      <div className="text-yellow-600">Мазнини</div>
+                    <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-950/30 rounded">
+                      <div className="font-medium text-yellow-700 dark:text-yellow-400">{food.fat_per_100g}г</div>
+                      <div className="text-yellow-600 dark:text-yellow-300">Мазнини</div>
                     </div>
                   </div>
 
                   {food.allergens && food.allergens.length > 0 && (
                     <div>
-                      <p className="text-xs text-gray-500 mb-1">Алергени:</p>
+                      <p className="text-xs text-muted-foreground mb-1">Алергени:</p>
                       <div className="flex flex-wrap gap-1">
                         {food.allergens.slice(0, 3).map((allergen, index) => (
                           <Badge key={index} variant="destructive" className="text-xs">
